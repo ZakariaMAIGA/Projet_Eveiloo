@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "194931270842",
+    "project_id": "eveiloo-flutter",
+    "storage_bucket": "eveiloo-flutter.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:194931270842:android:a35fffbf3ec2242bc98e83",
+        "android_client_info": {
+          "package_name": "com.example.eveiloo_enfant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwQRqnV-arpadoVz7x9rgn88i3_A-kh-0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
