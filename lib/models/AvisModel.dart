@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class ReviewModel {
+class AvisModel {
   final String reviewId;
   final String userId;
   final String userName;
@@ -9,7 +9,7 @@ class ReviewModel {
   final String comment;
   final DateTime createdAt;
 
-  const ReviewModel({
+  const AvisModel({
     required this.reviewId,
     required this.userId,
     required this.userName,
@@ -19,8 +19,8 @@ class ReviewModel {
     required this.createdAt,
   });
 
-  factory ReviewModel.fromMap(Map<String, dynamic> map) {
-    return ReviewModel(
+  factory AvisModel.fromMap(Map<String, dynamic> map) {
+    return AvisModel(
       reviewId: map['reviewId'] ?? '',
       userId: map['userId'] ?? '',
       userName: map['userName'] ?? '',
@@ -31,8 +31,8 @@ class ReviewModel {
     );
   }
 
-  factory ReviewModel.fromJson(Map<String, dynamic> json) {
-    return ReviewModel.fromMap(json);
+  factory AvisModel.fromJson(Map<String, dynamic> json) {
+    return AvisModel.fromMap(json);
   }
 
   Map<String, dynamic> toMap() {
@@ -59,7 +59,7 @@ class ReviewModel {
     };
   }
 
-  ReviewModel copyWith({
+  AvisModel copyWith({
     String? reviewId,
     String? userId,
     String? userName,
@@ -68,7 +68,7 @@ class ReviewModel {
     String? comment,
     DateTime? createdAt,
   }) {
-    return ReviewModel(
+    return AvisModel(
       reviewId: reviewId ?? this.reviewId,
       userId: userId ?? this.userId,
       userName: userName ?? this.userName,
@@ -81,7 +81,7 @@ class ReviewModel {
 
   @override
   String toString() {
-    return 'ReviewModel('
+    return 'AvisModel('
         'reviewId: $reviewId, '
         'userId: $userId, '
         'userName: $userName, '

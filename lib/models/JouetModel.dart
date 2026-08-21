@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class ToyModel {
+class JouetModel {
   final String toyId;
   final String name;
   final String categoryId;
@@ -15,7 +15,7 @@ class ToyModel {
   final int reviewCount;
   final DateTime createdAt;
 
-  const ToyModel({
+  const JouetModel({
     required this.toyId,
     required this.name,
     required this.categoryId,
@@ -31,8 +31,8 @@ class ToyModel {
     required this.createdAt,
   });
 
-  factory ToyModel.fromMap(Map<String, dynamic> map) {
-    return ToyModel(
+  factory JouetModel.fromMap(Map<String, dynamic> map) {
+    return JouetModel(
       toyId: map['toyId'] ?? '',
       name: map['name'] ?? '',
       categoryId: map['categoryId'] ?? '',
@@ -49,8 +49,8 @@ class ToyModel {
     );
   }
 
-  factory ToyModel.fromJson(Map<String, dynamic> json) {
-    return ToyModel.fromMap(json);
+  factory JouetModel.fromJson(Map<String, dynamic> json) {
+    return JouetModel.fromMap(json);
   }
 
   Map<String, dynamic> toMap() {
@@ -89,7 +89,7 @@ class ToyModel {
     };
   }
 
-  ToyModel copyWith({
+  JouetModel copyWith({
     String? toyId,
     String? name,
     String? categoryId,
@@ -104,7 +104,7 @@ class ToyModel {
     int? reviewCount,
     DateTime? createdAt,
   }) {
-    return ToyModel(
+    return JouetModel(
       toyId: toyId ?? this.toyId,
       name: name ?? this.name,
       categoryId: categoryId ?? this.categoryId,
@@ -123,7 +123,7 @@ class ToyModel {
 
   @override
   String toString() {
-    return 'ToyModel('
+    return 'JouetModel('
         'toyId: $toyId, '
         'name: $name, '
         'price: $price, '

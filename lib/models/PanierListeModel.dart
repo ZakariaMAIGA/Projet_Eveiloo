@@ -1,32 +1,33 @@
-class OrderItemModel {
+class PanierListModel {
   final String toyId;
   final String toyName;
   final String toyImage;
-  final double unitPrice;
+  final double price;
   final int quantity;
 
-  const OrderItemModel({
+  const PanierListModel({
     required this.toyId,
     required this.toyName,
     required this.toyImage,
-    required this.unitPrice,
+    required this.price,
     required this.quantity,
   });
 
-  double get totalPrice => unitPrice * quantity;
+  // Getter calculé
+  double get total => price * quantity;
 
-  factory OrderItemModel.fromMap(Map<String, dynamic> map) {
-    return OrderItemModel(
+  factory PanierListModel.fromMap(Map<String, dynamic> map) {
+    return PanierListModel(
       toyId: map['toyId'] ?? '',
       toyName: map['toyName'] ?? '',
       toyImage: map['toyImage'] ?? '',
-      unitPrice: (map['unitPrice'] ?? 0).toDouble(),
+      price: (map['price'] ?? 0).toDouble(),
       quantity: map['quantity'] ?? 1,
     );
   }
 
-  factory OrderItemModel.fromJson(Map<String, dynamic> json) {
-    return OrderItemModel.fromMap(json);
+  factory PanierListModel.fromJson(Map<String, dynamic> json) {
+    return PanierListModel.fromMap(json);
   }
 
   Map<String, dynamic> toMap() {
@@ -34,7 +35,7 @@ class OrderItemModel {
       'toyId': toyId,
       'toyName': toyName,
       'toyImage': toyImage,
-      'unitPrice': unitPrice,
+      'price': price,
       'quantity': quantity,
     };
   }
@@ -43,30 +44,30 @@ class OrderItemModel {
     return toMap();
   }
 
-  OrderItemModel copyWith({
+  PanierListModel copyWith({
     String? toyId,
     String? toyName,
     String? toyImage,
-    double? unitPrice,
+    double? price,
     int? quantity,
   }) {
-    return OrderItemModel(
+    return PanierListModel(
       toyId: toyId ?? this.toyId,
       toyName: toyName ?? this.toyName,
       toyImage: toyImage ?? this.toyImage,
-      unitPrice: unitPrice ?? this.unitPrice,
+      price: price ?? this.price,
       quantity: quantity ?? this.quantity,
     );
   }
 
   @override
   String toString() {
-    return 'OrderItemModel('
+    return 'PanierListModel('
         'toyId: $toyId, '
         'toyName: $toyName, '
-        'unitPrice: $unitPrice, '
+        'price: $price, '
         'quantity: $quantity, '
-        'totalPrice: $totalPrice'
+        'total: $total'
         ')';
   }
 }

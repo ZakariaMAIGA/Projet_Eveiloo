@@ -1,13 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class CategoryModel {
+class CategorieJouetModel {
   final String categoryId;
   final String name;
   final String description;
   final DateTime createdAt;
 
   // Constructeur principal
-  const CategoryModel({
+  const CategorieJouetModel({
     required this.categoryId,
     required this.name,
     required this.description,
@@ -15,8 +15,8 @@ class CategoryModel {
   });
 
   // Constructeur nommé : Map -> objet
-  factory CategoryModel.fromMap(Map<String, dynamic> map) {
-    return CategoryModel(
+  factory CategorieJouetModel.fromMap(Map<String, dynamic> map) {
+    return CategorieJouetModel(
       categoryId: map['categoryId'] ?? '',
       name: map['name'] ?? '',
       description: map['description'] ?? '',
@@ -25,8 +25,8 @@ class CategoryModel {
   }
 
   // JSON -> objet
-  factory CategoryModel.fromJson(Map<String, dynamic> json) {
-    return CategoryModel.fromMap(json);
+  factory CategorieJouetModel.fromJson(Map<String, dynamic> json) {
+    return CategorieJouetModel.fromMap(json);
   }
 
   // Objet -> Map
@@ -50,13 +50,13 @@ class CategoryModel {
   }
 
   // Créer une nouvelle version de l'objet
-  CategoryModel copyWith({
+  CategorieJouetModel copyWith({
     String? categoryId,
     String? name,
     String? description,
     DateTime? createdAt,
   }) {
-    return CategoryModel(
+    return CategorieJouetModel(
       categoryId: categoryId ?? this.categoryId,
       name: name ?? this.name,
       description: description ?? this.description,
@@ -66,7 +66,7 @@ class CategoryModel {
 
   @override
   String toString() {
-    return 'CategoryModel('
+    return 'CategorieJouetModel('
         'categoryId: $categoryId, '
         'name: $name, '
         'description: $description, '

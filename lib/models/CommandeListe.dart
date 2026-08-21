@@ -1,33 +1,32 @@
-class CartItemModel {
+class CommandeListeModel {
   final String toyId;
   final String toyName;
   final String toyImage;
-  final double price;
+  final double unitPrice;
   final int quantity;
 
-  const CartItemModel({
+  const CommandeListeModel({
     required this.toyId,
     required this.toyName,
     required this.toyImage,
-    required this.price,
+    required this.unitPrice,
     required this.quantity,
   });
 
-  // Getter calculé
-  double get total => price * quantity;
+  double get totalPrice => unitPrice * quantity;
 
-  factory CartItemModel.fromMap(Map<String, dynamic> map) {
-    return CartItemModel(
+  factory CommandeListeModel.fromMap(Map<String, dynamic> map) {
+    return CommandeListeModel(
       toyId: map['toyId'] ?? '',
       toyName: map['toyName'] ?? '',
       toyImage: map['toyImage'] ?? '',
-      price: (map['price'] ?? 0).toDouble(),
+      unitPrice: (map['unitPrice'] ?? 0).toDouble(),
       quantity: map['quantity'] ?? 1,
     );
   }
 
-  factory CartItemModel.fromJson(Map<String, dynamic> json) {
-    return CartItemModel.fromMap(json);
+  factory CommandeListeModel.fromJson(Map<String, dynamic> json) {
+    return CommandeListeModel.fromMap(json);
   }
 
   Map<String, dynamic> toMap() {
@@ -35,7 +34,7 @@ class CartItemModel {
       'toyId': toyId,
       'toyName': toyName,
       'toyImage': toyImage,
-      'price': price,
+      'unitPrice': unitPrice,
       'quantity': quantity,
     };
   }
@@ -44,30 +43,30 @@ class CartItemModel {
     return toMap();
   }
 
-  CartItemModel copyWith({
+  CommandeListeModel copyWith({
     String? toyId,
     String? toyName,
     String? toyImage,
-    double? price,
+    double? unitPrice,
     int? quantity,
   }) {
-    return CartItemModel(
+    return CommandeListeModel(
       toyId: toyId ?? this.toyId,
       toyName: toyName ?? this.toyName,
       toyImage: toyImage ?? this.toyImage,
-      price: price ?? this.price,
+      unitPrice: unitPrice ?? this.unitPrice,
       quantity: quantity ?? this.quantity,
     );
   }
 
   @override
   String toString() {
-    return 'CartItemModel('
+    return 'CommandeListeModel('
         'toyId: $toyId, '
         'toyName: $toyName, '
-        'price: $price, '
+        'unitPrice: $unitPrice, '
         'quantity: $quantity, '
-        'total: $total'
+        'totalPrice: $totalPrice'
         ')';
   }
 }
