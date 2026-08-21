@@ -1,92 +1,91 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class CategorieJouetModel {
-  final String categoryId;
-  final String name;
+  final String categorieId;
+  final String nom;
+  final String icone;
   final String description;
-  final DateTime createdAt;
 
-  // Constructeur principal
   const CategorieJouetModel({
-    required this.categoryId,
-    required this.name,
+    required this.categorieId,
+    required this.nom,
+    required this.icone,
     required this.description,
-    required this.createdAt,
   });
 
-  // Constructeur nommé : Map -> objet
+  // Créer un CategorieJouetModel à partir d'une Map
   factory CategorieJouetModel.fromMap(Map<String, dynamic> map) {
     return CategorieJouetModel(
-      categoryId: map['categoryId'] ?? '',
-      name: map['name'] ?? '',
+      categorieId: map['categorie_id'] ?? '',
+      nom: map['nom'] ?? '',
+      icone: map['icone'] ?? '',
       description: map['description'] ?? '',
-      createdAt: _parseDate(map['createdAt']),
     );
   }
 
-  // JSON -> objet
+  // Transformer le modèle en Map
+  Map<String, dynamic> toMap() {
+    return {
+      'categorie_id': categorieId,
+      'nom': nom,
+      'icone': icone,
+      'description': description,
+    };
+  }
+
+  // Créer un CategorieJouetModel à partir d'un JSON
   factory CategorieJouetModel.fromJson(Map<String, dynamic> json) {
     return CategorieJouetModel.fromMap(json);
   }
 
-  // Objet -> Map
-  Map<String, dynamic> toMap() {
-    return {
-      'categoryId': categoryId,
-      'name': name,
-      'description': description,
-      'createdAt': Timestamp.fromDate(createdAt),
-    };
-  }
-
-  // Objet -> JSON
+  // Transformer le modèle en JSON
   Map<String, dynamic> toJson() {
-    return {
-      'categoryId': categoryId,
-      'name': name,
-      'description': description,
-      'createdAt': createdAt.toIso8601String(),
-    };
+    return toMap();
   }
 
-  // Créer une nouvelle version de l'objet
+  // Créer une copie du modèle avec des valeurs modifiées
   CategorieJouetModel copyWith({
-    String? categoryId,
-    String? name,
+    String? categorieId,
+    String? nom,
+    String? icone,
     String? description,
-    DateTime? createdAt,
   }) {
     return CategorieJouetModel(
-      categoryId: categoryId ?? this.categoryId,
-      name: name ?? this.name,
+      categorieId: categorieId ?? this.categorieId,
+      nom: nom ?? this.nom,
+      icone: icone ?? this.icone,
       description: description ?? this.description,
-      createdAt: createdAt ?? this.createdAt,
     );
   }
 
   @override
   String toString() {
     return 'CategorieJouetModel('
-        'categoryId: $categoryId, '
-        'name: $name, '
-        'description: $description, '
-        'createdAt: $createdAt'
+        'categorieId: $categorieId, '
+        'nom: $nom, '
+        'icone: $icone, '
+        'description: $description'
         ')';
   }
 
-  static DateTime _parseDate(dynamic value) {
-    if (value is Timestamp) {
-      return value.toDate();
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
     }
 
-    if (value is DateTime) {
-      return value;
-    }
+    return other is CategorieJouetModel &&
+        other.categorieId == categorieId &&
+        other.nom == nom &&
+        other.icone == icone &&
+        other.description == description;
+  }
 
-    if (value is String) {
-      return DateTime.tryParse(value) ?? DateTime.now();
-    }
-
-    return DateTime.now();
+  @override
+  int get hashCode {
+    return Object.hash(
+      categorieId,
+      nom,
+      icone,
+      description,
+    );
   }
 }

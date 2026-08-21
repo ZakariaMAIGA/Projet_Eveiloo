@@ -1,145 +1,165 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class JouetModel {
-  final String toyId;
-  final String name;
-  final String categoryId;
-  final int recommendedAge;
-  final double price;
+  final String jouetId;
+  final String categorieId;
+  final String nom;
+  final int ageMin;
+  final int ageMax;
+  final double prix;
   final int stock;
   final String description;
-  final List<String> images;
-  final String videoUrl;
-  final List<String> benefits;
-  final double averageRating;
-  final int reviewCount;
-  final DateTime createdAt;
+  final String images;
+  final double noteMoyenne;
+  final int nombreAvis;
+  final DateTime dateAjout;
 
   const JouetModel({
-    required this.toyId,
-    required this.name,
-    required this.categoryId,
-    required this.recommendedAge,
-    required this.price,
+    required this.jouetId,
+    required this.categorieId,
+    required this.nom,
+    required this.ageMin,
+    required this.ageMax,
+    required this.prix,
     required this.stock,
     required this.description,
     required this.images,
-    required this.videoUrl,
-    required this.benefits,
-    required this.averageRating,
-    required this.reviewCount,
-    required this.createdAt,
+    required this.noteMoyenne,
+    required this.nombreAvis,
+    required this.dateAjout,
   });
 
+  // Création à partir des données Firestore
   factory JouetModel.fromMap(Map<String, dynamic> map) {
     return JouetModel(
-      toyId: map['toyId'] ?? '',
-      name: map['name'] ?? '',
-      categoryId: map['categoryId'] ?? '',
-      recommendedAge: map['recommendedAge'] ?? 0,
-      price: (map['price'] ?? 0).toDouble(),
+      jouetId: map['jouet_id'] ?? '',
+      categorieId: map['categorie_id'] ?? '',
+      nom: map['nom'] ?? '',
+      ageMin: map['ageMin'] ?? 0,
+      ageMax: map['ageMax'] ?? 0,
+      prix: (map['prix'] ?? 0).toDouble(),
       stock: map['stock'] ?? 0,
       description: map['description'] ?? '',
-      images: List<String>.from(map['images'] ?? []),
-      videoUrl: map['videoUrl'] ?? '',
-      benefits: List<String>.from(map['benefits'] ?? []),
-      averageRating: (map['averageRating'] ?? 0).toDouble(),
-      reviewCount: map['reviewCount'] ?? 0,
-      createdAt: _parseDate(map['createdAt']),
+      images: map['images'] ?? '',
+      noteMoyenne: (map['noteMoyenne'] ?? 0).toDouble(),
+      nombreAvis: map['nombreAvis'] ?? 0,
+      dateAjout: DateTime.parse(
+        map['dateAjout'] ?? '2026-01-01',
+      ),
     );
   }
 
+  // Transformation vers une Map pour Firestore
+  Map<String, dynamic> toMap() {
+    return {
+      'jouet_id': jouetId,
+      'categorie_id': categorieId,
+      'nom': nom,
+      'ageMin': ageMin,
+      'ageMax': ageMax,
+      'prix': prix,
+      'stock': stock,
+      'description': description,
+      'images': images,
+      'noteMoyenne': noteMoyenne,
+      'nombreAvis': nombreAvis,
+      'dateAjout': dateAjout.toIso8601String(),
+    };
+  }
+
+  // Création depuis JSON
   factory JouetModel.fromJson(Map<String, dynamic> json) {
     return JouetModel.fromMap(json);
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'toyId': toyId,
-      'name': name,
-      'categoryId': categoryId,
-      'recommendedAge': recommendedAge,
-      'price': price,
-      'stock': stock,
-      'description': description,
-      'images': images,
-      'videoUrl': videoUrl,
-      'benefits': benefits,
-      'averageRating': averageRating,
-      'reviewCount': reviewCount,
-      'createdAt': Timestamp.fromDate(createdAt),
-    };
-  }
-
+  // Transformation vers JSON
   Map<String, dynamic> toJson() {
-    return {
-      'toyId': toyId,
-      'name': name,
-      'categoryId': categoryId,
-      'recommendedAge': recommendedAge,
-      'price': price,
-      'stock': stock,
-      'description': description,
-      'images': images,
-      'videoUrl': videoUrl,
-      'benefits': benefits,
-      'averageRating': averageRating,
-      'reviewCount': reviewCount,
-      'createdAt': createdAt.toIso8601String(),
-    };
+    return toMap();
   }
 
+  // Création d'une copie modifiée
   JouetModel copyWith({
-    String? toyId,
-    String? name,
-    String? categoryId,
-    int? recommendedAge,
-    double? price,
+    String? jouetId,
+    String? categorieId,
+    String? nom,
+    int? ageMin,
+    int? ageMax,
+    double? prix,
     int? stock,
     String? description,
-    List<String>? images,
-    String? videoUrl,
-    List<String>? benefits,
-    double? averageRating,
-    int? reviewCount,
-    DateTime? createdAt,
+    String? images,
+    double? noteMoyenne,
+    int? nombreAvis,
+    DateTime? dateAjout,
   }) {
     return JouetModel(
-      toyId: toyId ?? this.toyId,
-      name: name ?? this.name,
-      categoryId: categoryId ?? this.categoryId,
-      recommendedAge: recommendedAge ?? this.recommendedAge,
-      price: price ?? this.price,
+      jouetId: jouetId ?? this.jouetId,
+      categorieId: categorieId ?? this.categorieId,
+      nom: nom ?? this.nom,
+      ageMin: ageMin ?? this.ageMin,
+      ageMax: ageMax ?? this.ageMax,
+      prix: prix ?? this.prix,
       stock: stock ?? this.stock,
       description: description ?? this.description,
       images: images ?? this.images,
-      videoUrl: videoUrl ?? this.videoUrl,
-      benefits: benefits ?? this.benefits,
-      averageRating: averageRating ?? this.averageRating,
-      reviewCount: reviewCount ?? this.reviewCount,
-      createdAt: createdAt ?? this.createdAt,
+      noteMoyenne: noteMoyenne ?? this.noteMoyenne,
+      nombreAvis: nombreAvis ?? this.nombreAvis,
+      dateAjout: dateAjout ?? this.dateAjout,
     );
   }
 
   @override
   String toString() {
     return 'JouetModel('
-        'toyId: $toyId, '
-        'name: $name, '
-        'price: $price, '
+        'jouetId: $jouetId, '
+        'categorieId: $categorieId, '
+        'nom: $nom, '
+        'ageMin: $ageMin, '
+        'ageMax: $ageMax, '
+        'prix: $prix, '
         'stock: $stock, '
-        'averageRating: $averageRating'
+        'description: $description, '
+        'images: $images, '
+        'noteMoyenne: $noteMoyenne, '
+        'nombreAvis: $nombreAvis, '
+        'dateAjout: $dateAjout'
         ')';
   }
 
-  static DateTime _parseDate(dynamic value) {
-    if (value is Timestamp) return value.toDate();
-    if (value is DateTime) return value;
-
-    if (value is String) {
-      return DateTime.tryParse(value) ?? DateTime.now();
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
     }
 
-    return DateTime.now();
+    return other is JouetModel &&
+        other.jouetId == jouetId &&
+        other.categorieId == categorieId &&
+        other.nom == nom &&
+        other.ageMin == ageMin &&
+        other.ageMax == ageMax &&
+        other.prix == prix &&
+        other.stock == stock &&
+        other.description == description &&
+        other.images == images &&
+        other.noteMoyenne == noteMoyenne &&
+        other.nombreAvis == nombreAvis &&
+        other.dateAjout == dateAjout;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      jouetId,
+      categorieId,
+      nom,
+      ageMin,
+      ageMax,
+      prix,
+      stock,
+      description,
+      images,
+      noteMoyenne,
+      nombreAvis,
+      dateAjout,
+    );
   }
 }
