@@ -3,12 +3,29 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'routes/app_routes.dart';
+import 'package:provider/provider.dart';
+
+import 'core/services/notificationService.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const MyApp());
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+final notificationService = NotificationService();
+notificationService.initNotifications();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<NotificationService>.value(
+          value: notificationService,
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

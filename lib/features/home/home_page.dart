@@ -18,6 +18,13 @@ class HomePage extends StatelessWidget {
         title: const Text('Éveiloo'),
         actions: [
           IconButton(
+            tooltip: 'Notifications',
+            icon: const Icon(Icons.notifications_none_outlined),
+            onPressed: () {
+              context.push('/notifications');
+            },
+          ),
+          IconButton(
             tooltip: 'Déconnexion',
             icon: const Icon(Icons.logout),
             onPressed: () async {
