@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../models/activity_model.dart';
+import '../../../routes/app_route.dart';
 import '../activity_service.dart';
 
 class AddActivityPage extends StatefulWidget {
@@ -16,6 +18,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
 
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _imageController = TextEditingController();
 
   final _minAgeController = TextEditingController();
   final _maxAgeController = TextEditingController();
@@ -34,6 +37,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _imageController.dispose();
     _minAgeController.dispose();
     _maxAgeController.dispose();
     _durationController.dispose();
@@ -53,6 +57,9 @@ class _AddActivityPageState extends State<AddActivityPage> {
       activityId: const Uuid().v4(),
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
+        imageUrl: _imageController.text.trim().isEmpty
+          ? null
+          : _imageController.text.trim(),
       minAge: int.parse(_minAgeController.text),
       maxAge: int.parse(_maxAgeController.text),
       activityType: activityType,
@@ -67,7 +74,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
     await _service.addActivity(activity);
 
     if (mounted) {
-      Navigator.pop(context);
+      context.go(AppRoutes.adminActivities);
     }
   }
 
@@ -76,6 +83,13 @@ class _AddActivityPageState extends State<AddActivityPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Nouvelle activité"),
+        actions: [
+          IconButton(
+            onPressed: () => context.go(AppRoutes.childActivities),
+            tooltip: 'Mode enfant',
+            icon: const Icon(Icons.child_care),
+          ),
+        ],
       ),
       body: Form(
         key: _formKey,
@@ -105,6 +119,17 @@ class _AddActivityPageState extends State<AddActivityPage> {
             const SizedBox(height: 15),
 
             TextFormField(
+              controller: _imageController,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: "Image (URL)",
+                hintText: "https://exemple.com/image.jpg",
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            TextFormField(
               controller: _durationController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
@@ -117,7 +142,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
             const SizedBox(height: 15),
 
             DropdownButtonFormField<String>(
-              value: activityType,
+              initialValue: activityType,
               items: const [
                 DropdownMenuItem(
                   value: "Lecture",
@@ -149,7 +174,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
             const SizedBox(height: 15),
 
             DropdownButtonFormField<String>(
-              value: competenceCategory,
+              initialValue: competenceCategory,
               items: const [
                 DropdownMenuItem(
                   value: "Lecture",

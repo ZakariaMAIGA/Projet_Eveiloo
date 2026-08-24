@@ -35,7 +35,7 @@ UtilisateurRepository({
       return UtilisateurModel.fromFirestore(document);
     });
   }
-  
+
   Future<void> mettreAJour(
     String utilisateurId,
     Map<String, dynamic> donnees,

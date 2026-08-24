@@ -19,14 +19,14 @@ class AnswerButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color background = Colors.white;
-    Color border = Colors.grey.shade300;
+    Color border = Colors.transparent;
 
     if (showResult) {
       if (isCorrect) {
-        background = Colors.green.shade100;
-        border = Colors.green;
+        background = const Color(0xFFC8F7D4);
+        border = const Color(0xFF20B24B);
       } else if (isSelected) {
-        background = Colors.red.shade100;
+        background = const Color(0xFFFFE7E7);
         border = Colors.red;
       }
     } else if (isSelected) {
@@ -43,10 +43,10 @@ class AnswerButton extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(11),
           border: Border.all(
             color: border,
-            width: 2,
+            width: showResult && isCorrect ? 1 : 0,
           ),
         ),
         child: Row(
@@ -55,8 +55,9 @@ class AnswerButton extends StatelessWidget {
               child: Text(
                 text,
                 style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF29258F),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),

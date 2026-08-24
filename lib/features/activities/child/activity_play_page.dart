@@ -193,9 +193,12 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     final questionsAsync = ref.watch(questionsProvider(widget.activity.activityId));
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(widget.activity.title),
         centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF29258F),
       ),
       body: questionsAsync.when(
         loading: () => const Center(
@@ -226,7 +229,8 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
                 Text(
                   question.statement,
                   style: const TextStyle(
-                    fontSize: 22,
+                    color: Color(0xFF29258F),
+                    fontSize: 23,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

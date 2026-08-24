@@ -13,126 +13,156 @@ class ActivityCard extends StatelessWidget {
     final progress = (activity.progress / 100).clamp(0.0, 1.0);
 
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(12),
       onTap: onTap,
       child: Card(
-        margin: const EdgeInsets.only(bottom: 20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        margin: const EdgeInsets.only(bottom: 12),
+        elevation: 4,
+        shadowColor: Colors.black26,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 9, 12, 9),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 156,
-              child: activity.imageUrl != null
-                  ? Image.network(
-                      activity.imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, error, stackTrace) => _ImagePlaceholder(
-                        category: activity.competenceCategory,
-                      ),
-                    )
-                  : _ImagePlaceholder(category: activity.competenceCategory),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ActivityImage(activity: activity),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 54,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                activity.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${activity.progress.toInt()}%',
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          activity.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 10, height: 1.15),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    activity.competenceCategory.toUpperCase(),
-                    style: TextStyle(
-                      color: Colors.teal.shade700,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
+            const SizedBox(height: 10),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: progress),
+              duration: const Duration(milliseconds: 850),
+              curve: Curves.easeOutCubic,
+              builder: (context, animatedProgress, child) {
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: animatedProgress,
+                    minHeight: 7,
+                    backgroundColor: const Color(0xFFE5E5E5),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      activity.progress >= 100
+                          ? const Color(0xFF36B86A)
+                          : const Color(0xFF1118F5),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    activity.title,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF173B35),
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Text(
-                    activity.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  Row(
-                    children: [
-                      _Meta(
-                        icon: Icons.star_rounded,
-                        text: '${activity.rewardPoints} pts',
-                      ),
-
-                      const SizedBox(width: 10),
-
-                      _Meta(
-                        icon: Icons.timer_outlined,
-                        text: '${activity.duration} min',
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 14),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 7,
-                      backgroundColor: const Color(0xFFE5EFEC),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${activity.progress.toInt()} % terminé',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      const Icon(
-                        Icons.arrow_forward_rounded,
-                        color: Colors.teal,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ],
         ),
       ),
+    ),
     );
   }
 }
 
-class _Meta extends StatelessWidget {
-  final IconData icon;
-  final String text;
+class _ActivityImage extends StatelessWidget {
+  final ActivityModel activity;
 
-  const _Meta({required this.icon, required this.text});
+  const _ActivityImage({required this.activity});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 17, color: Colors.teal.shade700),
-        const SizedBox(width: 5),
-        Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
-      ],
+    final image = activity.imageUrl;
+    return Container(
+      width: 58,
+      height: 58,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: _gradientFor(activity.competenceCategory),
+      ),
+      child: ClipOval(
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.all(3),
+          child: ClipOval(
+            child: image != null && image.isNotEmpty
+                ? Image.network(
+                    image,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, error, stackTrace) =>
+                        _ImagePlaceholder(category: activity.competenceCategory),
+                  )
+                : _ImagePlaceholder(category: activity.competenceCategory),
+          ),
+        ),
+      ),
     );
+  }
+
+  LinearGradient _gradientFor(String category) {
+    const gradients = [
+      LinearGradient(
+        colors: [Color(0xFF243BFF), Color(0xFFE91E9B), Color(0xFFFFA31A)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      LinearGradient(
+        colors: [Color(0xFF16B9D4), Color(0xFF5DD45A), Color(0xFFF0D52D)],
+        begin: Alignment.bottomLeft,
+        end: Alignment.topRight,
+      ),
+      LinearGradient(
+        colors: [Color(0xFF7656E8), Color(0xFFEF4E9D), Color(0xFFFF8B37)],
+        begin: Alignment.topRight,
+        end: Alignment.bottomLeft,
+      ),
+      LinearGradient(
+        colors: [Color(0xFF1D9BF0), Color(0xFF7A5AF8), Color(0xFF3CCB9A)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    ];
+    final index = activity.activityId.codeUnits.fold<int>(
+          0,
+          (total, codeUnit) => total + codeUnit,
+        ) %
+        gradients.length;
+    return gradients[index];
   }
 }
 
@@ -144,14 +174,20 @@ class _ImagePlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFDDF2EC),
+      color: category.toLowerCase().contains('math')
+          ? const Color(0xFFE4F7B8)
+          : const Color(0xFFFFE4F0),
       child: Center(
         child: Icon(
           category.toLowerCase().contains('math')
               ? Icons.calculate_outlined
-              : Icons.auto_awesome,
-          size: 58,
-          color: Colors.teal.shade600,
+              : category.toLowerCase().contains('cré')
+                  ? Icons.palette_outlined
+                  : Icons.menu_book_rounded,
+          size: 30,
+          color: category.toLowerCase().contains('math')
+              ? const Color(0xFF36B86A)
+              : const Color(0xFFE9168C),
         ),
       ),
     );

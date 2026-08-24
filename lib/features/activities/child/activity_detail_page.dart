@@ -14,8 +14,19 @@ class ActivityDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(activity.title),
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF29258F), size: 32),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.bookmark_border, color: Color(0xFF29258F), size: 30),
+          ),
+        ],
       ),
 
       body: SingleChildScrollView(
@@ -28,15 +39,15 @@ class ActivityDetailPage extends StatelessWidget {
               child: activity.imageUrl != null
                   ? Image.network(
                       activity.imageUrl!,
-                      width: double.infinity,
-                      height: 250,
+                      width: 112,
+                                height: 112,
                       fit: BoxFit.cover,
                     )
                   : Container(
-                      width: double.infinity,
-                      height: 250,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.image_not_supported),
+                      width: 112,
+                      height: 112,
+                      color: const Color(0xFFFFE4F0),
+                      child: const Icon(Icons.menu_book_rounded, color: Color(0xFFE91E9B), size: 52),
                     ),
             ),
 
@@ -49,8 +60,10 @@ class ActivityDetailPage extends StatelessWidget {
 
                   Text(
                     activity.title,
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontSize: 28,
+                      color: Color(0xFF29258F),
+                      fontSize: 30,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -76,7 +89,7 @@ class ActivityDetailPage extends StatelessWidget {
 
                   const SizedBox(height: 8),
 
-                  Text(activity.objective ?? 'Non spécifié'),
+                  Text(activity.objective ?? 'Lis attentivement les histoires et réponds aux questions'),
 
                   const SizedBox(height: 30),
 
@@ -121,9 +134,11 @@ class ActivityDetailPage extends StatelessWidget {
                   ClipRRect(
                     borderRadius:
                         BorderRadius.circular(20),
-                    child: LinearProgressIndicator(
+                      child: LinearProgressIndicator(
                       value: activity.progress / 100,
-                      minHeight: 12,
+                      minHeight: 14,
+                      backgroundColor: Colors.grey.shade300,
+                      valueColor: const AlwaysStoppedAnimation(Color(0xFF2D8DD5)),
                     ),
                   ),
 
@@ -155,7 +170,8 @@ class ActivityDetailPage extends StatelessWidget {
                       child: const Text(
                         "Commencer",
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),

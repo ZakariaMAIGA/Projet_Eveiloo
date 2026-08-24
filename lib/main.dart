@@ -1,13 +1,25 @@
-import 'package:eveiloo_enfant/features/activities/activities_page.dart';
-import 'package:eveiloo_enfant/firebase_options.dart';
+
+import 'package:eveiloo_enfant/routes/app_router.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const MyApp());
+  await _initializeFirebase();
+  runApp(const ProviderScope(child: MyApp()));
+}
+
+Future<void> _initializeFirebase() async {
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (error, stackTrace) {
+    debugPrint('Erreur Firebase : $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -15,20 +27,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ProviderScope(
-      child: MaterialApp(
-        title: 'Eveiloo',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2A9D8F)),
-          scaffoldBackgroundColor: const Color(0xFFF7FAF8),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFFF7FAF8),
-            foregroundColor: Color(0xFF173B35),
-            elevation: 0,
-          ),
-        ),
-        home: const ActivitiesPage(),
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      title: 'Éveiloo Enfant',
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
+      routerConfig: AppRouter.router,
     );
   }
 }

@@ -49,27 +49,25 @@ class ActivityResultPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(25),
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 18),
 
           child: Column(
             children: [
 
               const SizedBox(height: 20),
 
-              const Icon(
-                Icons.emoji_events,
-                size: 100,
-                color: Colors.amber,
-              ),
+              const Text('Bravo !', style: TextStyle(color: Color(0xFF2D8DD5), fontSize: 32, fontWeight: FontWeight.w800)),
 
               const SizedBox(height: 20),
 
               Text(
-                message,
+                'Tu as terminé cette activité',
                 style: const TextStyle(
-                  fontSize: 28,
+                  color: Color(0xFF29258F),
+                  fontSize: 23,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -78,15 +76,14 @@ class ActivityResultPage extends StatelessWidget {
               const SizedBox(height: 20),
 
               Text(
-                activity.title,
-                style: const TextStyle(
-                  fontSize: 20,
-                ),
+                'Score : $score/$totalQuestions   +${score * activity.rewardPoints} pts',
+                style: const TextStyle(color: Color(0xFF29258F), fontSize: 21, fontWeight: FontWeight.w800),
               ),
 
               const SizedBox(height: 35),
 
               Card(
+                color: const Color(0xFFDDF4FB),
                 elevation: 5,
 
                 shape: RoundedRectangleBorder(
@@ -103,6 +100,7 @@ class ActivityResultPage extends StatelessWidget {
                       Text(
                         "$score pts",
                         style: const TextStyle(
+                          color: Color(0xFF29258F),
                           fontSize: 40,
                           fontWeight: FontWeight.bold,
                         ),
@@ -113,6 +111,7 @@ class ActivityResultPage extends StatelessWidget {
                       Text(
                         "${percentage.toStringAsFixed(0)} %",
                         style: const TextStyle(
+                          color: Color(0xFF29258F),
                           fontSize: 22,
                         ),
                       ),
@@ -164,7 +163,11 @@ class ActivityResultPage extends StatelessWidget {
 
                   icon: const Icon(Icons.refresh),
 
-                  label: const Text("Rejouer"),
+                  label: const Text("Continuer"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2D8DD5),
+                    foregroundColor: Colors.white,
+                  ),
 
                   onPressed: () {
 
