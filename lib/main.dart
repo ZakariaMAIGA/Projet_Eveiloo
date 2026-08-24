@@ -11,6 +11,12 @@ void main () async {
   runApp(const MyApp());
 }
 
+  runApp(
+    const ProviderScope(
+      child: MyApp(),
+    ),
+  );
+}
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
