@@ -1,0 +1,67 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/category_model.dart';
+import '../models/toy_model.dart';
+
+class ToyRepository {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Récupérer la liste des catégories
+  Stream<List<CategoryModel>> getCategories() {
+    return _firestore.collection('CATEGORIES').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return CategoryModel.fromFirestore(
+          Map<String, dynamic>.from(data),
+          doc.id,
+        );
+      }).toList();
+    });
+  }
+
+  // Récupérer les jouets filtrés par genre et âge
+  Stream<List<ToyModel>> getToysByGenreAndAge({
+    required String genre,
+    required String ageFilter,
+  }) {
+    Query<Map<String, dynamic>> query = _firestore
+        .collection('JOUETS')
+        .where('genre', isEqualTo: genre.toLowerCase());
+
+    if (ageFilter != 'Tous') {
+      query = query.where('ageRange', isEqualTo: ageFilter);
+    }
+
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return ToyModel.fromFirestore(Map<String, dynamic>.from(data), doc.id);
+      }).toList();
+    });
+  }
+
+  // Récupérer les jouets par catégorie (si besoin)
+  Stream<List<ToyModel>> getToys({String? categorieId}) {
+    Query<Map<String, dynamic>> query = _firestore.collection('JOUETS');
+
+    if (categorieId != null && categorieId.isNotEmpty) {
+      query = query.where('categorieId', isEqualTo: categorieId);
+    }
+
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return ToyModel.fromFirestore(Map<String, dynamic>.from(data), doc.id);
+      }).toList();
+    });
+  }
+
+  // Ajouter un nouveau jouet dans Firestore
+  Future<void> addToy(ToyModel toy) async {
+    await _firestore.collection('JOUETS').add(toy.toMap());
+  }
+
+  // Supprimer un jouet
+  Future<void> deleteToy(String toyId) async {
+    await _firestore.collection('JOUETS').doc(toyId).delete();
+  }
+}

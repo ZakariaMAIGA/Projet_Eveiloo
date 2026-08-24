@@ -1,28 +1,24 @@
-import 'package:eveiloo_enfant/models/utilisateur.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User;
 
-import '../../repository/utilisateurRepository.dart';
 import '../../models/utilisateur.dart';
+import '../../repository/utilisateurRepository.dart';
 
 class AuthService {
-
-AuthService({
-  FirebaseAuth? firebaseAuth,
-  UtilisateurRepository? utilisateurRepository,
-})  : _auth = firebaseAuth ?? FirebaseAuth.instance,
-      _utilisateurRepository =
-          utilisateurRepository ?? UtilisateurRepository();
+  AuthService({
+    FirebaseAuth? firebaseAuth,
+    UtilisateurRepository? utilisateurRepository,
+  }) : _auth = firebaseAuth ?? FirebaseAuth.instance,
+       _utilisateurRepository =
+           utilisateurRepository ?? UtilisateurRepository();
 
   final FirebaseAuth _auth;
   final UtilisateurRepository _utilisateurRepository;
-
-
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   User? get utilisateurFirebase => _auth.currentUser;
 
-   Future<void> inscription({
+  Future<void> inscription({
     required String nom,
     required String prenom,
     required String courriel,
@@ -47,7 +43,7 @@ AuthService({
       nom: nom.trim(),
       prenom: prenom.trim(),
       courriel: courriel.trim().toLowerCase(),
-      telephone: telephone?.trim()  ?? '',
+      telephone: telephone?.trim() ?? '',
       role: 'parent',
       dateCreation: DateTime.now(),
     );
@@ -67,8 +63,9 @@ AuthService({
     final firebaseUser = credential.user;
 
     if (firebaseUser != null) {
-      await _utilisateurRepository
-          .mettreAJourDerniereConnexion(firebaseUser.uid);
+      await _utilisateurRepository.mettreAJourDerniereConnexion(
+        firebaseUser.uid,
+      );
     }
   }
 
@@ -79,7 +76,4 @@ AuthService({
   Future<void> reinitialiserMotDePasse(String courriel) {
     return _auth.sendPasswordResetEmail(email: courriel.trim());
   }
-
 }
-
-
