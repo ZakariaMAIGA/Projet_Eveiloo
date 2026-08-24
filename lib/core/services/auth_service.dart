@@ -15,23 +15,21 @@
     final FirebaseAuth _auth;
     final UtilisateurRepository _utilisateurRepository;
 
-
-
-    Stream<User?> get authStateChanges => _auth.authStateChanges();
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
 
     User? get utilisateurFirebase => _auth.currentUser;
 
-    Future<void> inscription({
-      required String nom,
-      required String prenom,
-      required String courriel,
-      required String motDePasse,
-      String? telephone,
-    }) async {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: courriel.trim(),
-        password: motDePasse,
-      );
+  Future<void> inscription({
+    required String nom,
+    required String prenom,
+    required String courriel,
+    required String motDePasse,
+    String? telephone,
+  }) async {
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: courriel.trim(),
+      password: motDePasse,
+    );
 
       final firebaseUser = credential.user;
 
@@ -39,7 +37,15 @@
         throw Exception('La création du compte a échoué.');
       }
 
-      await firebaseUser.updateDisplayName('$prenom $nom');
+    final utilisateur = UtilisateurModel(
+      utilisateurId: firebaseUser.uid,
+      nom: nom.trim(),
+      prenom: prenom.trim(),
+      courriel: courriel.trim().toLowerCase(),
+      telephone: telephone?.trim() ?? '',
+      role: 'parent',
+      dateCreation: DateTime.now(),
+    );
 
       final utilisateur = UtilisateurModel(
         utilisateurId: firebaseUser.uid,
@@ -71,8 +77,10 @@
       }
     }
 
-    Future<void> deconnexion() {
-      return _auth.signOut();
+    if (firebaseUser != null) {
+      await _utilisateurRepository.mettreAJourDerniereConnexion(
+        firebaseUser.uid,
+      );
     }
 
     Future<void> reinitialiserMotDePasse(String courriel) {
@@ -80,5 +88,4 @@
     }
 
   }
-
-
+}
