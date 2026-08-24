@@ -1,8 +1,8 @@
+import 'package:eveiloo_enfant/features/auth/register_page.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
-import 'package:eveiloo_enfant/screens/home_page.dart';
-import 'package:eveiloo_enfant/screens/login_page.dart';
-import 'package:eveiloo_enfant/screens/overview_page.dart';
-import 'package:eveiloo_enfant/screens/register_page.dart';
+import 'package:eveiloo_enfant/features/home/home_page.dart';
+import 'package:eveiloo_enfant/features/auth/login_page.dart';
+import 'package:eveiloo_enfant/features/overview/overview_page.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRouter {
