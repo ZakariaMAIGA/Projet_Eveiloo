@@ -17,17 +17,29 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        return ios;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for ios - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
-        return windows;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -46,42 +58,5 @@ class DefaultFirebaseOptions {
     messagingSenderId: '194931270842',
     projectId: 'eveiloo-flutter',
     storageBucket: 'eveiloo-flutter.firebasestorage.app',
-  );
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDEckM_HqfvhxPzKfTkPqF4tNh7KdflBzU',
-    appId: '1:194931270842:web:ec73cf84204d2bf1c98e83',
-    messagingSenderId: '194931270842',
-    projectId: 'eveiloo-flutter',
-    authDomain: 'eveiloo-flutter.firebaseapp.com',
-    storageBucket: 'eveiloo-flutter.firebasestorage.app',
-    measurementId: 'G-946LLZF0CX',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBvPp4rUudAtxyNIv_GPhIuHYoMZkeDdz8',
-    appId: '1:194931270842:ios:51af81a491db3dc4c98e83',
-    messagingSenderId: '194931270842',
-    projectId: 'eveiloo-flutter',
-    storageBucket: 'eveiloo-flutter.firebasestorage.app',
-    iosBundleId: 'com.example.eveilooEnfant',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBvPp4rUudAtxyNIv_GPhIuHYoMZkeDdz8',
-    appId: '1:194931270842:ios:51af81a491db3dc4c98e83',
-    messagingSenderId: '194931270842',
-    projectId: 'eveiloo-flutter',
-    storageBucket: 'eveiloo-flutter.firebasestorage.app',
-    iosBundleId: 'com.example.eveilooEnfant',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDEckM_HqfvhxPzKfTkPqF4tNh7KdflBzU',
-    appId: '1:194931270842:web:011a7aaee859e77ac98e83',
-    messagingSenderId: '194931270842',
-    projectId: 'eveiloo-flutter',
-    authDomain: 'eveiloo-flutter.firebaseapp.com',
-    storageBucket: 'eveiloo-flutter.firebasestorage.app',
-    measurementId: 'G-1FTLKX02VZ',
   );
 }
