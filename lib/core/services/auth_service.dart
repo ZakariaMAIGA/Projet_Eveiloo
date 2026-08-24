@@ -15,8 +15,6 @@ AuthService({
   final FirebaseAuth _auth;
   final UtilisateurRepository _utilisateurRepository;
 
-
-
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   User? get utilisateurFirebase => _auth.currentUser;
