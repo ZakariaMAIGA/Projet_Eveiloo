@@ -1,4 +1,3 @@
-import 'package:eveiloo_enfant/models/utilisateur.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../repository/utilisateurRepository.dart';
