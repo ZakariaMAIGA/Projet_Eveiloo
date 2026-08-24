@@ -1,3 +1,4 @@
+import 'package:eveiloo_enfant/features/home/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -10,13 +11,8 @@ void main () async {
   );
   runApp(const MyApp());
 }
+ 
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
-}
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -43,7 +39,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const HomePage(),
     );
   }
 }
