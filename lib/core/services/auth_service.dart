@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User;
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../models/utilisateur.dart';
 import '../../repository/utilisateurRepository.dart';
