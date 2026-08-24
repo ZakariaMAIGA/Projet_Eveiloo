@@ -69,7 +69,7 @@ EVEILOO/
 │   │   ├── activities/
 │   │   │   ├── activities_page.dart
 │   │   │   ├── activity_detail_page.dart
-│   │   │   ├── activity_play_page.dart
+│   │   │   ├── activityplay_page.dart
 │   │   │   └── activity_service.dart
 │   │   │
 │   │   ├── progressions/
