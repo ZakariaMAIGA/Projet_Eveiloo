@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
       title: 'Éveiloo Enfant',
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
       ),
       routerConfig: AppRouter.router,
     );
