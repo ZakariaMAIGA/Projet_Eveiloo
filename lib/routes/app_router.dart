@@ -1,4 +1,5 @@
 import 'package:eveiloo_enfant/features/articles/activite_page.dart';
+import 'package:eveiloo_enfant/features/Nootifications/notification.dart';
 import 'package:eveiloo_enfant/features/auth/register_page.dart';
 import 'package:eveiloo_enfant/features/catalogues/catalogue.dart';
 import 'package:eveiloo_enfant/features/profil/profil_page.dart';
@@ -9,6 +10,7 @@ import 'package:eveiloo_enfant/features/auth/login_page.dart';
 import 'package:eveiloo_enfant/features/overview/overview_page.dart';
 import 'package:eveiloo_enfant/widgets/app_bottom_navigation.dart';
 import 'package:go_router/go_router.dart';
+
 
 class AppRouter {
   AppRouter._();
@@ -90,6 +92,11 @@ class AppRouter {
           ),
         ],
       ),
+
+      GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationsPage(),
+    ),
     ],
   );
 }
