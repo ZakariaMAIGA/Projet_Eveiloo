@@ -6,7 +6,9 @@ import 'package:eveiloo_enfant/features/children/children_routes.dart';
 import 'package:eveiloo_enfant/features/profil/profileRoutes.dart';
 import 'package:eveiloo_enfant/features/toys/admin_toys_page.dart';
 import 'package:eveiloo_enfant/features/tutorials/tutorialsRoutes.dart';
+import 'package:eveiloo_enfant/models/favoris.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
+import 'package:eveiloo_enfant/features/favoris/favoris.dart';
 import 'package:eveiloo_enfant/features/home/homeRoutes.dart';
 import 'package:eveiloo_enfant/features/auth/login_page.dart';
 import 'package:eveiloo_enfant/features/overview/overview_page.dart';
@@ -57,7 +59,17 @@ class AppRouter {
         path: '/notifications',
         builder: (context, state) => const NotificationsPage(),
       ),
+      GoRoute(
+        path: AppRoutes.favoris, // ex: '/favoris/:enfantId'
+        name: AppRoutes.favorisName,
+        builder: (context, state) {
+          final enfantId = state.pathParameters['enfantId'] ?? '';
 
+          return FavorisScreen(
+            enfantId: enfantId,
+          );
+        },
+      ),
       // Route Administration ajoutée
       GoRoute(
         path: AppRoutes.adminToys,

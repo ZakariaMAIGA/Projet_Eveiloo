@@ -12,7 +12,6 @@ abstract final class AppRoutes {
   static const tutorials = '/tutorials';
   static const profile = '/profile';
   static const catalogue = '/catalogue';
-
   // Sous-routes du catalogue (imbriquées, relatives à /catalogue)
   static const categories = 'categories'; // -> /catalogue/categories
   static const toys = 'toys'; // -> /catalogue/toys
@@ -23,6 +22,7 @@ abstract final class AppRoutes {
 
   // routes admin
   static const String adminToys = '/admin-toys';
+  static const favoris = '/favoris';
 
   //routes names
 
@@ -42,7 +42,9 @@ abstract final class AppRoutes {
   static const toyDetailName = 'toy-detail';
 
   static const childrenListName = 'children';
+  static const favorisName = 'favoris';
 
   // routes name admin
   static const String adminToysName = 'adminToys';
+  // static const FavorisScreen = '/favoris';
 }
