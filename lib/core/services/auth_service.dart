@@ -1,28 +1,25 @@
-import 'package:eveiloo_enfant/models/utilisateur.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+  import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../repository/utilisateurRepository.dart';
-import '../../models/utilisateur.dart';
+  import '../../repository/utilisateurRepository.dart';
+  import '../../models/utilisateur.dart';
 
-class AuthService {
+  class AuthService {
 
-AuthService({
-  FirebaseAuth? firebaseAuth,
-  UtilisateurRepository? utilisateurRepository,
-})  : _auth = firebaseAuth ?? FirebaseAuth.instance,
-      _utilisateurRepository =
-          utilisateurRepository ?? UtilisateurRepository();
+  AuthService({
+    FirebaseAuth? firebaseAuth,
+    UtilisateurRepository? utilisateurRepository,
+  })  : _auth = firebaseAuth ?? FirebaseAuth.instance,
+        _utilisateurRepository =
+            utilisateurRepository ?? UtilisateurRepository();
 
-  final FirebaseAuth _auth;
-  final UtilisateurRepository _utilisateurRepository;
-
-
+    final FirebaseAuth _auth;
+    final UtilisateurRepository _utilisateurRepository;
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  User? get utilisateurFirebase => _auth.currentUser;
+    User? get utilisateurFirebase => _auth.currentUser;
 
-   Future<void> inscription({
+  Future<void> inscription({
     required String nom,
     required String prenom,
     required String courriel,
@@ -34,52 +31,61 @@ AuthService({
       password: motDePasse,
     );
 
-    final firebaseUser = credential.user;
+      final firebaseUser = credential.user;
 
-    if (firebaseUser == null) {
-      throw Exception('La création du compte a échoué.');
-    }
-
-    await firebaseUser.updateDisplayName('$prenom $nom');
+      if (firebaseUser == null) {
+        throw Exception('La création du compte a échoué.');
+      }
 
     final utilisateur = UtilisateurModel(
       utilisateurId: firebaseUser.uid,
       nom: nom.trim(),
       prenom: prenom.trim(),
       courriel: courriel.trim().toLowerCase(),
-      telephone: telephone?.trim()  ?? '',
+      telephone: telephone?.trim() ?? '',
       role: 'parent',
       dateCreation: DateTime.now(),
     );
 
-    await _utilisateurRepository.creer(utilisateur);
-  }
+      final utilisateur = UtilisateurModel(
+        utilisateurId: firebaseUser.uid,
+        nom: nom.trim(),
+        prenom: prenom.trim(),
+        courriel: courriel.trim().toLowerCase(),
+        telephone: telephone?.trim()  ?? '',
+        role: 'parent',
+        dateCreation: DateTime.now(),
+      );
 
-  Future<void> connexion({
-    required String courriel,
-    required String motDePasse,
-  }) async {
-    final credential = await _auth.signInWithEmailAndPassword(
-      email: courriel.trim(),
-      password: motDePasse,
-    );
+      await _utilisateurRepository.creer(utilisateur);
+    }
 
-    final firebaseUser = credential.user;
+    Future<void> connexion({
+      required String courriel,
+      required String motDePasse,
+    }) async {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: courriel.trim(),
+        password: motDePasse,
+      );
+
+      final firebaseUser = credential.user;
+
+      if (firebaseUser != null) {
+        await _utilisateurRepository
+            .mettreAJourDerniereConnexion(firebaseUser.uid);
+      }
+    }
 
     if (firebaseUser != null) {
-      await _utilisateurRepository
-          .mettreAJourDerniereConnexion(firebaseUser.uid);
+      await _utilisateurRepository.mettreAJourDerniereConnexion(
+        firebaseUser.uid,
+      );
     }
-  }
 
-  Future<void> deconnexion() {
-    return _auth.signOut();
-  }
+    Future<void> reinitialiserMotDePasse(String courriel) {
+      return _auth.sendPasswordResetEmail(email: courriel.trim());
+    }
 
-  Future<void> reinitialiserMotDePasse(String courriel) {
-    return _auth.sendPasswordResetEmail(email: courriel.trim());
   }
-
 }
-
-
