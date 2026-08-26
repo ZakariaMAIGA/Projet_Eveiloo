@@ -9,7 +9,7 @@ abstract final class AppRoutes {
   static const tutorials = '/tutorials';
   static const profile = '/profile';
   static const catalogue = '/catalogue';
-
+  static const FavorisScreen = '/favoris';
 
   static const overviewName = 'overview';
 

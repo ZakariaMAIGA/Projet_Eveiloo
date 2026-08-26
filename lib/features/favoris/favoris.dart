@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import '../../core/constants/AppColors.dart';
 import '../../core/constants/AppFontSize.dart';
 import '../../core/constants/AppSpacing.dart';
-import '../../models/favori.dart';
-import '../../models/jouet.dart';
+import '../../models/favoris.dart';
+import '../../models/jouetModel.dart';
 import '../../repository/favoriRepository.dart';
-import '../../repository/jouetRepository.dart';
+// import '../../repository/jouetRepository.dart';
 import '../../widgets/favori_toy_row.dart';
 
 /// Écran "Mes Favoris" : liste des jouets qu'un enfant a mis en favori,
@@ -35,7 +35,7 @@ class FavorisScreen extends StatefulWidget {
 
 class _FavorisScreenState extends State<FavorisScreen> {
   final FavoriRepository _favoriRepository = FavoriRepository();
-  final JouetRepository _jouetRepository = JouetRepository();
+  // final JouetRepository _jouetRepository = JouetRepository();
 
   static const _filtreTous = 'Tous';
   static const _filtreJouets = 'Jouets';
@@ -51,7 +51,7 @@ class _FavorisScreenState extends State<FavorisScreen> {
     final idsTries = [...ids]..sort();
     if (_jouetsFuture == null || !listEquals(idsTries, _dernierIdsDemandes)) {
       _dernierIdsDemandes = idsTries;
-      _jouetsFuture = _jouetRepository.obtenirParIds(ids);
+      // _jouetsFuture = _jouetRepository.obtenirParIds(ids);
     }
     return _jouetsFuture!;
   }
@@ -91,7 +91,7 @@ class _FavorisScreenState extends State<FavorisScreen> {
             ),
             AppSpacing.verticalGapLg,
             Expanded(
-              child: StreamBuilder<List<FavoriModel>>(
+              child: StreamBuilder<List<Favoris>>(
                 stream: _favoriRepository.observerParEnfant(widget.enfantId),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -165,7 +165,7 @@ class _FavorisScreenState extends State<FavorisScreen> {
                             onVoirLeJouet: () =>
                                 widget.onVoirLeJouet?.call(jouet.jouetId),
                             onRetirerDesFavoris: () =>
-                                _retirerDesFavoris(favori.favoriId),
+                                _retirerDesFavoris(favori.id),
                           );
                         },
                       );

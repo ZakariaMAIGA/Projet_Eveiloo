@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../models/favori.dart';
+import '../models/favoris.dart';
 
 class FavoriRepository {
   FavoriRepository({FirebaseFirestore? firestore})
@@ -11,8 +11,8 @@ class FavoriRepository {
   CollectionReference<Map<String, dynamic>> get _favoris =>
       _firestore.collection('favoris');
 
-  Future<String> ajouter(FavoriModel favori) async {
-    final document = await _favoris.add(favori.toMap());
+  Future<String> ajouter(Favoris favori) async {
+    final document = await _favoris.add(favori.toJson());
     return document.id;
   }
 
@@ -20,20 +20,20 @@ class FavoriRepository {
     return _favoris.doc(favoriId).delete();
   }
 
-  Future<FavoriModel?> obtenirParId(String favoriId) async {
+  Future<Favoris?> obtenirParId(String favoriId) async {
     final document = await _favoris.doc(favoriId).get();
 
     if (!document.exists) return null;
 
-    return FavoriModel.fromFirestore(document);
+    return Favoris.fromFirestore(document);
   }
 
-  Stream<List<FavoriModel>> observerParEnfant(String enfantId) {
+  Stream<List<Favoris>> observerParEnfant(String enfantId) {
     return _favoris
         .where('enfantId', isEqualTo: enfantId)
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) => FavoriModel.fromFirestore(doc))
+            .map((doc) => Favoris.fromFirestore(doc))
             .toList());
   }
 

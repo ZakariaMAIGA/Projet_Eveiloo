@@ -7,6 +7,7 @@ import 'package:eveiloo_enfant/features/tutorials/tutorial_page.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:eveiloo_enfant/features/home/home_page.dart';
 import 'package:eveiloo_enfant/features/auth/login_page.dart';
+import 'package:eveiloo_enfant/features/favoris/favoris.dart';
 import 'package:eveiloo_enfant/features/overview/overview_page.dart';
 import 'package:eveiloo_enfant/widgets/app_bottom_navigation.dart';
 import 'package:go_router/go_router.dart';
@@ -92,10 +93,16 @@ class AppRouter {
           ),
         ],
       ),
-
+      
       GoRoute(
       path: '/notifications',
       builder: (context, state) => const NotificationsPage(),
+    ),
+      GoRoute(
+      path: '/favoris',
+      builder: (context, state) => const FavorisScreen(
+        enfantId: "403ZaeYfDCM3DVHVsxSV",
+      ),
     ),
     ],
   );

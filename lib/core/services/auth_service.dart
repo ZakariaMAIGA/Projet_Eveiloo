@@ -47,15 +47,6 @@
       dateCreation: DateTime.now(),
     );
 
-      final utilisateur = UtilisateurModel(
-        utilisateurId: firebaseUser.uid,
-        nom: nom.trim(),
-        prenom: prenom.trim(),
-        courriel: courriel.trim().toLowerCase(),
-        telephone: telephone?.trim()  ?? '',
-        role: 'parent',
-        dateCreation: DateTime.now(),
-      );
 
       await _utilisateurRepository.creer(utilisateur);
     }
@@ -71,21 +62,14 @@
 
       final firebaseUser = credential.user;
 
-      if (firebaseUser != null) {
-        await _utilisateurRepository
-            .mettreAJourDerniereConnexion(firebaseUser.uid);
-      }
-    }
-
     if (firebaseUser != null) {
       await _utilisateurRepository.mettreAJourDerniereConnexion(
         firebaseUser.uid,
       );
     }
-
+    }
     Future<void> reinitialiserMotDePasse(String courriel) {
       return _auth.sendPasswordResetEmail(email: courriel.trim());
     }
-
+    
   }
-}
