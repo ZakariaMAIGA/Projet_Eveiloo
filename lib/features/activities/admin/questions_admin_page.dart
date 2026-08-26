@@ -261,17 +261,23 @@ class _QuestionCard extends ConsumerWidget {
                     );
 
                     if(confirm==true){
-
-                      await ref.read(
-                        questionServiceProvider,
-                      ).deleteQuestion(
-
-                        activityId,
-
-                        question.questionId,
-
-                      );
-
+                      try {
+                        await ref.read(questionServiceProvider).deleteQuestion(
+                          activityId,
+                          question.questionId,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Question supprimée')),
+                          );
+                        }
+                      } catch (error) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Impossible de supprimer : $error')),
+                          );
+                        }
+                      }
                     }
 
                   },

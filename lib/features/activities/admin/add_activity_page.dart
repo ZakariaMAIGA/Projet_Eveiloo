@@ -5,6 +5,26 @@ import 'package:go_router/go_router.dart';
 import '../../../models/activity_model.dart';
 import '../../../routes/app_route.dart';
 import '../activity_service.dart';
+import '../widgets/image_url_validation.dart';
+
+String? _validateInteger(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'Champ obligatoire';
+  }
+  return int.tryParse(value.trim()) == null
+      ? 'Entrez un nombre entier'
+      : null;
+}
+
+String? _validateAge(String? value) {
+  final error = _validateInteger(value);
+  if (error != null) return error;
+
+  final age = int.parse(value!.trim());
+  return age < 0 || age > 12
+      ? 'L’âge doit être compris entre 0 et 12 ans'
+      : null;
+}
 
 class AddActivityPage extends StatefulWidget {
   const AddActivityPage({super.key});
@@ -18,6 +38,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
 
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _objectiveController = TextEditingController();
   final _imageController = TextEditingController();
 
   final _minAgeController = TextEditingController();
@@ -37,6 +58,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _objectiveController.dispose();
     _imageController.dispose();
     _minAgeController.dispose();
     _maxAgeController.dispose();
@@ -49,32 +71,63 @@ class _AddActivityPageState extends State<AddActivityPage> {
   Future<void> saveActivity() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final minAge = int.parse(_minAgeController.text.trim());
+    final maxAge = int.parse(_maxAgeController.text.trim());
+    if (minAge > maxAge) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(
+          'L’âge minimum ne peut pas être supérieur à l’âge maximum',
+        )),
+      );
+      return;
+    }
+
     setState(() {
       isLoading = true;
     });
 
-    final activity = ActivityModel(
-      activityId: const Uuid().v4(),
-      title: _titleController.text.trim(),
-      description: _descriptionController.text.trim(),
-        imageUrl: _imageController.text.trim().isEmpty
+    try {
+      final activity = ActivityModel(
+        activityId: const Uuid().v4(),
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        objective: _objectiveController.text.trim().isEmpty
           ? null
-          : _imageController.text.trim(),
-      minAge: int.parse(_minAgeController.text),
-      maxAge: int.parse(_maxAgeController.text),
-      activityType: activityType,
-      competenceCategory: competenceCategory,
-      duration: int.parse(_durationController.text),
-      rewardPoints: int.parse(_rewardController.text),
-      successThreshold: int.parse(_successController.text),
-      progress: 0.0,
-      createdAt: DateTime.now(),
-    );
+          : _objectiveController.text.trim(),
+        imageUrl: _imageController.text.trim().isEmpty
+            ? null
+            : _imageController.text.trim(),
+        minAge: minAge,
+        maxAge: maxAge,
+        activityType: activityType,
+        competenceCategory: competenceCategory,
+        duration: int.parse(_durationController.text),
+        rewardPoints: int.parse(_rewardController.text),
+        successThreshold: int.parse(_successController.text),
+        progress: 0.0,
+        createdAt: DateTime.now(),
+      );
 
-    await _service.addActivity(activity);
+      await _service.addActivity(activity);
 
-    if (mounted) {
-      context.go(AppRoutes.adminActivities);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Activité ajoutée avec succès')),
+        );
+        context.go(AppRoutes.adminActivities);
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Impossible d\'enregistrer : $error')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -82,6 +135,11 @@ class _AddActivityPageState extends State<AddActivityPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => context.go(AppRoutes.adminActivities),
+          tooltip: 'Retour à la liste des activités',
+          icon: const Icon(Icons.arrow_back),
+        ),
         title: const Text("Nouvelle activité"),
         actions: [
           IconButton(
@@ -112,7 +170,19 @@ class _AddActivityPageState extends State<AddActivityPage> {
               controller: _descriptionController,
               maxLines: 3,
               decoration: const InputDecoration(
-                labelText: "Description",
+                labelText: "Texte à lire",
+                hintText: "Écris ici l'histoire que l'enfant doit lire avant les questions",
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            TextFormField(
+              controller: _objectiveController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: "Objectif",
+                hintText: "Ex. Lis attentivement l'histoire et réponds aux questions",
               ),
             ),
 
@@ -123,8 +193,9 @@ class _AddActivityPageState extends State<AddActivityPage> {
               keyboardType: TextInputType.url,
               decoration: const InputDecoration(
                 labelText: "Image (URL)",
-                hintText: "https://exemple.com/image.jpg",
+                hintText: "https://i.pinimg.com/.../image.jpg",
               ),
+              validator: validateImageUrl,
             ),
 
             const SizedBox(height: 15),
@@ -135,8 +206,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
               decoration: const InputDecoration(
                 labelText: "Durée (en secondes)",
               ),
-              validator: (value) =>
-                  value!.isEmpty ? "Champ obligatoire" : null,
+              validator: _validateInteger,
             ),
 
             const SizedBox(height: 15),
@@ -213,8 +283,9 @@ class _AddActivityPageState extends State<AddActivityPage> {
                     controller: _minAgeController,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                      labelText: "Age min",
+                      labelText: "Age min (0-12)",
                     ),
+                    validator: _validateAge,
                   ),
                 ),
 
@@ -225,8 +296,9 @@ class _AddActivityPageState extends State<AddActivityPage> {
                     controller: _maxAgeController,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                      labelText: "Age max",
+                      labelText: "Age max (0-12)",
                     ),
+                    validator: _validateAge,
                   ),
                 ),
 
@@ -245,6 +317,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
                     decoration: const InputDecoration(
                       labelText: "Points",
                     ),
+                    validator: _validateInteger,
                   ),
                 ),
 
@@ -257,6 +330,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
                     decoration: const InputDecoration(
                       labelText: "Seuil (%)",
                     ),
+                    validator: _validateInteger,
                   ),
                 ),
 

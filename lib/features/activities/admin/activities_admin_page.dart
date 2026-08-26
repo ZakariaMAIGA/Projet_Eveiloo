@@ -209,11 +209,22 @@ class _ActivityCard extends ConsumerWidget {
                     );
 
                     if (confirm == true) {
-                      await ref
-                          .read(activityServiceProvider)
-                          .deleteActivity(
-                            activity.activityId,
+                      try {
+                        await ref.read(activityServiceProvider).deleteActivity(
+                          activity.activityId,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Activité supprimée')),
                           );
+                        }
+                      } catch (error) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Impossible de supprimer : $error')),
+                          );
+                        }
+                      }
                     }
                   },
                 ),

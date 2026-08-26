@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,8 +7,10 @@ import '../../../models/activity_model.dart';
 import '../../../models/proposition.dart';
 import '../../../models/question_model.dart';
 import '../providers/question_provider.dart';
+import '../activity_service.dart';
 import '../widgets/answer_button.dart';
 import '../widgets/question_header.dart';
+import '../widgets/question_answer_utils.dart';
 import 'activity_result_page.dart';
 
 class ActivityPlayPage extends ConsumerStatefulWidget {
@@ -25,13 +29,79 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
   int currentQuestion = 0;
   int score = 0;
   bool answered = false;
+  bool readingStep = true;
+  late int remainingSeconds;
+  Timer? countdownTimer;
+  bool activityFinished = false;
+  int totalQuestionCount = 0;
+  String? sessionId;
   String? selectedAnswer;
   final TextEditingController textController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _startSession();
+    remainingSeconds = widget.activity.duration;
+    if (remainingSeconds > 0) {
+      countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!mounted || activityFinished) return;
+        if (remainingSeconds <= 1) {
+          countdownTimer?.cancel();
+          setState(() => remainingSeconds = 0);
+          finishActivity();
+          return;
+        }
+        setState(() => remainingSeconds--);
+      });
+    }
+  }
+
+  Future<void> _startSession() async {
+    try {
+      sessionId = await ActivityService().startActivitySession(
+        widget.activity.activityId,
+        widget.activity.duration,
+      );
+    } catch (_) {
+      // The activity can still be played if the session marker cannot be written.
+    }
+  }
+
+  bool get hasReadingStep {
+    final category = widget.activity.competenceCategory.toLowerCase();
+    final type = widget.activity.activityType.toLowerCase();
+    return category.contains('lecture') || type.contains('lecture');
+  }
+
+  @override
   void dispose() {
+    countdownTimer?.cancel();
+    final currentSessionId = sessionId;
+    if (currentSessionId != null) {
+      ActivityService().endActivitySession(
+        widget.activity.activityId,
+        currentSessionId,
+      );
+    }
     textController.dispose();
     super.dispose();
+  }
+
+  void finishActivity([List<QuestionModel>? questions]) {
+    if (activityFinished || !mounted) return;
+    activityFinished = true;
+    countdownTimer?.cancel();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ActivityResultPage(
+          score: score,
+          totalQuestions: questions?.length ?? totalQuestionCount,
+          activity: widget.activity,
+        ),
+      ),
+    );
   }
 
   void nextQuestion(List<QuestionModel> questions) {
@@ -43,16 +113,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
         textController.clear();
       });
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ActivityResultPage(
-            score: score,
-            totalQuestions: questions.length,
-            activity: widget.activity,
-          ),
-        ),
-      );
+      finishActivity(questions);
     }
   }
 
@@ -64,7 +125,10 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     switch (question.type) {
       case QuestionType.multipleChoice:
         // For multiple choice, answer is a Proposition object
-        correct = answer is Proposition && answer.id == question.correctAnswer;
+        correct = answer is Proposition &&
+          (answer.id.toLowerCase() == question.correctAnswer.toLowerCase() ||
+            answer.texte.trim().toLowerCase() ==
+              question.correctAnswer.trim().toLowerCase());
         break;
 
       case QuestionType.numeric:
@@ -84,7 +148,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     }
 
     if (correct) {
-      score += widget.activity.rewardPoints;
+      score++;
     }
 
     setState(() {
@@ -114,7 +178,11 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
           text: proposition.texte,
           isSelected: selectedAnswer == proposition.texte,
           showResult: answered,
-          isCorrect: proposition.id == question.correctAnswer,
+          isCorrect: normalizeChoiceAnswer(
+                question.correctAnswer,
+                question.options,
+              ) ==
+              proposition.id,
           onTap: () {
             checkAnswer(
               question,
@@ -188,6 +256,94 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     );
   }
 
+  Widget buildReadingStep(int totalQuestions) {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+        QuestionHeader(
+          current: 1,
+          total: totalQuestions,
+          title: widget.activity.title,
+          onClose: () => Navigator.pop(context),
+        ),
+        const SizedBox(height: 10),
+        _TimerBadge(seconds: remainingSeconds),
+        const SizedBox(height: 48),
+        const Text(
+          'Histoire 1',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF29258F),
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          widget.activity.title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Color(0xFF29258F),
+            fontSize: 25,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 28),
+        if (widget.activity.imageUrl != null &&
+            widget.activity.imageUrl!.isNotEmpty)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.network(
+              widget.activity.imageUrl!,
+              height: 245,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, error, stackTrace) => const ColoredBox(
+                color: Color(0xFFDDF4FB),
+                child: Icon(Icons.broken_image_outlined,
+                    color: Color(0xFF2D8DD5), size: 72),
+              ),
+            ),
+          ),
+        if (widget.activity.imageUrl == null ||
+            widget.activity.imageUrl!.isEmpty)
+          Container(
+            height: 180,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: const Color(0xFFDDF4FB),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.menu_book_rounded,
+                color: Color(0xFF2D8DD5), size: 72),
+          ),
+        const SizedBox(height: 38),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            widget.activity.description,
+            style: const TextStyle(
+              color: Color(0xFF29258F),
+              fontSize: 19,
+              height: 1.25,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 36),
+        SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: ElevatedButton(
+            onPressed: () => setState(() => readingStep = false),
+            child: const Text('Suivant', style: TextStyle(fontSize: 23)),
+          ),
+        ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final questionsAsync = ref.watch(questionsProvider(widget.activity.activityId));
@@ -208,9 +364,17 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
           child: Text(e.toString()),
         ),
         data: (questions) {
+          totalQuestionCount = questions.length;
           if (questions.isEmpty) {
             return const Center(
               child: Text("Aucune question"),
+            );
+          }
+
+          if (hasReadingStep && readingStep) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              child: buildReadingStep(questions.length),
             );
           }
 
@@ -224,8 +388,12 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
                 QuestionHeader(
                   current: currentQuestion + 1,
                   total: questions.length,
+                  title: widget.activity.title,
+                  onClose: () => Navigator.pop(context),
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 10),
+                _TimerBadge(seconds: remainingSeconds),
+                const SizedBox(height: 20),
                 Text(
                   question.statement,
                   style: const TextStyle(
@@ -253,6 +421,48 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _TimerBadge extends StatelessWidget {
+  const _TimerBadge({required this.seconds});
+
+  final int seconds;
+
+  @override
+  Widget build(BuildContext context) {
+    final minutes = seconds ~/ 60;
+    final remaining = seconds % 60;
+    final urgent = seconds <= 10;
+
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: urgent ? const Color(0xFFFFE1E1) : const Color(0xFFDDF4FB),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.timer_outlined,
+                size: 20,
+                color: urgent ? const Color(0xFFD93025) : const Color(0xFF2D8DD5)),
+            const SizedBox(width: 5),
+            Text(
+              minutes > 0
+                  ? '$minutes:${remaining.toString().padLeft(2, '0')}'
+                  : '${remaining}s',
+              style: TextStyle(
+                color: urgent ? const Color(0xFFD93025) : const Color(0xFF29258F),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

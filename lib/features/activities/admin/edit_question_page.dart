@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../models/proposition.dart';
 import '../../../models/question_model.dart';
 import '../question_service.dart';
+import '../widgets/question_answer_utils.dart';
 
 class EditQuestionPage extends StatefulWidget {
   final String activityId;
@@ -50,7 +51,7 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
         TextEditingController(text: widget.question.statement);
 
     optionAController =
-        TextEditingController(text: options.length > 0 ? options[0].texte : "");
+        TextEditingController(text: options.isNotEmpty ? options[0].texte : "");
 
     optionBController =
         TextEditingController(text: options.length > 1 ? options[1].texte : "");
@@ -101,45 +102,57 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
       loading = true;
     });
 
-    final updatedQuestion = widget.question.copyWith(
-      statement: statementController.text.trim(),
-      type: type,
-      options: [
-        Proposition(
-          id: 'A',
-          texte: optionAController.text.trim(),
-        ),
-        Proposition(
-          id: 'B',
-          texte: optionBController.text.trim(),
-        ),
-        Proposition(
-          id: 'C',
-          texte: optionCController.text.trim(),
-        ),
-        Proposition(
-          id: 'D',
-          texte: optionDController.text.trim(),
-        ),
-      ],
-      correctAnswer: correctAnswerController.text.trim(),
-      correctNumericAnswer: numericAnswerController.text.isEmpty
-          ? null
-          : double.parse(numericAnswerController.text),
-      tolerance: toleranceController.text.isEmpty
-          ? 0
-          : double.parse(toleranceController.text),
-      freeTextAnswer: freeTextController.text.trim(),
-      caseSensitive: caseSensitive,
-    );
+    final options = [
+      Proposition(id: 'A', texte: optionAController.text.trim()),
+      Proposition(id: 'B', texte: optionBController.text.trim()),
+      Proposition(id: 'C', texte: optionCController.text.trim()),
+      Proposition(id: 'D', texte: optionDController.text.trim()),
+    ];
+    final normalizedAnswer = type == QuestionType.multipleChoice
+        ? normalizeChoiceAnswer(correctAnswerController.text, options)
+        : correctAnswerController.text.trim();
+    if (type == QuestionType.multipleChoice && normalizedAnswer == null) {
+      setState(() => loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(
+          'Indiquez la lettre ou le texte exact d’une réponse',
+        )),
+      );
+      return;
+    }
 
-    await service.updateQuestion(
-      widget.activityId,
-      updatedQuestion,
-    );
+    try {
+      final updatedQuestion = widget.question.copyWith(
+        statement: statementController.text.trim(),
+        type: type,
+        options: options,
+        correctAnswer: normalizedAnswer ?? '',
+        correctNumericAnswer: numericAnswerController.text.isEmpty
+            ? null
+            : double.parse(numericAnswerController.text),
+        tolerance: toleranceController.text.isEmpty
+            ? 0
+            : double.parse(toleranceController.text),
+        freeTextAnswer: freeTextController.text.trim(),
+        caseSensitive: caseSensitive,
+      );
 
-    if (mounted) {
-      Navigator.pop(context);
+      await service.updateQuestion(widget.activityId, updatedQuestion);
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Question modifiée avec succès')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Impossible de modifier : $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
   }
 
@@ -171,7 +184,8 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
             TextFormField(
               controller: correctAnswerController,
               decoration: const InputDecoration(
-                labelText: "Bonne réponse",
+                labelText: "Bonne réponse (lettre ou texte)",
+                hintText: "Ex. A ou Dans la grotte sombre",
               ),
             ),
           ],
@@ -225,6 +239,11 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'Retour aux questions',
+          icon: const Icon(Icons.arrow_back),
+        ),
         title: const Text("Modifier une question"),
       ),
       body: Form(
@@ -233,7 +252,7 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
           padding: const EdgeInsets.all(20),
           children: [
             DropdownButtonFormField<QuestionType>(
-              value: type,
+              initialValue: type,
               decoration: const InputDecoration(
                 labelText: "Type de question",
               ),

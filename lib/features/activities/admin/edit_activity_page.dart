@@ -2,6 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../../../models/activity_model.dart';
 import '../activity_service.dart';
+import '../widgets/image_url_validation.dart';
+
+String? _validateAge(String? value) {
+  if (value == null || value.trim().isEmpty) return 'Champ obligatoire';
+  final age = int.tryParse(value.trim());
+  if (age == null) return 'Entrez un nombre entier';
+  return age < 0 || age > 12
+      ? 'L’âge doit être compris entre 0 et 12 ans'
+      : null;
+}
 
 class EditActivityPage extends StatefulWidget {
   final ActivityModel activity;
@@ -33,6 +43,18 @@ class _EditActivityPageState extends State<EditActivityPage> {
   bool loading = false;
 
   final ActivityService service = ActivityService();
+
+  String? _validateMaxAge(String? value) {
+    final error = _validateAge(value);
+    if (error != null) return error;
+
+    final minAge = int.tryParse(minAgeController.text.trim());
+    final maxAge = int.tryParse(value!.trim());
+    if (minAge != null && maxAge != null && minAge > maxAge) {
+      return 'L’âge maximum doit être supérieur ou égal à l’âge minimum';
+    }
+    return null;
+  }
 
   @override
   void initState() {
@@ -82,27 +104,52 @@ class _EditActivityPageState extends State<EditActivityPage> {
   Future<void> updateActivity() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final minAge = int.tryParse(minAgeController.text.trim());
+    final maxAge = int.tryParse(maxAgeController.text.trim());
+    if (minAge == null || maxAge == null) return;
+    if (minAge > maxAge) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(
+          'L’âge minimum ne peut pas être supérieur à l’âge maximum',
+        )),
+      );
+      return;
+    }
+
     setState(() {
       loading = true;
     });
 
-    final activity = widget.activity.copyWith(
-      title: titleController.text.trim(),
-      description: descriptionController.text.trim(),
-      imageUrl: imageController.text.trim(),
-      objective: objectiveController.text.trim(),
-      minAge: int.parse(minAgeController.text),
-      maxAge: int.parse(maxAgeController.text),
-      activityType: activityType,
-      competenceCategory: competenceCategory,
-      rewardPoints: int.parse(rewardController.text),
-      successThreshold: int.parse(successController.text),
-    );
+    try {
+      final activity = widget.activity.copyWith(
+        title: titleController.text.trim(),
+        description: descriptionController.text.trim(),
+        imageUrl: imageController.text.trim(),
+        objective: objectiveController.text.trim(),
+        minAge: minAge,
+        maxAge: maxAge,
+        activityType: activityType,
+        competenceCategory: competenceCategory,
+        rewardPoints: int.parse(rewardController.text),
+        successThreshold: int.parse(successController.text),
+      );
 
-    await service.updateActivity(activity);
+      await service.updateActivity(activity);
 
-    if (mounted) {
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Activité modifiée avec succès')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Impossible de modifier : $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
   }
 
@@ -110,6 +157,11 @@ class _EditActivityPageState extends State<EditActivityPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'Retour à la liste des activités',
+          icon: const Icon(Icons.arrow_back),
+        ),
         title: const Text("Modifier activité"),
       ),
       body: Form(
@@ -131,7 +183,8 @@ class _EditActivityPageState extends State<EditActivityPage> {
               controller: descriptionController,
               maxLines: 3,
               decoration: const InputDecoration(
-                labelText: "Description",
+                labelText: "Texte à lire",
+                hintText: "Écris ici l'histoire que l'enfant doit lire avant les questions",
               ),
             ),
 
@@ -150,13 +203,15 @@ class _EditActivityPageState extends State<EditActivityPage> {
               controller: imageController,
               decoration: const InputDecoration(
                 labelText: "Image",
+                hintText: "https://i.pinimg.com/.../image.jpg",
               ),
+              validator: validateImageUrl,
             ),
 
             const SizedBox(height: 15),
 
             DropdownButtonFormField<String>(
-              value: activityType,
+              initialValue: activityType,
               items: const [
                 DropdownMenuItem(
                     value: "Lecture",
@@ -181,7 +236,7 @@ class _EditActivityPageState extends State<EditActivityPage> {
             const SizedBox(height: 15),
 
             DropdownButtonFormField<String>(
-              value: competenceCategory,
+              initialValue: competenceCategory,
               items: const [
                 DropdownMenuItem(
                     value: "Lecture",
@@ -213,7 +268,8 @@ class _EditActivityPageState extends State<EditActivityPage> {
                     controller: minAgeController,
                     keyboardType: TextInputType.number,
                     decoration:
-                        const InputDecoration(labelText: "Age min"),
+                      const InputDecoration(labelText: "Age min (0-12)"),
+                    validator: _validateAge,
                   ),
                 ),
 
@@ -224,7 +280,8 @@ class _EditActivityPageState extends State<EditActivityPage> {
                     controller: maxAgeController,
                     keyboardType: TextInputType.number,
                     decoration:
-                        const InputDecoration(labelText: "Age max"),
+                      const InputDecoration(labelText: "Age max (0-12)"),
+                    validator: _validateMaxAge,
                   ),
                 ),
               ],

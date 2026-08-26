@@ -23,6 +23,17 @@ class QuestionImage extends StatelessWidget {
           height: 220,
           width: double.infinity,
           fit: BoxFit.cover,
+          errorBuilder: (_, error, stackTrace) => Container(
+            height: 220,
+            width: double.infinity,
+            color: const Color(0xFFDDF4FB),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.broken_image_outlined,
+              color: Color(0xFF2D8DD5),
+              size: 58,
+            ),
+          ),
         ),
       ),
     );

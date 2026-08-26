@@ -8,6 +8,41 @@ class ActivityService {
 
   final String collection = "activities";
 
+  CollectionReference<Map<String, dynamic>> _activeSessions(
+    String activityId,
+  ) => _firestore.collection(collection).doc(activityId).collection('activeSessions');
+
+  Future<void> ensureActivityIsNotInUse(String activityId) async {
+    final snapshot = await _activeSessions(activityId)
+        .where('expiresAt', isGreaterThan: Timestamp.now())
+        .limit(1)
+        .get();
+    if (snapshot.docs.isNotEmpty) {
+      throw StateError(
+        'Cette activité est actuellement utilisée par un enfant',
+      );
+    }
+  }
+
+  Future<String> startActivitySession(
+    String activityId,
+    int durationSeconds,
+  ) async {
+    final session = _activeSessions(activityId).doc();
+    final expiresAt = DateTime.now().add(
+      Duration(seconds: durationSeconds > 0 ? durationSeconds + 30 : 1800),
+    );
+    await session.set({
+      'startedAt': Timestamp.now(),
+      'expiresAt': Timestamp.fromDate(expiresAt),
+    });
+    return session.id;
+  }
+
+  Future<void> endActivitySession(String activityId, String sessionId) {
+    return _activeSessions(activityId).doc(sessionId).delete();
+  }
+
   /// ===========================
   /// ACTIVITIES
   /// ===========================
@@ -22,6 +57,7 @@ class ActivityService {
 
   /// Modifier une activité
   Future<void> updateActivity(ActivityModel activity) async {
+    await ensureActivityIsNotInUse(activity.activityId);
     await _firestore
         .collection(collection)
         .doc(activity.activityId)
@@ -30,6 +66,7 @@ class ActivityService {
 
   /// Supprimer une activité
   Future<void> deleteActivity(String activityId) async {
+    await ensureActivityIsNotInUse(activityId);
     await _firestore
         .collection(collection)
         .doc(activityId)
@@ -74,6 +111,7 @@ class ActivityService {
       String activityId,
       QuestionModel question,
       ) async {
+        await ensureActivityIsNotInUse(activityId);
     await _firestore
         .collection(collection)
         .doc(activityId)
@@ -88,6 +126,7 @@ class ActivityService {
       String activityId,
       QuestionModel question,
       ) async {
+        await ensureActivityIsNotInUse(activityId);
     await _firestore
         .collection(collection)
         .doc(activityId)
@@ -102,6 +141,7 @@ class ActivityService {
       String activityId,
       String questionId,
       ) async {
+        await ensureActivityIsNotInUse(activityId);
     await _firestore
         .collection(collection)
         .doc(activityId)

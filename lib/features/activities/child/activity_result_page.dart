@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/activity_model.dart';
-import 'activity_play_page.dart';
 
 class ActivityResultPage extends StatelessWidget {
   final ActivityModel activity;
@@ -16,11 +15,8 @@ class ActivityResultPage extends StatelessWidget {
   });
 
   double get percentage {
-    final maxScore = activity.rewardPoints * totalQuestions;
-
-    if (maxScore == 0) return 0;
-
-    return (score / maxScore) * 100;
+    if (totalQuestions == 0) return 0;
+    return (score / totalQuestions) * 100;
   }
 
   int get stars {
@@ -48,190 +44,238 @@ class ActivityResultPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final completedProgress = totalQuestions == 0
+        ? 0.0
+        : (score / totalQuestions).clamp(0.0, 1.0);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 12, 22, 18),
-
-          child: Column(
-            children: [
-
-              const SizedBox(height: 20),
-
-              const Text('Bravo !', style: TextStyle(color: Color(0xFF2D8DD5), fontSize: 32, fontWeight: FontWeight.w800)),
-
-              const SizedBox(height: 20),
-
-              Text(
-                'Tu as terminé cette activité',
-                style: const TextStyle(
-                  color: Color(0xFF29258F),
-                  fontSize: 23,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: 20),
-
-              Text(
-                'Score : $score/$totalQuestions   +${score * activity.rewardPoints} pts',
-                style: const TextStyle(color: Color(0xFF29258F), fontSize: 21, fontWeight: FontWeight.w800),
-              ),
-
-              const SizedBox(height: 35),
-
-              Card(
-                color: const Color(0xFFDDF4FB),
-                elevation: 5,
-
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-
-                child: Padding(
-                  padding: const EdgeInsets.all(25),
-
-                  child: Column(
-
-                    children: [
-
-                      Text(
-                        "$score pts",
-                        style: const TextStyle(
-                          color: Color(0xFF29258F),
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(22, 12, 22, 18),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Bravo !',
+                      style: TextStyle(
+                        color: Color(0xFF2D8DD5),
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
                       ),
-
-                      const SizedBox(height: 15),
-
-                      Text(
-                        "${percentage.toStringAsFixed(0)} %",
-                        style: const TextStyle(
-                          color: Color(0xFF29258F),
-                          fontSize: 22,
-                        ),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text(
+                      'Tu as terminé cette activité',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Color(0xFF29258F),
+                        fontSize: 23,
+                        fontWeight: FontWeight.bold,
                       ),
-
-                      const SizedBox(height: 25),
-
-                      Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
-
-                        children: List.generate(
-                          3,
-                          (index) {
-
-                            return Icon(
-
-                              index < stars
-                                  ? Icons.star
-                                  : Icons.star_border,
-
-                              color: Colors.amber,
-
-                              size: 45,
-
-                            );
-
-                          },
+                    ),
+                    const _ResultIllustration(),
+                    _ResultSummary(
+                      score: score,
+                      totalQuestions: totalQuestions,
+                      points: score * activity.rewardPoints,
+                    ),
+                    const SizedBox(height: 28),
+                    _ProgressSummary(
+                      score: score,
+                      totalQuestions: totalQuestions,
+                      progress: completedProgress,
+                    ),
+                    const SizedBox(height: 54),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.popUntil(
+                          context,
+                          (route) => route.isFirst,
                         ),
-
-                      )
-
-                    ],
-
-                  ),
-
-                ),
-
-              ),
-
-              const Spacer(),
-
-              SizedBox(
-
-                width: double.infinity,
-
-                height: 55,
-
-                child: ElevatedButton.icon(
-
-                  icon: const Icon(Icons.refresh),
-
-                  label: const Text("Continuer"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2D8DD5),
-                    foregroundColor: Colors.white,
-                  ),
-
-                  onPressed: () {
-
-                    Navigator.pushReplacement(
-
-                      context,
-
-                      MaterialPageRoute(
-
-                        builder: (_) => ActivityPlayPage(
-
-                          activity: activity,
-
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2D8DD5),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-
+                        child: const Text('Continuer', style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                        )),
                       ),
-
-                    );
-
-                  },
-
+                    ),
+                  ],
                 ),
-
               ),
-
-              const SizedBox(height: 15),
-
-              SizedBox(
-
-                width: double.infinity,
-
-                height: 55,
-
-                child: OutlinedButton.icon(
-
-                  icon: const Icon(Icons.home),
-
-                  label: const Text("Retour"),
-
-                  onPressed: () {
-
-                    Navigator.popUntil(
-
-                      context,
-
-                      (route) => route.isFirst,
-
-                    );
-
-                  },
-
-                ),
-
-              ),
-
-            ],
-
-          ),
-
+            ),
+            const _ResultNavigationBar(),
+          ],
         ),
-
       ),
-
     );
   }
+}
 
+class _ResultIllustration extends StatelessWidget {
+  const _ResultIllustration();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 265,
+      child: ClipRect(
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: 0.78,
+          child: Image.asset(
+            'assets/images/logo_eveiloo.png',
+            width: 270,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ResultSummary extends StatelessWidget {
+  const _ResultSummary({required this.score, required this.totalQuestions, required this.points});
+
+  final int score;
+  final int totalQuestions;
+  final int points;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 19, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDDF4FB),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _ResultValue(label: 'Score', value: '$score/$totalQuestions')),
+          Container(width: 1, height: 62, color: Colors.black38),
+          Expanded(child: _ResultValue(label: 'Point gagnés', value: '+$points pts', icon: Icons.star)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ResultValue extends StatelessWidget {
+  const _ResultValue({required this.label, required this.value, this.icon});
+
+  final String label;
+  final String value;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(label, style: const TextStyle(color: Color(0xFF29258F), fontSize: 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) const Icon(Icons.star, color: Color(0xFFFFD600), size: 38),
+            Text(value, style: const TextStyle(color: Color(0xFF29258F), fontSize: 28, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ProgressSummary extends StatelessWidget {
+  const _ProgressSummary({required this.score, required this.totalQuestions, required this.progress});
+
+  final int score;
+  final int totalQuestions;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(19, 25, 9, 12),
+      decoration: BoxDecoration(color: const Color(0xFFDDF4FB), borderRadius: BorderRadius.circular(10)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Progression de l’activité', style: TextStyle(color: Color(0xFF29258F), fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Text('$score/$totalQuestions histoires lues', style: const TextStyle(color: Color(0xFF29258F), fontSize: 20, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(5),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: progress),
+              duration: const Duration(milliseconds: 700),
+              builder: (_, value, _) => LinearProgressIndicator(
+                value: value,
+                minHeight: 15,
+                backgroundColor: const Color(0xFFD0D0D0),
+                valueColor: const AlwaysStoppedAnimation(Color(0xFF2D8DD5)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ResultNavigationBar extends StatelessWidget {
+  const _ResultNavigationBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 70,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFE5E5E5))),
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _ResultNavigationItem(icon: Icons.home, label: 'Accueil'),
+          _ResultNavigationItem(icon: Icons.live_tv_outlined, label: 'Tutoriel'),
+          _ResultNavigationItem(icon: Icons.toys_outlined, label: 'Catalogue'),
+          _ResultNavigationItem(icon: Icons.directions_run, label: 'Activité'),
+          _ResultNavigationItem(icon: Icons.person, label: 'Profil'),
+        ],
+      ),
+    );
+  }
+}
+
+class _ResultNavigationItem extends StatelessWidget {
+  const _ResultNavigationItem({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, color: const Color(0xFF2D8DD5), size: 28),
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.black87)),
+      ],
+    );
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/activity_model.dart';
+import '../widgets/activity_category.dart';
 import 'activity_play_page.dart';
 
 class ActivityDetailPage extends StatelessWidget {
@@ -13,6 +14,8 @@ class ActivityDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final category = categoryStyle(activity.competenceCategory);
+    final progress = (activity.progress / 100).clamp(0.0, 1.0);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -34,21 +37,37 @@ class ActivityDetailPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            Hero(
-              tag: activity.activityId,
-              child: activity.imageUrl != null
-                  ? Image.network(
-                      activity.imageUrl!,
-                      width: 112,
-                                height: 112,
-                      fit: BoxFit.cover,
-                    )
-                  : Container(
-                      width: 112,
-                      height: 112,
-                      color: const Color(0xFFFFE4F0),
-                      child: const Icon(Icons.menu_book_rounded, color: Color(0xFFE91E9B), size: 52),
-                    ),
+            Center(
+              child: Hero(
+                tag: activity.activityId,
+                child: Container(
+                  width: 112,
+                  height: 112,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: category.gradient,
+                  ),
+                  child: ClipOval(
+                    child: activity.imageUrl != null
+                        ? Image.network(
+                            activity.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, error, stackTrace) =>
+                                const ColoredBox(
+                              color: Color(0xFFFFE4F0),
+                              child: Icon(Icons.broken_image_outlined,
+                                  color: Color(0xFFE91E9B), size: 52),
+                            ),
+                          )
+                        : const ColoredBox(
+                            color: Color(0xFFFFE4F0),
+                            child: Icon(Icons.menu_book_rounded,
+                                color: Color(0xFFE91E9B), size: 52),
+                          ),
+                  ),
+                ),
+              ),
             ),
 
             Padding(
@@ -70,26 +89,33 @@ class ActivityDetailPage extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
-                  Text(
-                    activity.description,
-                    style: const TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
-
+                 
                   const SizedBox(height: 25),
 
-                  const Text(
-                    "Objectif",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDDF4FB),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Objectif', style: TextStyle(
+                          color: Color(0xFF29258F),
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        )),
+                        const SizedBox(height: 12),
+                        Text(activity.objective ?? activity.description,
+                            style: const TextStyle(
+                              color: Color(0xFF29258F),
+                              fontWeight: FontWeight.w600,
+                            )),
+                      ],
                     ),
                   ),
-
-                  const SizedBox(height: 8),
-
-                  Text(activity.objective ?? 'Lis attentivement les histoires et réponds aux questions'),
 
                   const SizedBox(height: 30),
 
@@ -100,7 +126,7 @@ class ActivityDetailPage extends StatelessWidget {
                         child: _InfoCard(
                           icon: Icons.star,
                           title: "Points",
-                          value:
+                            value:
                               "${activity.rewardPoints}",
                         ),
                       ),
@@ -111,8 +137,8 @@ class ActivityDetailPage extends StatelessWidget {
                         child: _InfoCard(
                           icon: Icons.timer,
                           title: "Durée",
-                          value:
-                              "${activity.duration} min",
+                            value:
+                              "${(activity.duration / 60).ceil()} min",
                         ),
                       ),
 
@@ -135,10 +161,10 @@ class ActivityDetailPage extends StatelessWidget {
                     borderRadius:
                         BorderRadius.circular(20),
                       child: LinearProgressIndicator(
-                      value: activity.progress / 100,
+                      value: progress,
                       minHeight: 14,
                       backgroundColor: Colors.grey.shade300,
-                      valueColor: const AlwaysStoppedAnimation(Color(0xFF2D8DD5)),
+                      valueColor: AlwaysStoppedAnimation(category.accent),
                     ),
                   ),
 

@@ -4,6 +4,15 @@ import 'package:uuid/uuid.dart';
 import '../../../models/proposition.dart';
 import '../../../models/question_model.dart';
 import '../question_service.dart';
+import '../widgets/image_url_validation.dart';
+import '../widgets/question_answer_utils.dart';
+
+String? _validateDouble(String? value) {
+  if (value == null || value.trim().isEmpty) return null;
+  return double.tryParse(value.trim()) == null
+      ? 'Entrez un nombre valide'
+      : null;
+}
 
 class AddQuestionPage extends StatefulWidget {
   final String activityId;
@@ -75,56 +84,64 @@ class _AddQuestionPageState
       loading = true;
     });
 
-    final question = QuestionModel(
-      questionId: const Uuid().v4(),
-      activityId: widget.activityId,
-      type: type,
-      statement: statementController.text.trim(),
-      objective: objectiveController.text.trim(),
-      image: imageUrlController.text.trim().isEmpty ? null : imageUrlController.text.trim(),
-      options: [
-        Proposition(
-          id: 'A',
-          texte: optionAController.text,
-        ),
-        Proposition(
-          id: 'B',
-          texte: optionBController.text,
-        ),
-        Proposition(
-          id: 'C',
-          texte: optionCController.text,
-        ),
-        Proposition(
-          id: 'D',
-          texte: optionDController.text,
-        ),
-      ],
-      correctAnswer:
-          correctAnswerController.text.trim(),
-      correctNumericAnswer:
-          numericAnswerController.text.isEmpty
-              ? null
-              : double.parse(
-                  numericAnswerController.text),
-      tolerance:
-          toleranceController.text.isEmpty
-              ? 0
-              : double.parse(
-                  toleranceController.text),
-      freeTextAnswer:
-          freeTextController.text.trim(),
-      caseSensitive: caseSensitive,
-      createdAt: DateTime.now(),
-    );
+    try {
+      final options = [
+        Proposition(id: 'A', texte: optionAController.text.trim()),
+        Proposition(id: 'B', texte: optionBController.text.trim()),
+        Proposition(id: 'C', texte: optionCController.text.trim()),
+        Proposition(id: 'D', texte: optionDController.text.trim()),
+      ];
+      final normalizedAnswer = type == QuestionType.multipleChoice
+          ? normalizeChoiceAnswer(correctAnswerController.text, options)
+          : correctAnswerController.text.trim();
+      if (type == QuestionType.multipleChoice && normalizedAnswer == null) {
+        throw const FormatException(
+          'Indiquez la lettre ou le texte exact d’une réponse',
+        );
+      }
 
-    await service.addQuestion(
-      widget.activityId,
-      question,
-    );
+      final question = QuestionModel(
+        questionId: const Uuid().v4(),
+        activityId: widget.activityId,
+        type: type,
+        statement: statementController.text.trim(),
+        objective: objectiveController.text.trim(),
+        image: imageUrlController.text.trim().isEmpty
+            ? null
+            : imageUrlController.text.trim(),
+        options: options,
+        correctAnswer: normalizedAnswer ?? '',
+        correctNumericAnswer: numericAnswerController.text.isEmpty
+            ? null
+            : double.parse(numericAnswerController.text),
+        tolerance: toleranceController.text.isEmpty
+            ? 0
+            : double.parse(toleranceController.text),
+        freeTextAnswer: freeTextController.text.trim(),
+        caseSensitive: caseSensitive,
+        createdAt: DateTime.now(),
+      );
 
-    if (mounted) {
-      Navigator.pop(context);
+      await service.addQuestion(widget.activityId, question);
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Question ajoutée avec succès')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Impossible d\'enregistrer : $error')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     }
   }
 
@@ -132,7 +149,14 @@ class _AddQuestionPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar:
-          AppBar(title: const Text("Nouvelle question")),
+          AppBar(
+            leading: IconButton(
+              onPressed: () => Navigator.pop(context),
+              tooltip: 'Retour aux questions',
+              icon: const Icon(Icons.arrow_back),
+            ),
+            title: const Text("Nouvelle question"),
+          ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -140,7 +164,7 @@ class _AddQuestionPageState
           children: [
 
             DropdownButtonFormField<QuestionType>(
-              value: type,
+              initialValue: type,
               decoration: const InputDecoration(
                 labelText: "Type",
               ),
@@ -164,6 +188,18 @@ class _AddQuestionPageState
               decoration: const InputDecoration(
                 labelText: "Question",
               ),
+            ),
+
+            const SizedBox(height: 20),
+
+            TextFormField(
+              controller: imageUrlController,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: "Image de la question (URL)",
+                hintText: "https://i.pinimg.com/.../image.jpg",
+              ),
+              validator: validateImageUrl,
             ),
 
             const SizedBox(height: 20),
@@ -211,7 +247,8 @@ class _AddQuestionPageState
                     correctAnswerController,
                 decoration: const InputDecoration(
                   labelText:
-                      "Bonne réponse",
+                    "Bonne réponse (lettre ou texte)",
+                  hintText: "Ex. A ou Dans la grotte sombre",
                 ),
               ),
             ],
@@ -227,6 +264,7 @@ class _AddQuestionPageState
                   labelText:
                       "Bonne réponse",
                 ),
+                validator: _validateDouble,
               ),
 
               const SizedBox(height: 15),
@@ -240,6 +278,7 @@ class _AddQuestionPageState
                   labelText:
                       "Tolérance",
                 ),
+                validator: _validateDouble,
               ),
             ],
 

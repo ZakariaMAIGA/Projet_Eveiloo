@@ -66,25 +66,28 @@ class _ActivityList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visibleActivities = selectedStatus == 'Toutes'
-        ? activities
-        : activities.where((activity) => selectedStatus == 'Terminées'
-            ? activity.progress >= 100
-            : activity.progress < 100).toList();
+        final visibleActivities = activities.where((activity) {
+          if (selectedStatus == 'Toutes') return true;
+          if (selectedStatus == 'En cours') {
+            return activity.progress > 0 && activity.progress < 100;
+          }
+          return activity.progress >= 100;
+        }).toList();
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(22, 12, 22, 20),
+      padding: const EdgeInsets.fromLTRB(22, 34, 22, 20),
       children: [
         Text(
           'Activités',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
             color: const Color(0xFF10158C),
-            fontSize: 24,
+            fontSize: 32,
+            height: 1.1,
           ),
         ),
         const SizedBox(height: 20),
-        Row(
+                Row(
           children: [
             Expanded(child: _StatusTab(
               label: 'Toutes',

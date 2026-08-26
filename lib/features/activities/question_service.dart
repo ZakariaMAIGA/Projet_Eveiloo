@@ -8,11 +8,31 @@ class QuestionService {
   static const String activitiesCollection = 'activities';
   static const String questionsCollection = 'questions';
 
+  CollectionReference<Map<String, dynamic>> _activeSessions(
+    String activityId,
+  ) => _firestore
+      .collection(activitiesCollection)
+      .doc(activityId)
+      .collection('activeSessions');
+
+  Future<void> ensureActivityIsNotInUse(String activityId) async {
+    final snapshot = await _activeSessions(activityId)
+        .where('expiresAt', isGreaterThan: Timestamp.now())
+        .limit(1)
+        .get();
+    if (snapshot.docs.isNotEmpty) {
+      throw StateError(
+        'Cette activité est actuellement utilisée par un enfant',
+      );
+    }
+  }
+
   /// Ajouter une question
   Future<void> addQuestion(
     String activityId,
     QuestionModel question,
   ) async {
+    await ensureActivityIsNotInUse(activityId);
     await _firestore
         .collection(activitiesCollection)
         .doc(activityId)
@@ -26,6 +46,7 @@ class QuestionService {
     String activityId,
     QuestionModel question,
   ) async {
+    await ensureActivityIsNotInUse(activityId);
     await _firestore
         .collection(activitiesCollection)
         .doc(activityId)
@@ -39,6 +60,7 @@ class QuestionService {
     String activityId,
     String questionId,
   ) async {
+    await ensureActivityIsNotInUse(activityId);
     await _firestore
         .collection(activitiesCollection)
         .doc(activityId)
