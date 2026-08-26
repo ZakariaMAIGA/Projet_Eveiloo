@@ -1,10 +1,10 @@
+import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/AppFontSize.dart';
 import '../../core/constants/AppSpacing.dart';
 import '../../models/category_model.dart';
 import '../../repository/toy_repository.dart';
-import '../../routes/app_routes.dart'; // Import des routes pour la navigation admin
 
 class CategoriesToysPage extends StatefulWidget {
   const CategoriesToysPage({Key? key}) : super(key: key);

@@ -1,16 +1,17 @@
-import 'package:eveiloo_enfant/features/articles/activite_page.dart';
 import 'package:eveiloo_enfant/features/Nootifications/notification.dart';
+import 'package:eveiloo_enfant/features/activites/activitiesRoutes.dart';
 import 'package:eveiloo_enfant/features/auth/register_page.dart';
-import 'package:eveiloo_enfant/features/catalogues/catalogue.dart';
-import 'package:eveiloo_enfant/features/profil/profil_page.dart';
-import 'package:eveiloo_enfant/features/tutorials/tutorial_page.dart';
+import 'package:eveiloo_enfant/features/catalogues/catalogueRoutes.dart';
+import 'package:eveiloo_enfant/features/children/children_routes.dart';
+import 'package:eveiloo_enfant/features/profil/profileRoutes.dart';
+import 'package:eveiloo_enfant/features/toys/admin_toys_page.dart';
+import 'package:eveiloo_enfant/features/tutorials/tutorialsRoutes.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
-import 'package:eveiloo_enfant/features/home/home_page.dart';
+import 'package:eveiloo_enfant/features/home/homeRoutes.dart';
 import 'package:eveiloo_enfant/features/auth/login_page.dart';
 import 'package:eveiloo_enfant/features/overview/overview_page.dart';
 import 'package:eveiloo_enfant/widgets/app_bottom_navigation.dart';
 import 'package:go_router/go_router.dart';
-
 
 class AppRouter {
   AppRouter._();
@@ -41,62 +42,35 @@ class AppRouter {
           return AppBottomNavigation(navigationShell: navigationShell);
         },
         branches: [
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.home,
-                name: AppRoutes.homeName,
-                builder: (context, state) => const HomePage(),
-              ),
-            ],
-          ),
-
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.tutorials,
-                name: AppRoutes.tutorialsName,
-                builder: (context, state) => const TutorialPage(),
-              ),
-            ],
-          ),
-
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.catalogue,
-                name: AppRoutes.catalogueName,
-                builder: (context, state) => const Catalogue(),
-              ),
-            ],
-          ),
-
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.activities,
-                name: AppRoutes.activitiesName,
-                builder: (context, state) => const ActivitePage(),
-              ),
-            ],
-          ),
-
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.profile,
-                name: AppRoutes.profileName,
-                builder: (context, state) => const ProfilPage(),
-              ),
-            ],
-          ),
+          StatefulShellBranch(routes: homeRoutes),
+          StatefulShellBranch(routes: tutorialsRoutes),
+          StatefulShellBranch(routes: catalogueRoutes),
+          StatefulShellBranch(routes: activitiesRoutes),
+          StatefulShellBranch(routes: profileRoutes),
         ],
       ),
 
+      // Liste complète des enfants — poussée depuis le home,
+      ...childrenRoutes,
+
       GoRoute(
-      path: '/notifications',
-      builder: (context, state) => const NotificationsPage(),
-    ),
+        path: '/notifications',
+        builder: (context, state) => const NotificationsPage(),
+      ),
+
+      // Route Administration ajoutée
+      GoRoute(
+        path: AppRoutes.adminToys,
+        name: AppRoutes.adminToysName,
+        builder: (context, state) {
+          final categorieId = state.uri.queryParameters['categorieId'];
+          final categorieNom = state.uri.queryParameters['categorieNom'];
+          return AdminToysPage(
+            categorieId: categorieId,
+            categorieNom: categorieNom,
+          );
+        },
+      ),
     ],
   );
 }
