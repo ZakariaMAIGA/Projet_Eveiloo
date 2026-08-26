@@ -1,8 +1,31 @@
+import 'package:eveiloo_enfant/routes/app_router.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:eveiloo_enfant/features/favoris/favoris_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'core/services/notificationService.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+final notificationService = NotificationService();
+notificationService.initNotifications();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<NotificationService>.value(
+          value: notificationService,
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -10,18 +33,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Eveiloo Enfant',
-      debugShowCheckedModeBanner: false, // Enlève la bannière rouge "Debug"
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      title: 'Éveiloo Enfant',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
       ),
-      // Chargement de votre page avec des données de test
-      home: const FavorisScreen(
-        enfantId: "enfant_test_123",
-        avatarUrl: "https://placeholder.com",
-      ),
+      routerConfig: AppRouter.router,
     );
   }
 }

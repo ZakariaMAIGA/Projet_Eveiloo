@@ -1,0 +1,17 @@
+import 'package:flutter/material.dart';
+
+class TutorialPage extends StatelessWidget {
+  const TutorialPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: Text(
+          'Tutoriels',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+}
