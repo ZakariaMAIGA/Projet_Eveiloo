@@ -1,14 +1,15 @@
+import 'package:eveiloo_enfant/core/constants/AppColors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/constants/AppColors.dart';
+// import '../../core/constants/AppColors.dart';
 import '../../core/constants/AppFontSize.dart';
 import '../../core/constants/AppSpacing.dart';
 import '../../models/favoris.dart';
 import '../../models/jouetModel.dart';
 import '../../repository/favoriRepository.dart';
 // import '../../repository/jouetRepository.dart';
-import '../../widgets/favori_toy_row.dart';
+// import '../../widgets/favori_toy_row.dart';
 
 /// Écran "Mes Favoris" : liste des jouets qu'un enfant a mis en favori,
 /// avec filtre par catégorie (Tous / Jouets).
@@ -63,7 +64,7 @@ class _FavorisScreenState extends State<FavorisScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -76,7 +77,7 @@ class _FavorisScreenState extends State<FavorisScreen> {
                     onPressed: () => Navigator.of(context).maybePop(),
                     icon: const Icon(
                       Icons.arrow_back,
-                      color: AppColors.textPrimary,
+                      color: Colors.black87,
                     ),
                   ),
                 ],
@@ -160,13 +161,13 @@ class _FavorisScreenState extends State<FavorisScreen> {
                             return const SizedBox.shrink();
                           }
 
-                          return FavoriToyRow(
-                            jouet: jouet,
-                            onVoirLeJouet: () =>
-                                widget.onVoirLeJouet?.call(jouet.jouetId),
-                            onRetirerDesFavoris: () =>
-                                _retirerDesFavoris(favori.id),
-                          );
+                          // return FavoriToyRow(
+                          //   jouet: jouet,
+                          //   onVoirLeJouet: () =>
+                          //       widget.onVoirLeJouet?.call(jouet.jouetId),
+                          //   onRetirerDesFavoris: () =>
+                          //       _retirerDesFavoris(favori.id),
+                          // );
                         },
                       );
                     },
@@ -218,11 +219,8 @@ class _FavorisAppBar extends StatelessWidget {
                   fontSize: AppFontSize.large,
                   fontWeight: FontWeight.w800,
                   color: AppColors.white,
-                ),
-              ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: AppSpacing.md),
           CircleAvatar(
             radius: 24,
             backgroundColor: AppColors.chipBackground,
@@ -230,14 +228,13 @@ class _FavorisAppBar extends StatelessWidget {
                 avatarUrl != null ? NetworkImage(avatarUrl!) : null,
             child: avatarUrl == null
                 ? const Icon(Icons.person, color: AppColors.textSecondary)
-                : null,
           ),
+            backgroundColor: Color(0xFFE0E0E0),
         ],
       ),
     );
   }
 }
-
 /// Chips de filtre par catégorie ("Tous" / "🧸 Jouets").
 class _FavorisCategoryChips extends StatelessWidget {
   const _FavorisCategoryChips({
@@ -250,7 +247,7 @@ class _FavorisCategoryChips extends StatelessWidget {
 
   static const _options = [
     (label: 'Tous', value: 'Tous', color: Color(0xFF4DD0E1)),
-    (label: '🧸 Jouets', value: 'Jouets', color: AppColors.starFilled),
+    (label: '🧸 Jouets', value: 'Jouets', color: Color(0xFFFFB300)),
   ];
 
   @override
@@ -277,7 +274,7 @@ class _FavorisCategoryChips extends StatelessWidget {
                 style: TextStyle(
                   fontSize: AppFontSize.medium,
                   fontWeight: FontWeight.w800,
-                  color: isSelected ? AppColors.white : AppColors.textPrimary,
+                  color: isSelected ? Colors.white : Colors.black87,
                 ),
               ),
             ),
@@ -304,7 +301,7 @@ class _EtatVide extends StatelessWidget {
             const Icon(
               Icons.favorite_border,
               size: 48,
-              color: AppColors.textSecondary,
+              color: Colors.grey,
             ),
             AppSpacing.verticalGapMd,
             const Text(
@@ -312,7 +309,7 @@ class _EtatVide extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: AppFontSize.medium,
-                color: AppColors.textSecondary,
+                color: Colors.grey,
               ),
             ),
           ],

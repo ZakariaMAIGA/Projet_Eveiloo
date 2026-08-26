@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/constants/AppColors.dart';
 import '../core/constants/AppFontSize.dart';
 import '../core/constants/AppSpacing.dart';
-import '../models/jouet.dart';
+import '../models/jouetModel.dart';
 
 /// Ligne présentant un jouet mis en favori : image, nom, étoile pour retirer
 /// le favori, bouton "Voir le jouet" et prix — tel que sur la maquette
