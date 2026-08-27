@@ -4,48 +4,39 @@ import 'package:flutter/material.dart';
 import '../../core/constants/AppColors.dart';
 import '../../core/constants/AppFontSize.dart';
 import '../../core/constants/AppSpacing.dart';
-import '../../models/favoris.dart';
+import '../../models/favoris.dart' as model; // Alias pour éviter la collision de nom
 import '../../models/jouetModel.dart';
 import '../../repository/favoriRepository.dart';
 // import '../../repository/jouetRepository.dart';
 import '../../widgets/favori_toy_row.dart';
 
-/// Écran "Mes Favoris" : liste des jouets qu'un enfant a mis en favori,
-/// avec filtre par catégorie (Tous / Jouets).
-class FavorisScreen extends StatefulWidget {
-  const FavorisScreen({
+/// Écran "Mes Favoris"
+class Favoris extends StatefulWidget {
+  const Favoris({
     super.key,
     required this.enfantId,
     this.avatarUrl,
     this.onVoirLeJouet,
   });
 
-  /// Id de l'enfant dont on affiche les favoris.
   final String enfantId;
-
-  /// URL de l'avatar affiché en haut à droite (avatar de l'enfant).
   final String? avatarUrl;
-
-  /// Appelé avec le [JouetModel.jouetId] quand on tape "Voir le jouet".
   final void Function(String jouetId)? onVoirLeJouet;
 
   @override
-  State<FavorisScreen> createState() => _FavorisScreenState();
+  State<Favoris> createState() => _FavorisState();
 }
 
-class _FavorisScreenState extends State<FavorisScreen> {
+class _FavorisState extends State<Favoris> {
   final FavoriRepository _favoriRepository = FavoriRepository();
   // final JouetRepository _jouetRepository = JouetRepository();
 
   static const _filtreTous = 'Tous';
-
   String _filtreActif = _filtreTous;
 
   List<String> _dernierIdsDemandes = [];
   Future<List<JouetModel>>? _jouetsFuture;
 
-  /// Récupère les jouets correspondant à [ids], en mémorisant la requête
-  /// tant que la liste d'ids ne change pas (évite de refetch à chaque build).
   Future<List<JouetModel>> _obtenirJouets(List<String> ids) {
     final idsTries = [...ids]..sort();
     if (_jouetsFuture == null || !listEquals(idsTries, _dernierIdsDemandes)) {
@@ -55,8 +46,8 @@ class _FavorisScreenState extends State<FavorisScreen> {
     return _jouetsFuture!;
   }
 
-  Future<void> _retirerDesFavoris(String favoriId) {
-    return _favoriRepository.supprimer(favoriId);
+  Future<void> _retirerDesFavoris(String id) {
+    return _favoriRepository.supprimer(widget.enfantId, id);
   }
 
   @override
@@ -90,7 +81,7 @@ class _FavorisScreenState extends State<FavorisScreen> {
             ),
             AppSpacing.verticalGapLg,
             Expanded(
-              child: StreamBuilder<List<Favoris>>(
+              child: StreamBuilder<List<model.Favoris>>(
                 stream: _favoriRepository.observerParEnfant(widget.enfantId),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -104,25 +95,23 @@ class _FavorisScreenState extends State<FavorisScreen> {
 
                   final tousLesFavoris = snapshot.data ?? [];
 
-                  final favorisJouets =
-                      tousLesFavoris.where((f) => f.type == 'jouet').toList();
+                  final favorisFiltres = tousLesFavoris.where((f) {
+                    if (_filtreActif == 'Jouets') return f.type == 'jouet';
+                    return true;
+                  }).toList();
 
-                  if (favorisJouets.isEmpty) {
+                  if (favorisFiltres.isEmpty) {
                     return _EtatVide(filtreActif: _filtreActif);
                   }
 
-                  final ids =
-                      favorisJouets.map((f) => f.elementId).toList();
+                  final ids = favorisFiltres.map((f) => f.elementId).toList();
 
                   return FutureBuilder<List<JouetModel>>(
                     future: _obtenirJouets(ids),
                     builder: (context, jouetsSnapshot) {
-                      if (jouetsSnapshot.connectionState ==
-                              ConnectionState.waiting &&
+                      if (jouetsSnapshot.connectionState == ConnectionState.waiting &&
                           !jouetsSnapshot.hasData) {
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
+                        return const Center(child: CircularProgressIndicator());
                       }
                       if (jouetsSnapshot.hasError) {
                         return Center(
@@ -142,11 +131,10 @@ class _FavorisScreenState extends State<FavorisScreen> {
                           AppSpacing.lg,
                           AppSpacing.xl,
                         ),
-                        itemCount: favorisJouets.length,
-                        separatorBuilder: (_, __) =>
-                            AppSpacing.verticalGapXl,
+                        itemCount: favorisFiltres.length,
+                        separatorBuilder: (_, __) => AppSpacing.verticalGapXl,
                         itemBuilder: (context, index) {
-                          final favori = favorisJouets[index];
+                          final favori = favorisFiltres[index];
                           final jouet = jouetsParId[favori.elementId];
 
                           if (jouet == null) {
@@ -158,7 +146,7 @@ class _FavorisScreenState extends State<FavorisScreen> {
                             onVoirLeJouet: () =>
                                 widget.onVoirLeJouet?.call(jouet.jouetId),
                             onRetirerDesFavoris: () =>
-                                _retirerDesFavoris(favori.id),
+                                _retirerDesFavoris(favori.elementId),
                           );
                         },
                       );
@@ -174,7 +162,6 @@ class _FavorisScreenState extends State<FavorisScreen> {
   }
 }
 
-/// Barre du haut : cœur décoratif, titre multicolore "Mes Favoris", avatar.
 class _FavorisAppBar extends StatelessWidget {
   const _FavorisAppBar({this.avatarUrl});
 
@@ -231,7 +218,6 @@ class _FavorisAppBar extends StatelessWidget {
   }
 }
 
-/// Chips de filtre par catégorie ("Tous" / "🧸 Jouets").
 class _FavorisCategoryChips extends StatelessWidget {
   const _FavorisCategoryChips({
     required this.selected,

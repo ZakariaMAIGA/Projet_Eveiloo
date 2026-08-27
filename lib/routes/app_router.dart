@@ -64,7 +64,7 @@ class AppRouter {
         builder: (context, state) {
           final enfantId = state.pathParameters['enfantId'] ?? '';
 
-          return FavorisScreen(
+          return Favoris(
             enfantId: enfantId,
           );
         },

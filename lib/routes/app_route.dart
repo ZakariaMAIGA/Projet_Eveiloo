@@ -46,5 +46,5 @@ abstract final class AppRoutes {
 
   // routes name admin
   static const String adminToysName = 'adminToys';
-  // static const FavorisScreen = '/favoris';
+  // static const Favoris = '/favoris';
 }
