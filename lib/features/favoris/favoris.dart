@@ -1,15 +1,14 @@
-import 'package:eveiloo_enfant/core/constants/AppColors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-// import '../../core/constants/AppColors.dart';
+import '../../core/constants/AppColors.dart';
 import '../../core/constants/AppFontSize.dart';
 import '../../core/constants/AppSpacing.dart';
 import '../../models/favoris.dart';
 import '../../models/jouetModel.dart';
 import '../../repository/favoriRepository.dart';
 // import '../../repository/jouetRepository.dart';
-// import '../../widgets/favori_toy_row.dart';
+import '../../widgets/favori_toy_row.dart';
 
 /// Écran "Mes Favoris" : liste des jouets qu'un enfant a mis en favori,
 /// avec filtre par catégorie (Tous / Jouets).
@@ -39,7 +38,6 @@ class _FavorisScreenState extends State<FavorisScreen> {
   // final JouetRepository _jouetRepository = JouetRepository();
 
   static const _filtreTous = 'Tous';
-  static const _filtreJouets = 'Jouets';
 
   String _filtreActif = _filtreTous;
 
@@ -106,11 +104,6 @@ class _FavorisScreenState extends State<FavorisScreen> {
 
                   final tousLesFavoris = snapshot.data ?? [];
 
-                  // NOTE : seul le type "jouet" a un rendu implémenté pour
-                  // l'instant (aucune maquette pour les favoris d'activités/
-                  // tutoriels). Donc "Tous" et "🧸 Jouets" affichent le même
-                  // résultat aujourd'hui. Le filtre reste posé pour être
-                  // câblé dès qu'un autre type aura son propre design.
                   final favorisJouets =
                       tousLesFavoris.where((f) => f.type == 'jouet').toList();
 
@@ -157,17 +150,16 @@ class _FavorisScreenState extends State<FavorisScreen> {
                           final jouet = jouetsParId[favori.elementId];
 
                           if (jouet == null) {
-                            // Le jouet référencé n'existe plus / pas encore chargé.
                             return const SizedBox.shrink();
                           }
 
-                          // return FavoriToyRow(
-                          //   jouet: jouet,
-                          //   onVoirLeJouet: () =>
-                          //       widget.onVoirLeJouet?.call(jouet.jouetId),
-                          //   onRetirerDesFavoris: () =>
-                          //       _retirerDesFavoris(favori.id),
-                          // );
+                          return FavoriToyRow(
+                            jouet: jouet,
+                            onVoirLeJouet: () =>
+                                widget.onVoirLeJouet?.call(jouet.jouetId),
+                            onRetirerDesFavoris: () =>
+                                _retirerDesFavoris(favori.id),
+                          );
                         },
                       );
                     },
@@ -219,8 +211,11 @@ class _FavorisAppBar extends StatelessWidget {
                   fontSize: AppFontSize.large,
                   fontWeight: FontWeight.w800,
                   color: AppColors.white,
+                ),
+              ),
             ),
-          SizedBox(width: AppSpacing.md),
+          ),
+          const SizedBox(width: AppSpacing.md),
           CircleAvatar(
             radius: 24,
             backgroundColor: AppColors.chipBackground,
@@ -228,13 +223,14 @@ class _FavorisAppBar extends StatelessWidget {
                 avatarUrl != null ? NetworkImage(avatarUrl!) : null,
             child: avatarUrl == null
                 ? const Icon(Icons.person, color: AppColors.textSecondary)
+                : null,
           ),
-            backgroundColor: Color(0xFFE0E0E0),
         ],
       ),
     );
   }
 }
+
 /// Chips de filtre par catégorie ("Tous" / "🧸 Jouets").
 class _FavorisCategoryChips extends StatelessWidget {
   const _FavorisCategoryChips({
