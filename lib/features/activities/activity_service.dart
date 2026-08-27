@@ -101,6 +101,26 @@ class ActivityService {
     });
   }
 
+  /// Marquer une activité comme commencée par l'enfant.
+  /// Appelé quand l'enfant sélectionne une activité dans l'onglet "Toutes".
+  Future<void> markActivityStarted(String activityId) async {
+    await _firestore.collection(collection).doc(activityId).update({
+      'startedAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// Marquer une activité comme terminée (une fois la session de jeu finie).
+  /// [progressPercent] : pourcentage réel obtenu (score / nombre de questions).
+  Future<void> markActivityCompleted(
+    String activityId,
+    double progressPercent,
+  ) async {
+    await _firestore.collection(collection).doc(activityId).update({
+      'completedAt': DateTime.now().toIso8601String(),
+      'progress': progressPercent.clamp(0.0, 100.0),
+    });
+  }
+
   /// ===========================
   /// QUESTIONS
   /// ===========================

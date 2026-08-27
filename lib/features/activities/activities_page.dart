@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,6 +33,15 @@ class _ActivitiesPageState extends ConsumerState<ActivitiesPage> {
               setState(() => _selectedStatus = status);
             },
             onActivityTap: (activity) {
+              // La sélection se fait dans l'onglet "Toutes" :
+              // l'activité choisie passe automatiquement "En cours".
+              if (_selectedStatus == 'Toutes' && !activity.isStarted) {
+                unawaited(
+                  ref
+                      .read(activityServiceProvider)
+                      .markActivityStarted(activity.activityId),
+                );
+              }
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -67,11 +78,14 @@ class _ActivityList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
         final visibleActivities = activities.where((activity) {
-          if (selectedStatus == 'Toutes') return true;
-          if (selectedStatus == 'En cours') {
-            return activity.progress > 0 && activity.progress < 100;
+          switch (selectedStatus) {
+            case 'En cours':
+              return activity.status == ActivityStatus.enCours;
+            case 'Terminées':
+              return activity.status == ActivityStatus.terminee;
+            default:
+              return true;
           }
-          return activity.progress >= 100;
         }).toList();
 
     return ListView(
@@ -110,7 +124,7 @@ class _ActivityList extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         if (visibleActivities.isEmpty)
-          const _EmptyActivities()
+          _EmptyActivities(selectedStatus: selectedStatus)
         else
           ...visibleActivities.map(
             (activity) => ActivityCard(
@@ -231,23 +245,53 @@ class _NavigationItem extends StatelessWidget {
 }
 
 class _EmptyActivities extends StatelessWidget {
-  const _EmptyActivities();
+  const _EmptyActivities({required this.selectedStatus});
+
+  final String selectedStatus;
+
+  String get title {
+    switch (selectedStatus) {
+      case 'En cours':
+        return 'Aucune activité en cours';
+      case 'Terminées':
+        return 'Aucune activité terminée';
+      default:
+        return 'Aucune activité disponible';
+    }
+  }
+
+  String get message {
+    switch (selectedStatus) {
+      case 'En cours':
+        return 'Choisis une activité dans l\'onglet « Toutes » pour la commencer.';
+      case 'Terminées':
+        return 'Termine une activité en cours pour la retrouver ici.';
+      default:
+        return 'Reviens bientôt pour découvrir de nouveaux défis.';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 72),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 72),
       child: Column(
         children: [
-          Icon(Icons.auto_awesome, size: 52, color: Color(0xFF74B9AD)),
-          SizedBox(height: 16),
-          Text(
-            'Aucune activité disponible',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+          Icon(
+            selectedStatus == 'Terminées'
+                ? Icons.emoji_events_outlined
+                : Icons.auto_awesome,
+            size: 52,
+            color: const Color(0xFF74B9AD),
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 16),
           Text(
-            'Reviens bientôt pour découvrir de nouveaux défis.',
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            message,
             textAlign: TextAlign.center,
           ),
         ],

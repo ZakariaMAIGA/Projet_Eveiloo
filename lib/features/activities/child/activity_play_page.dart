@@ -92,6 +92,17 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     if (activityFinished || !mounted) return;
     activityFinished = true;
     countdownTimer?.cancel();
+
+    // La session de jeu est finie : l'activité passe "Terminée".
+    // On persiste aussi le pourcentage réel obtenu par l'enfant.
+    final total = questions?.length ?? totalQuestionCount;
+    final percent =
+        total == 0 ? 0.0 : ((score / total) * 100).clamp(0.0, 100.0);
+    unawaited(
+      ActivityService()
+          .markActivityCompleted(widget.activity.activityId, percent),
+    );
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(

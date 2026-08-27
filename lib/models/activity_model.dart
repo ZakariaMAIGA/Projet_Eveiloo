@@ -2,6 +2,25 @@ import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
 
+/// Statut possible d'une activité vue par l'enfant :
+/// - [statusAFaire] : jamais sélectionnée
+/// - [statusEnCours] : sélectionnée mais pas encore terminée
+/// - [statusTerminee] : jouée jusqu'au bout
+enum ActivityStatus { aFaire, enCours, terminee }
+
+extension ActivityStatusX on ActivityStatus {
+  String get label {
+    switch (this) {
+      case ActivityStatus.aFaire:
+        return 'À faire';
+      case ActivityStatus.enCours:
+        return 'En cours';
+      case ActivityStatus.terminee:
+        return 'Terminée';
+    }
+  }
+}
+
 class ActivityModel extends Equatable {
   final String activityId;
   final String title;
@@ -18,6 +37,25 @@ class ActivityModel extends Equatable {
   final String? objective;
   final DateTime createdAt;
 
+  /// Date à laquelle l'enfant a sélectionné/démarré l'activité (null = jamais).
+  final DateTime? startedAt;
+
+  /// Date à laquelle l'enfant a terminé l'activité (null = pas encore).
+  final DateTime? completedAt;
+
+  /// L'activité a-t-elle déjà été démarrée ?
+  bool get isStarted => startedAt != null || completedAt != null;
+
+  /// L'activité est-elle terminée ?
+  bool get isCompleted => completedAt != null;
+
+  /// Statut courant de l'activité pour l'enfant.
+  ActivityStatus get status {
+    if (completedAt != null) return ActivityStatus.terminee;
+    if (isStarted) return ActivityStatus.enCours;
+    return ActivityStatus.aFaire;
+  }
+
   const ActivityModel({
     required this.activityId,
     required this.title,
@@ -33,6 +71,8 @@ class ActivityModel extends Equatable {
     this.imageUrl,
     this.objective,
     required this.createdAt,
+    this.startedAt,
+    this.completedAt,
   });
 
   /// Objet vide
@@ -71,6 +111,8 @@ class ActivityModel extends Equatable {
     String? imageUrl,
     String? objective,
     DateTime? createdAt,
+    DateTime? startedAt,
+    DateTime? completedAt,
   }) {
     return ActivityModel(
       activityId: activityId ?? this.activityId,
@@ -89,6 +131,10 @@ class ActivityModel extends Equatable {
       imageUrl: imageUrl ?? this.imageUrl,
       objective: objective ?? this.objective,
       createdAt: createdAt ?? this.createdAt,
+      startedAt: startedAt ?? this.startedAt,
+      // completedAt est volontairement figé : on ne peut pas "dé-terminer"
+      // une activité. Utiliser l'assignation directe si besoin de réinitialiser.
+      completedAt: completedAt ?? this.completedAt,
     );
   }
 
@@ -109,6 +155,8 @@ class ActivityModel extends Equatable {
       'imageUrl': imageUrl,
       'objective': objective,
       'createdAt': createdAt.toIso8601String(),
+      'startedAt': startedAt?.toIso8601String(),
+      'completedAt': completedAt?.toIso8601String(),
     };
   }
 
@@ -130,7 +178,15 @@ class ActivityModel extends Equatable {
       progress: (map['progress'] as num?)?.toDouble() ?? 0.0,
       imageUrl: map['imageUrl']?.toString(),
       objective: map['objective']?.toString(),
-      createdAt: DateTime.parse(map['createdAt']),
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'].toString())
+          : DateTime.now(),
+      startedAt: map['startedAt'] != null
+          ? DateTime.tryParse(map['startedAt'].toString())
+          : null,
+      completedAt: map['completedAt'] != null
+          ? DateTime.tryParse(map['completedAt'].toString())
+          : null,
     );
   }
 
@@ -157,5 +213,7 @@ class ActivityModel extends Equatable {
         imageUrl,
         objective,
         createdAt,
+        startedAt,
+        completedAt,
       ];
 }
