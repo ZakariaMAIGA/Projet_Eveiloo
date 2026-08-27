@@ -4,13 +4,12 @@ import '../../repository/utilisateurRepository.dart';
 import '../../models/utilisateur.dart';
 
 class AuthService {
-
-AuthService({
-  FirebaseAuth? firebaseAuth,
-  UtilisateurRepository? utilisateurRepository,
-})  : _auth = firebaseAuth ?? FirebaseAuth.instance,
-      _utilisateurRepository =
-          utilisateurRepository ?? UtilisateurRepository();
+  AuthService({
+    FirebaseAuth? firebaseAuth,
+    UtilisateurRepository? utilisateurRepository,
+  }) : _auth = firebaseAuth ?? FirebaseAuth.instance,
+       _utilisateurRepository =
+           utilisateurRepository ?? UtilisateurRepository();
 
   final FirebaseAuth _auth;
   final UtilisateurRepository _utilisateurRepository;
@@ -19,7 +18,7 @@ AuthService({
 
   User? get utilisateurFirebase => _auth.currentUser;
 
-   Future<void> inscription({
+  Future<void> inscription({
     required String nom,
     required String prenom,
     required String courriel,
@@ -44,8 +43,8 @@ AuthService({
       nom: nom.trim(),
       prenom: prenom.trim(),
       courriel: courriel.trim().toLowerCase(),
-      telephone: telephone?.trim()  ?? '',
-      role: 'parent',
+      telephone: telephone?.trim() ?? '',
+      role: RoleUtilisateur.parent,
       dateCreation: DateTime.now(),
     );
 
@@ -64,8 +63,9 @@ AuthService({
     final firebaseUser = credential.user;
 
     if (firebaseUser != null) {
-      await _utilisateurRepository
-          .mettreAJourDerniereConnexion(firebaseUser.uid);
+      await _utilisateurRepository.mettreAJourDerniereConnexion(
+        firebaseUser.uid,
+      );
     }
   }
 
@@ -76,7 +76,4 @@ AuthService({
   Future<void> reinitialiserMotDePasse(String courriel) {
     return _auth.sendPasswordResetEmail(email: courriel.trim());
   }
-
 }
-
-

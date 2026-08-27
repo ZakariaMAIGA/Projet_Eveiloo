@@ -41,8 +41,8 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  void _passerLaCommande(CartModel panier) {
-    if (panier.articles.isEmpty) return;
+  void _passerLaCommande(CartItemModel panier) {
+    if (panier.articlePanierId.isEmpty) return;
     // TODO : créer la commande (order_service.dart) puis vider le panier
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Commande en cours de traitement...')),
@@ -55,7 +55,7 @@ class _CartPageState extends State<CartPage> {
       backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
         bottom: false,
-        child: StreamBuilder<CartModel>(
+        child: StreamBuilder<List<CartItemModel>>(
           stream: _cartService.streamPanier(widget.utilisateurId),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
@@ -84,13 +84,13 @@ class _CartPageState extends State<CartPage> {
                   ),
                 ),
                 Expanded(
-                  child: panier.articles.isEmpty
+                  child: panier.isEmpty
                       ? const Center(child: Text('Ton panier est vide.'))
                       : ListView.builder(
                           padding: const EdgeInsets.only(top: 8, bottom: 8),
-                          itemCount: panier.articles.length,
+                          itemCount: panier.length,
                           itemBuilder: (context, index) {
-                            final item = panier.articles[index];
+                            final item = panier[index];
                             return CartItemCard(
                               item: item,
                               onQuantiteChanged: (q) =>
@@ -111,7 +111,7 @@ class _CartPageState extends State<CartPage> {
                     ),
                     child: Center(
                       child: Text(
-                        'Total:   ${_formaterTotal(panier.totalGeneral)}',
+                        'Total:   ${_formaterTotal(panier.fold(0, (sum, item) => sum + item.sousTotal))}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -127,7 +127,10 @@ class _CartPageState extends State<CartPage> {
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton(
-                      onPressed: () => _passerLaCommande(panier),
+                      onPressed: () {
+                        // TODO : créer la commande puis vider le panier
+                        _passerLaCommande(panier.first);
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3D9BE9),
                         shape: RoundedRectangleBorder(

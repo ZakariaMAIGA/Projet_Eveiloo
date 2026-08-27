@@ -1,57 +1,76 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// Type d'élément mis en favori (jouet, tutoriel ou activité).
+enum TypeFavori {
+  jouet,
+  tutoriel;
+
+  static TypeFavori fromString(String? value) {
+    switch (value) {
+      case 'tutoriel':
+        return TypeFavori.tutoriel;
+      case 'jouet':
+      default:
+        return TypeFavori.jouet;
+    }
+  }
+
+  String toValue() => name;
+}
+
 class Favoris {
-  final String id;
+  final String favoriId;
   final String enfantId;
   final String elementId;
-  final String type;
-  final DateTime dateAjout;
+  final TypeFavori type;
+  final DateTime? dateAjout;
 
-  Favoris({
-    required this.id,
+  const Favoris({
+    required this.favoriId,
     required this.enfantId,
     required this.elementId,
     required this.type,
-    required this.dateAjout,
+    this.dateAjout,
   });
 
-  factory Favoris.fromJson(Map<String, dynamic> json) {
+  factory Favoris.fromMap(Map<String, dynamic> map, String id) {
     return Favoris(
-      id: json['id'].toString(),
-      enfantId: json['enfantId'].toString(),
-      elementId: json['jouetId'].toString(),
-      type: json['type'] as String,
-      dateAjout: DateTime.parse(json['dateAjout'] as String),
+      favoriId: id,
+      enfantId: map['enfantId'] ?? '',
+      elementId: map['elementId'] ?? '',
+      type: TypeFavori.fromString(map['type'] as String?),
+      dateAjout: (map['dateAjout'] as Timestamp?)?.toDate(),
     );
   }
 
-  Map<String, dynamic> toJson() {
+  factory Favoris.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+    return Favoris.fromMap(doc.data() ?? {}, doc.id);
+  }
+
+  Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'enfantId': enfantId,
       'elementId': elementId,
-      'type': type,
-      'dateAjout': dateAjout.toIso8601String(),
+      'type': type.toValue(),
+      'dateAjout': dateAjout != null
+          ? Timestamp.fromDate(dateAjout!)
+          : FieldValue.serverTimestamp(),
     };
   }
 
-  factory Favoris.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  Favoris copyWith({
+    String? favoriId,
+    String? enfantId,
+    String? elementId,
+    TypeFavori? type,
+    DateTime? dateAjout,
+  }) {
     return Favoris(
-      id: doc.id,
-      enfantId: data['enfantId'] as String,
-      elementId: data['elementId'] as String,
-      type: data['type'] as String,
-      dateAjout: (data['dateAjout'] as Timestamp).toDate(),
+      favoriId: favoriId ?? this.favoriId,
+      enfantId: enfantId ?? this.enfantId,
+      elementId: elementId ?? this.elementId,
+      type: type ?? this.type,
+      dateAjout: dateAjout ?? this.dateAjout,
     );
-  }
-
-  Map<String, dynamic> toFirestore() {
-    return {
-      'enfantId': enfantId,
-      'elementId': elementId,
-      'type': type,
-      'dateAjout': Timestamp.fromDate(dateAjout),
-    };
   }
 }

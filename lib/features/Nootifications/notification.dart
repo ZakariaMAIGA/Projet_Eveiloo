@@ -1,18 +1,21 @@
+// features/Nootifications/notification.dart
+import 'package:eveiloo_enfant/core/provider/notification_service_provider.dart';
 import 'package:flutter/material.dart' hide Notification;
-import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart'; 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../core/constants/AppFontSize.dart';
 import '../../core/constants/AppSpacing.dart';
-import '../../core/services/notificationService.dart';
+
 import '../../models/notifications.dart';
 
-class NotificationsPage extends StatelessWidget {
+class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final notificationService = Provider.of<NotificationService>(context, listen: false);
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Accès au service via Riverpod
+    final notificationService = ref.watch(notificationServiceProvider);
     final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
     return Scaffold(

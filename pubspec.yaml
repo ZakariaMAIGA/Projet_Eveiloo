@@ -41,7 +41,7 @@ dependencies:
   equatable: ^2.1.0
   firebase_auth: ^6.5.7
   firebase_messaging: ^16.5.0
-  provider: ^6.1.5+1
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +68,7 @@ flutter:
   assets:
     - assets/images/
     - assets/logo/
+    - assets/icons/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

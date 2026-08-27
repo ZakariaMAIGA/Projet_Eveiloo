@@ -29,9 +29,7 @@ class ProfilPage extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Ici ton menu prend tout l’espace restant
-          Expanded(child: ProfileMenu()),
-
-          const SizedBox(height: 30),
+          Expanded(child: SingleChildScrollView(child: ProfileMenu())),
         ],
       ),
     );

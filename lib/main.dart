@@ -1,19 +1,15 @@
+// main.dart
 import 'package:eveiloo_enfant/routes/app_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 
-import 'core/services/notificationService.dart';
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _initializeFirebase();
 
-  final notificationService = NotificationService();
-  notificationService.initNotifications();
-
-  runApp(ProviderScope(child: MyApp(notificationService: notificationService)));
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 Future<void> _initializeFirebase() async {
@@ -28,9 +24,7 @@ Future<void> _initializeFirebase() async {
 }
 
 class MyApp extends StatelessWidget {
-  final NotificationService notificationService;
-
-  const MyApp({super.key, required this.notificationService});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
