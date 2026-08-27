@@ -1,5 +1,5 @@
 import 'package:eveiloo_enfant/features/Nootifications/notification.dart';
-import 'package:eveiloo_enfant/features/activites/activitiesRoutes.dart';
+import 'package:eveiloo_enfant/features/activities/activitiesRoutes.dart';
 import 'package:eveiloo_enfant/features/auth/register_page.dart';
 import 'package:eveiloo_enfant/features/catalogues/catalogueRoutes.dart';
 import 'package:eveiloo_enfant/features/children/children_routes.dart';

@@ -18,7 +18,9 @@ class ChildrenListPage extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        leading: const BackButton(color: Colors.black),
       ),
+
       body: StreamBuilder<List<EnfantModel>>(
         stream: EnfantRepository().observerEnfants(parentId),
         builder: (context, snapshot) {
@@ -41,37 +43,39 @@ class ChildrenListPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final enfant = enfants[index];
 
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
+              return Material(
+                color: Colors.transparent,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.grey.shade200),
                   ),
-                  leading: CircleAvatar(
-                    backgroundImage: enfant.urlAvatar.isNotEmpty
-                        ? NetworkImage(enfant.urlAvatar)
-                        : null,
-                    child: enfant.urlAvatar.isEmpty
-                        ? const Icon(Icons.face)
-                        : null,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    leading: CircleAvatar(
+                      backgroundImage: enfant.urlAvatar.isNotEmpty
+                          ? NetworkImage(enfant.urlAvatar)
+                          : null,
+                      child: enfant.urlAvatar.isEmpty
+                          ? const Icon(Icons.face)
+                          : null,
+                    ),
+                    title: Text(
+                      enfant.prenom,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      '${enfant.age} ans · Niveau ${enfant.niveauAtteint} · ${enfant.pointsGagnes} pts',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      // TODO: naviguer vers la fiche détaillée de l'enfant
+                    },
                   ),
-                  title: Text(
-                    enfant.prenom,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    '${enfant.age} ans · Niveau ${enfant.niveauAtteint} · '
-                    '${enfant.pointsGagnes} pts',
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    // TODO: naviguer vers la fiche détaillée de l'enfant
-                  },
                 ),
               );
             },

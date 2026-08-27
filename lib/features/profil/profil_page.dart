@@ -1,44 +1,38 @@
-import 'package:eveiloo_enfant/core/services/auth_service.dart';
-import 'package:eveiloo_enfant/routes/app_route.dart';
+import 'package:eveiloo_enfant/features/profil/widgets/profile_header.dart';
+import 'package:eveiloo_enfant/features/profil/widgets/profile_menu.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class ProfilPage extends StatelessWidget {
   const ProfilPage({super.key});
 
   @override
- Widget build(BuildContext context) {
-    final authService = AuthService();
-    final utilisateur = authService.utilisateurFirebase;
-
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mon profil')),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircleAvatar(radius: 36, child: Icon(Icons.person, size: 40)),
-            const SizedBox(height: 12),
-            Text(
-              utilisateur?.displayName ?? 'Parent',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 4),
-            Text(utilisateur?.email ?? ''),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: () async {
-                await authService.deconnexion();
+      backgroundColor: Colors.white,
 
-                if (!context.mounted) return;
-
-                context.goNamed(AppRoutes.loginName);
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Se déconnecter'),
-            ),
-          ],
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: const Icon(
+          Icons.arrow_back_ios_new,
+          size: 18,
+          color: Colors.black,
         ),
+      ),
+
+      body: Column(
+        children: [
+          const SizedBox(height: 10),
+
+          const ProfileHeader(name: 'Utilisateur'),
+
+          const SizedBox(height: 20),
+
+          // Ici ton menu prend tout l’espace restant
+          Expanded(child: ProfileMenu()),
+
+          const SizedBox(height: 30),
+        ],
       ),
     );
   }
