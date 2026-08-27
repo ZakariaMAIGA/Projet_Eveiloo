@@ -11,6 +11,7 @@ import 'package:eveiloo_enfant/features/home/homeRoutes.dart';
 import 'package:eveiloo_enfant/features/auth/login_page.dart';
 import 'package:eveiloo_enfant/features/overview/overview_page.dart';
 import 'package:eveiloo_enfant/widgets/app_bottom_navigation.dart';
+import 'package:eveiloo_enfant/features/cart/cart_page.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRouter {
@@ -68,6 +69,17 @@ class AppRouter {
           return AdminToysPage(
             categorieId: categorieId,
             categorieNom: categorieNom,
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.cart,
+        name: AppRoutes.cartName,
+        builder: (context, state) {
+          final utilisateurId = state.pathParameters['id']!;
+
+          return CartPage(
+            utilisateurId: utilisateurId,
           );
         },
       ),

@@ -20,10 +20,9 @@ abstract final class AppRoutes {
 
   // route liste complète des enfants (hors shell, poussée depuis le home)
   static const childrenList = '/children';
-
+  // static const cart = '/cart';
   // routes admin
   static const String adminToys = '/admin-toys';
-
   //routes names
 
   static const overviewName = 'overview';
@@ -42,7 +41,9 @@ abstract final class AppRoutes {
   static const toyDetailName = 'toy-detail';
 
   static const childrenListName = 'children';
-
+  // static const cartName = 'cart';
+  static const cartName = 'cart';
+  static const cart = '/cart/:id';
   // routes name admin
   static const String adminToysName = 'adminToys';
 }
