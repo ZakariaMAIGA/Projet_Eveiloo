@@ -1,14 +1,33 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class UtilisateurModel{
+/// Rôle de l'utilisateur dans l'application.
+enum RoleUtilisateur {
+  parent,
+  admin;
+
+  /// Conversion depuis la valeur stockée en base (String).
+  static RoleUtilisateur fromString(String? value) {
+    switch (value) {
+      case 'admin':
+        return RoleUtilisateur.admin;
+      case 'parent':
+      default:
+        return RoleUtilisateur.parent;
+    }
+  }
+
+  /// Conversion vers la valeur à stocker en base (String).
+  String toValue() => name; // 'parent' ou 'admin'
+}
+
+class UtilisateurModel {
   final String utilisateurId;
   final String nom;
   final String prenom;
   final String courriel;
   final String telephone;
   final String urlAvatar;
-  final String role; // 'parent' | 'admin'
+  final RoleUtilisateur role; // 'parent' | 'admin'
   final DateTime dateCreation;
   final DateTime? derniereConnexion;
 
@@ -17,45 +36,46 @@ class UtilisateurModel{
     required this.nom,
     required this.prenom,
     required this.courriel,
-     this.telephone = '',
-     this.urlAvatar = '',
-    required this.role,
+    this.telephone = '',
+    this.urlAvatar = '',
+    this.role = RoleUtilisateur.parent,
     required this.dateCreation,
     this.derniereConnexion,
   });
 
+  factory UtilisateurModel.fromMap(Map<String, dynamic> map, String id) {
+    return UtilisateurModel(
+      utilisateurId: id,
+      nom: map['nom'] ?? '',
+      prenom: map['prenom'] ?? '',
+      courriel: map['courriel'] ?? '',
+      telephone: map['telephone'] ?? '',
+      urlAvatar: map['urlAvatar'] ?? '',
+      role: RoleUtilisateur.fromString(map['role'] as String?),
+      dateCreation: (map['dateCreation'] as Timestamp).toDate(),
+      derniereConnexion: (map['derniereConnexion'] as Timestamp?) != null
+          ? (map['derniereConnexion'] as Timestamp).toDate()
+          : null,
+    );
+  }
 
-factory UtilisateurModel.fromMap(Map<String, dynamic> map, String id) {
-  return UtilisateurModel(
-    utilisateurId: id,
-    nom: map['nom'] ?? '',
-    prenom: map['prenom'] ?? '',
-    courriel: map['courriel']   ?? '',
-    telephone: map['telephone']     ?? '',
-    urlAvatar: map['urlAvatar'] ?? '',
-    role: map['role'] ?? 'parent',
-    dateCreation: (map['dateCreation'] as Timestamp ).toDate(),
-    derniereConnexion: (map['derniereConnexion'] as Timestamp?) != null ? (map['derniereConnexion'] as Timestamp).toDate() : null,
-  );
-}
-
-
-   factory UtilisateurModel.fromFirestore(DocumentSnapshot doc){
+  factory UtilisateurModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return UtilisateurModel.fromMap(data, doc.id);
-   }
+  }
 
-   Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap() {
     return {
       'nom': nom,
       'prenom': prenom,
       'courriel': courriel,
       'telephone': telephone,
       'urlAvatar': urlAvatar,
-      'role': role,
+      'role': role.toValue(),
       'dateCreation': Timestamp.fromDate(dateCreation),
-      'derniereConnexion':
-          derniereConnexion != null ? Timestamp.fromDate(derniereConnexion!) : null,
+      'derniereConnexion': derniereConnexion != null
+          ? Timestamp.fromDate(derniereConnexion!)
+          : null,
     };
   }
 
@@ -65,7 +85,7 @@ factory UtilisateurModel.fromMap(Map<String, dynamic> map, String id) {
     String? courriel,
     String? telephone,
     String? urlAvatar,
-    String? role,
+    RoleUtilisateur? role,
     DateTime? dateCreation,
     DateTime? derniereConnexion,
   }) {
@@ -81,5 +101,4 @@ factory UtilisateurModel.fromMap(Map<String, dynamic> map, String id) {
       derniereConnexion: derniereConnexion ?? this.derniereConnexion,
     );
   }
-
 }

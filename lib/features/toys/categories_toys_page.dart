@@ -1,9 +1,9 @@
+import 'package:eveiloo_enfant/models/CategorieJouetModel.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/AppFontSize.dart';
 import '../../core/constants/AppSpacing.dart';
-import '../../models/category_model.dart';
 import '../../repository/toy_repository.dart';
 
 class CategoriesToysPage extends StatefulWidget {
@@ -106,7 +106,7 @@ class _CategoriesToysPageState extends State<CategoriesToysPage> {
 
               // --- LISTE DE CATÉGORIES ---
               Expanded(
-                child: StreamBuilder<List<CategoryModel>>(
+                child: StreamBuilder<List<CategorieJouetModel>>(
                   stream: _toyRepository.getCategories(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -158,7 +158,10 @@ class _CategoriesToysPageState extends State<CategoriesToysPage> {
     );
   }
 
-  Widget _buildCategoryCard(BuildContext context, CategoryModel category) {
+  Widget _buildCategoryCard(
+    BuildContext context,
+    CategorieJouetModel category,
+  ) {
     final theme = Theme.of(context);
 
     return Card(

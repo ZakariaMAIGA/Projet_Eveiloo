@@ -16,10 +16,10 @@ class ProfileMenu extends StatelessWidget {
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
           BoxShadow(
-            color: const Color.fromARGB(45, 0, 0, 0), // couleur de l’ombre
-            spreadRadius: 2, // étalement
+            color: const Color.fromARGB(20, 0, 0, 0), // couleur de l’ombre
+            spreadRadius: 1, // étalement
             blurRadius: 5, // flou
-            offset: Offset(3, 3), // décalage (x, y)
+            offset: Offset(0, 2), // décalage (x, y)
           ),
         ],
         borderRadius: BorderRadius.circular(12),
@@ -32,7 +32,13 @@ class ProfileMenu extends StatelessWidget {
             onTap: () {},
           ),
 
-          const Divider(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: const Divider(
+              height: 10,
+              color: Color.fromARGB(19, 0, 0, 0),
+            ),
+          ),
 
           ProfileMenuItem(
             icon: Icons.child_care,
@@ -42,7 +48,13 @@ class ProfileMenu extends StatelessWidget {
             },
           ),
 
-          const Divider(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: const Divider(
+              height: 10,
+              color: Color.fromARGB(19, 0, 0, 0),
+            ),
+          ),
 
           ProfileMenuItem(
             icon: Icons.inventory_2_outlined,
@@ -50,7 +62,13 @@ class ProfileMenu extends StatelessWidget {
             onTap: () {},
           ),
 
-          const Divider(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: const Divider(
+              height: 10,
+              color: Color.fromARGB(19, 0, 0, 0),
+            ),
+          ),
 
           ProfileMenuItem(
             icon: Icons.shopping_basket_outlined,
@@ -58,31 +76,46 @@ class ProfileMenu extends StatelessWidget {
             onTap: () {},
           ),
 
-          const Divider(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: const Divider(
+              height: 10,
+              color: Color.fromARGB(19, 0, 0, 0),
+            ),
+          ),
 
           ProfileMenuItem(
-            icon: Icons.favorite,
-            iconColor: Colors.red,
+            icon: Icons.favorite_outline,
+
             title: 'Favoris',
             onTap: () {},
           ),
 
-          const Divider(height: 10),
-
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: const Divider(
+              height: 10,
+              color: Color.fromARGB(19, 0, 0, 0),
+            ),
+          ),
           ProfileMenuItem(
             icon: Icons.settings_outlined,
             title: 'Paramètres',
             onTap: () {},
           ),
-          const Divider(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: const Divider(
+              height: 10,
+              color: Color.fromARGB(19, 0, 0, 0),
+            ),
+          ),
 
           ProfileMenuItem(
             icon: Icons.logout,
             title: 'Se déconnecter',
             onTap: () {},
           ),
-
-          const Divider(height: 10),
         ],
       ),
     );
