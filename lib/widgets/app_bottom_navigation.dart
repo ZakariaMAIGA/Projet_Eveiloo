@@ -1,4 +1,6 @@
+import 'package:eveiloo_enfant/core/constants/AppRadius.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
 class AppBottomNavigation extends StatelessWidget {
@@ -13,79 +15,101 @@ class AppBottomNavigation extends StatelessWidget {
     );
   }
 
+  // Helper pour éviter la répétition du code SVG
+  Widget _buildSvgIcon({
+    required String assetName,
+    required bool isSelected,
+    required ThemeData theme,
+  }) {
+    final Color color = isSelected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+
+    return SvgPicture.asset(
+      assetName,
+      width: 24,
+      height: 24,
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       body: navigationShell,
       backgroundColor: Colors.white,
       bottomNavigationBar: NavigationBar(
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: Appradius.borderRadiusSm,
+        ),
         backgroundColor: Colors.white,
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: _onTap,
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Image(
-              image: AssetImage('assets/logo/home.png'),
-              width: 50,
-              height: 50,
+            icon: _buildSvgIcon(
+              assetName: "assets/icons/accueil.svg",
+              isSelected: false,
+              theme: theme,
             ),
-            selectedIcon: Image(
-              image: AssetImage('assets/logo/home.png'),
-              width: 50,
-              height: 50,
+            selectedIcon: _buildSvgIcon(
+              assetName: "assets/icons/accueil.svg",
+              isSelected: true,
+              theme: theme,
             ),
             label: 'Accueil',
           ),
           NavigationDestination(
-            icon: Image(
-              image: AssetImage('assets/logo/tuto.png'),
-              width: 50,
-              height: 50,
+            icon: _buildSvgIcon(
+              assetName: "assets/icons/tutoriel.svg",
+              isSelected: false,
+              theme: theme,
             ),
-            selectedIcon: Image(
-              image: AssetImage('assets/logo/tuto.png'),
-              width: 50,
-              height: 50,
+            selectedIcon: _buildSvgIcon(
+              assetName: "assets/icons/tutoriel.svg",
+              isSelected: true,
+              theme: theme,
             ),
             label: 'Tutoriels',
           ),
           NavigationDestination(
-            icon: Image(
-              image: AssetImage('assets/logo/catalogue.png'),
-              width: 50,
-              height: 50,
+            icon: _buildSvgIcon(
+              assetName: "assets/icons/catalogue.svg",
+              isSelected: false,
+              theme: theme,
             ),
-            selectedIcon: Image(
-              image: AssetImage('assets/logo/catalogue.png'),
-              width: 50,
-              height: 50,
+            selectedIcon: _buildSvgIcon(
+              assetName: "assets/icons/catalogue.svg",
+              isSelected: true,
+              theme: theme,
             ),
             label: 'Catalogues',
           ),
           NavigationDestination(
-            icon: Image(
-              image: AssetImage('assets/logo/activite.png'),
-              width: 50,
-              height: 50,
+            icon: _buildSvgIcon(
+              assetName: "assets/icons/activites.svg",
+              isSelected: false,
+              theme: theme,
             ),
-            selectedIcon: Image(
-              image: AssetImage('assets/logo/activite.png'),
-              width: 50,
-              height: 50,
+            selectedIcon: _buildSvgIcon(
+              assetName: "assets/icons/activites.svg",
+              isSelected: true,
+              theme: theme,
             ),
             label: 'Activités',
           ),
-
           NavigationDestination(
-            icon: Image(
-              image: AssetImage('assets/logo/person.png'),
-              width: 50,
-              height: 50,
+            icon: _buildSvgIcon(
+              assetName: "assets/icons/personne.svg",
+              isSelected: false,
+              theme: theme,
             ),
-            selectedIcon: Image(
-              image: AssetImage('assets/logo/person.png'),
-              width: 50,
-              height: 50,
+            selectedIcon: _buildSvgIcon(
+              assetName: "assets/icons/personne.svg",
+              isSelected: true,
+              theme: theme,
             ),
             label: 'Profil',
           ),

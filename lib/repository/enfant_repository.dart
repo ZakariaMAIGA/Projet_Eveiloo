@@ -24,6 +24,14 @@ class EnfantRepository {
     );
   }
 
+  /// Écoute un seul enfant par son ID — 1 lecture Firestore au lieu de N.
+  Stream<EnfantModel?> observerEnfant(String parentId, String enfantId) {
+    return _enfants(parentId).doc(enfantId).snapshots().map((doc) {
+      if (!doc.exists) return null;
+      return EnfantModel.fromMap(doc.data()!, doc.id);
+    });
+  }
+
   Future<EnfantModel?> obtenirParId(String parentId, String enfantId) async {
     final document = await _enfants(parentId).doc(enfantId).get();
 

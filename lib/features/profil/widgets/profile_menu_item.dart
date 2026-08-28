@@ -28,12 +28,12 @@ class ProfileMenuItem extends StatelessWidget {
           0.1,
         ), // effet au survol (web/desktop)
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
           child: Row(
             children: [
               Icon(
                 icon,
-                size: AppFontSize.extraLarge,
+                size: AppFontSize.large,
                 color: iconColor ?? Colors.black87,
               ),
 
@@ -43,13 +43,13 @@ class ProfileMenuItem extends StatelessWidget {
                 child: Text(
                   title,
                   style: const TextStyle(
-                    fontSize: AppFontSize.large,
+                    fontSize: AppFontSize.medium,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
               ),
 
-              const Icon(Icons.chevron_right, size: 30, color: Colors.black54),
+              const Icon(Icons.chevron_right, size: 20, color: Colors.black54),
             ],
           ),
         ),

@@ -1,7 +1,7 @@
+import 'package:eveiloo_enfant/models/CategorieJouetModel.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/AppFontSize.dart';
 import '../../core/constants/AppSpacing.dart';
-import '../../models/category_model.dart';
 import '../../models/toy_model.dart';
 import '../../repository/toy_repository.dart';
 
@@ -72,7 +72,7 @@ class _AdminToysPageState extends State<AdminToysPage> {
                       const SizedBox(height: AppSpacing.md),
 
                       // Sélection dynamique de la catégorie via Firestore
-                      StreamBuilder<List<CategoryModel>>(
+                      StreamBuilder<List<CategorieJouetModel>>(
                         stream: _toyRepository.getCategories(),
                         builder: (context, snapshot) {
                           if (!snapshot.hasData) {

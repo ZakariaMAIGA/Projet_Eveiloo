@@ -1,22 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/cart_model.dart';
+import '../../models/cart_model.dart'; // contient CartItemModel
 
-/// Service de gestion du panier via Firestore.
-///
-/// Structure Firestore utilisée :
-/// paniers/{utilisateurId}/articles/{articlePanierId}
-///
-/// Adapte les noms de collections ci-dessous avec tes constantes
-/// définies dans core/constants/firebase_collections.dart si besoin
-/// (ex: FirebaseCollections.paniers).
 class CartService {
   final FirebaseFirestore _firestore;
 
   CartService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  CollectionReference<Map<String, dynamic>> _articlesRef(
-      String utilisateurId) {
+  CollectionReference<Map<String, dynamic>> _articlesRef(String utilisateurId) {
     return _firestore
         .collection('paniers')
         .doc(utilisateurId)
@@ -24,20 +15,20 @@ class CartService {
   }
 
   /// Écoute en temps réel le panier de l'utilisateur.
-  Stream<CartModel> streamPanier(String utilisateurId) {
+  Stream<List<CartItemModel>> streamPanier(String utilisateurId) {
     return _articlesRef(utilisateurId).snapshots().map((snapshot) {
-      final documents = snapshot.docs.map((doc) => doc.data()).toList();
-      final ids = snapshot.docs.map((doc) => doc.id).toList();
-      return CartModel.fromFirestore(utilisateurId, documents, ids);
+      return snapshot.docs.map((doc) {
+        return CartItemModel.fromFirestore(doc);
+      }).toList();
     });
   }
 
   /// Récupère le panier une seule fois (sans écoute temps réel).
-  Future<CartModel> recupererPanier(String utilisateurId) async {
+  Future<List<CartItemModel>> recupererPanier(String utilisateurId) async {
     final snapshot = await _articlesRef(utilisateurId).get();
-    final documents = snapshot.docs.map((doc) => doc.data()).toList();
-    final ids = snapshot.docs.map((doc) => doc.id).toList();
-    return CartModel.fromFirestore(utilisateurId, documents, ids);
+    return snapshot.docs.map((doc) {
+      return CartItemModel.fromFirestore(doc);
+    }).toList();
   }
 
   /// Ajoute un jouet au panier, ou incrémente sa quantité s'il y est déjà.
@@ -54,10 +45,11 @@ class CartService {
     if (existant.docs.isNotEmpty) {
       final doc = existant.docs.first;
       final quantiteActuelle = (doc.data()['quantite'] as num?)?.toInt() ?? 0;
-      await doc.reference
-          .update({'quantite': quantiteActuelle + article.quantite});
+      await doc.reference.update({
+        'quantite': quantiteActuelle + article.quantite,
+      });
     } else {
-      await ref.add(article.toFirestore());
+      await ref.add(article.toMap());
     }
   }
 
@@ -74,9 +66,9 @@ class CartService {
       );
       return;
     }
-    await _articlesRef(utilisateurId)
-        .doc(articlePanierId)
-        .update({'quantite': nouvelleQuantite});
+    await _articlesRef(
+      utilisateurId,
+    ).doc(articlePanierId).update({'quantite': nouvelleQuantite});
   }
 
   /// Supprime un article du panier.

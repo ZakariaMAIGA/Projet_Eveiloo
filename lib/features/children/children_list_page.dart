@@ -2,6 +2,7 @@ import 'package:eveiloo_enfant/core/services/auth_service.dart';
 import 'package:eveiloo_enfant/models/enfant.dart';
 import 'package:eveiloo_enfant/repository/enfant_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class ChildrenListPage extends StatelessWidget {
   const ChildrenListPage({super.key});
@@ -43,15 +44,16 @@ class ChildrenListPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final enfant = enfants[index];
 
-              return Material(
-                color: Colors.transparent,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
+              return Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
                   child: ListTile(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 6,
@@ -73,7 +75,7 @@ class ChildrenListPage extends StatelessWidget {
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // TODO: naviguer vers la fiche détaillée de l'enfant
+                      context.go('/childProfil/$parentId/${enfant.enfantId}');
                     },
                   ),
                 ),

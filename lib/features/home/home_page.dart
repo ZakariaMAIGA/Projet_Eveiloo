@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildChildrenList(String parentId) {
     return SizedBox(
-      height: 195,
+      height: 220, // augmenté de 195 à 220 pour éviter l'overflow bottom de 14px
       child: StreamBuilder<List<EnfantModel>>(
         stream: _enfantRepository.observerEnfants(parentId),
         builder: (context, snapshot) {
@@ -180,7 +180,7 @@ class _HomePageState extends State<HomePage> {
                 enfant: enfant,
                 accentColor: couleur,
                 onTap: () {
-                  // TODO: naviguer vers la fiche détaillée de l'enfant
+                  context.go('/childProfil/$parentId/${enfant.enfantId}');
                 },
               );
             },

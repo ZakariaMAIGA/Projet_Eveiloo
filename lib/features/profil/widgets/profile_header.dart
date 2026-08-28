@@ -12,13 +12,13 @@ class ProfileHeader extends StatelessWidget {
     return Column(
       children: [
         CircleAvatar(
-          radius: 80,
+          radius: 40,
           backgroundColor: const Color(0xFFD9F7FF),
           backgroundImage: photoUrl != null && photoUrl!.isNotEmpty
               ? NetworkImage(photoUrl!)
               : null,
           child: photoUrl == null || photoUrl!.isEmpty
-              ? const Icon(Icons.person, size: 90, color: Colors.pinkAccent)
+              ? const Icon(Icons.person, size: 50, color: Colors.pinkAccent)
               : null,
         ),
 

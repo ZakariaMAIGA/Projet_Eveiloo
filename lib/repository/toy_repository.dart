@@ -1,19 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/category_model.dart';
+import 'package:eveiloo_enfant/models/CategorieJouetModel.dart';
 import '../models/toy_model.dart';
 
 class ToyRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Récupérer la liste des catégories
-  Stream<List<CategoryModel>> getCategories() {
+  Stream<List<CategorieJouetModel>> getCategories() {
     return _firestore.collection('CATEGORIES').snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
         final data = doc.data();
-        return CategoryModel.fromFirestore(
-          Map<String, dynamic>.from(data),
-          doc.id,
-        );
+        return CategorieJouetModel.fromMap(Map<String, dynamic>.from(data));
       }).toList();
     });
   }
