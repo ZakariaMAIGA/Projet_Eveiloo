@@ -92,17 +92,6 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     if (activityFinished || !mounted) return;
     activityFinished = true;
     countdownTimer?.cancel();
-
-    // La session de jeu est finie : l'activité passe "Terminée".
-    // On persiste aussi le pourcentage réel obtenu par l'enfant.
-    final total = questions?.length ?? totalQuestionCount;
-    final percent =
-        total == 0 ? 0.0 : ((score / total) * 100).clamp(0.0, 100.0);
-    unawaited(
-      ActivityService()
-          .markActivityCompleted(widget.activity.activityId, percent),
-    );
-
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -285,7 +274,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Color(0xFF29258F),
-            fontSize: 22,
+            fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -295,7 +284,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: Color(0xFF29258F),
-            fontSize: 25,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -312,7 +301,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
               errorBuilder: (_, error, stackTrace) => const ColoredBox(
                 color: Color(0xFFDDF4FB),
                 child: Icon(Icons.broken_image_outlined,
-                    color: Color(0xFF2D8DD5), size: 72),
+                    color: Color(0xFF2D8DD5), size: 56),
               ),
             ),
           ),
@@ -326,7 +315,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(Icons.menu_book_rounded,
-                color: Color(0xFF2D8DD5), size: 72),
+                color: Color(0xFF2D8DD5), size: 56),
           ),
         const SizedBox(height: 38),
         Align(
@@ -335,7 +324,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
             widget.activity.description,
             style: const TextStyle(
               color: Color(0xFF29258F),
-              fontSize: 19,
+              fontSize: 16,
               height: 1.25,
               fontWeight: FontWeight.w700,
             ),
@@ -347,7 +336,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
           height: 55,
           child: ElevatedButton(
             onPressed: () => setState(() => readingStep = false),
-            child: const Text('Suivant', style: TextStyle(fontSize: 23)),
+            child: const Text('Suivant', style: TextStyle(fontSize: 18)),
           ),
         ),
         ],
@@ -409,7 +398,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
                   question.statement,
                   style: const TextStyle(
                     color: Color(0xFF29258F),
-                    fontSize: 23,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

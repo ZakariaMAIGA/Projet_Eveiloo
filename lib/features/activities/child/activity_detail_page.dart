@@ -22,12 +22,12 @@ class ActivityDetailPage extends StatelessWidget {
         backgroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF29258F), size: 32),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF29258F), size: 24),
         ),
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.bookmark_border, color: Color(0xFF29258F), size: 30),
+            icon: const Icon(Icons.bookmark_border, color: Color(0xFF29258F), size: 24),
           ),
         ],
       ),
@@ -82,14 +82,20 @@ class ActivityDetailPage extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Color(0xFF29258F),
-                      fontSize: 30,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
 
                   const SizedBox(height: 10),
 
-                 
+                  Text(
+                    activity.description,
+                    style: const TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+
                   const SizedBox(height: 25),
 
                   Container(
@@ -104,7 +110,7 @@ class ActivityDetailPage extends StatelessWidget {
                       children: [
                         const Text('Objectif', style: TextStyle(
                           color: Color(0xFF29258F),
-                          fontSize: 22,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         )),
                         const SizedBox(height: 12),
@@ -196,7 +202,7 @@ class ActivityDetailPage extends StatelessWidget {
                       child: const Text(
                         "Commencer",
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -244,7 +250,7 @@ class _InfoCard extends StatelessWidget {
 
             Icon(
               icon,
-              size: 35,
+              size: 28,
               color: Colors.deepPurple,
             ),
 
@@ -262,7 +268,7 @@ class _InfoCard extends StatelessWidget {
             Text(
               value,
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 16,
               ),
             )
 

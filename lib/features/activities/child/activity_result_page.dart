@@ -63,7 +63,7 @@ class ActivityResultPage extends StatelessWidget {
                       'Bravo !',
                       style: TextStyle(
                         color: Color(0xFF2D8DD5),
-                        fontSize: 32,
+                        fontSize: 26,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -73,7 +73,7 @@ class ActivityResultPage extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Color(0xFF29258F),
-                        fontSize: 23,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -106,7 +106,7 @@ class ActivityResultPage extends StatelessWidget {
                           ),
                         ),
                         child: const Text('Continuer', style: TextStyle(
-                          fontSize: 24,
+                          fontSize: 18,
                           fontWeight: FontWeight.w800,
                         )),
                       ),
@@ -184,13 +184,13 @@ class _ResultValue extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(color: Color(0xFF29258F), fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(color: Color(0xFF29258F), fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (icon != null) const Icon(Icons.star, color: Color(0xFFFFD600), size: 38),
-            Text(value, style: const TextStyle(color: Color(0xFF29258F), fontSize: 28, fontWeight: FontWeight.bold)),
+            if (icon != null) const Icon(Icons.star, color: Color(0xFFFFD600), size: 30),
+            Text(value, style: const TextStyle(color: Color(0xFF29258F), fontSize: 22, fontWeight: FontWeight.bold)),
           ],
         ),
       ],
@@ -214,9 +214,9 @@ class _ProgressSummary extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Progression de l’activité', style: TextStyle(color: Color(0xFF29258F), fontSize: 20, fontWeight: FontWeight.bold)),
+          const Text('Progression de l’activité', style: TextStyle(color: Color(0xFF29258F), fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
-          Text('$score/$totalQuestions histoires lues', style: const TextStyle(color: Color(0xFF29258F), fontSize: 20, fontWeight: FontWeight.w700)),
+          Text('$score/$totalQuestions histoires lues', style: const TextStyle(color: Color(0xFF29258F), fontSize: 16, fontWeight: FontWeight.w700)),
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(5),

@@ -1,4 +1,6 @@
 abstract final class AppRoutes {
+  static const onboarding = '/onboarding';
+  static const splash = '/splash';
   static const login = '/login';
   static const register = '/register';
   static const home = '/home';
@@ -16,6 +18,8 @@ abstract final class AppRoutes {
       '/admin/activities/:activityId/questions/:questionId/edit';
 
   static const loginName = 'login';
+  static const onboardingName = 'onboarding';
+  static const splashName = 'splash';
   static const registerName = 'register';
   static const homeName = 'home';
   static const overviewName = 'overview';

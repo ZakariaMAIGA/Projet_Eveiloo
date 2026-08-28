@@ -1,3 +1,5 @@
+import 'package:eveiloo_enfant/features/auth/splash_page.dart';
+import 'package:eveiloo_enfant/features/onboarding/onboarding_page.dart';
 import 'package:eveiloo_enfant/features/auth/register_page.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:eveiloo_enfant/features/home/home_page.dart';
@@ -21,8 +23,22 @@ class AppRouter {
   AppRouter._();
 
   static final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.adminAddActivity,
+    // Point de démarrage temporaire : liste des activités côté enfant
+    // (pour les tests). Remettre AppRoutes.splash pour la version normale.
+    initialLocation: AppRoutes.childActivities,
     routes: [
+      GoRoute(
+        path: AppRoutes.onboarding,
+        name: AppRoutes.onboardingName,
+        builder: (context, state) => const OnboardingPage(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.splash,
+        name: AppRoutes.splashName,
+        builder: (context, state) => const SplashPage(),
+      ),
+
       GoRoute(
         path: AppRoutes.login,
         name: AppRoutes.loginName,

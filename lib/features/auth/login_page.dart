@@ -54,6 +54,8 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
+      // Compte existant -> accueil direct (l'onboarding est réservé
+      // aux nouveaux comptes créés via l'inscription)
       context.goNamed(AppRoutes.homeName);
 
       // Si tu ajoutes AuthGate plus tard, il redirigera automatiquement

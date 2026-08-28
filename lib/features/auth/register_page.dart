@@ -63,7 +63,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (!mounted) return;
 
-      context.goNamed(AppRoutes.homeName);
+      // Nouveau compte parent -> onboarding de bienvenue avant l'accueil
+      context.goNamed(AppRoutes.onboardingName);
 
       // À ajouter après la création de HomePage ou AuthGate :
       //

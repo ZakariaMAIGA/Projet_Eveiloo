@@ -40,7 +40,7 @@ class AnswerButton extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         margin: const EdgeInsets.only(bottom: 15),
-        height: 92,
+        height: 76,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: background,
@@ -54,8 +54,8 @@ class AnswerButton extends StatelessWidget {
           children: [
             if (isSelected || showResult && isCorrect)
               Container(
-                width: 72,
-                height: 90,
+                width: 64,
+                height: 74,
                 margin: const EdgeInsets.only(right: 14),
                 color: const Color(0xFFE9FFF0),
               ),
@@ -70,7 +70,7 @@ class AnswerButton extends StatelessWidget {
               ),
             ),
             if (showResult && isCorrect)
-              const Icon(Icons.check_circle, color: Color(0xFF18A447), size: 40),
+              const Icon(Icons.check_circle, color: Color(0xFF18A447), size: 28),
             if (showResult && isSelected && !isCorrect)
               const Icon(Icons.cancel, color: Colors.red),
           ],
