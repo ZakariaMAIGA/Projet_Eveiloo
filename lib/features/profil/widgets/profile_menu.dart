@@ -101,7 +101,9 @@ class ProfileMenu extends StatelessWidget {
           ProfileMenuItem(
             icon: Icons.settings_outlined,
             title: 'Paramètres',
-            onTap: () {},
+            onTap: () {
+              context.push('/parametres');
+            },
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0),
