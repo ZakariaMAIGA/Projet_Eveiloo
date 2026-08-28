@@ -24,6 +24,13 @@ class EnfantRepository {
     );
   }
 
+  Stream<EnfantModel?> observerEnfantParId(String parentId, String enfantId) {
+    return _enfants(parentId).doc(enfantId).snapshots().map((doc) {
+      if (!doc.exists || doc.data() == null) return null;
+      return EnfantModel.fromMap(doc.data()!, doc.id);
+    });
+  }
+
   Future<EnfantModel?> obtenirParId(String parentId, String enfantId) async {
     final document = await _enfants(parentId).doc(enfantId).get();
 

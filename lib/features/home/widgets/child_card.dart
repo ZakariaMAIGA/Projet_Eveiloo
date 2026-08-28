@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../../models/enfant.dart';
 
 /// Carte compacte pour un enfant, affichée dans la liste horizontale
@@ -16,11 +15,37 @@ class ChildCard extends StatelessWidget {
   final Color accentColor;
   final VoidCallback? onTap;
 
+  /// Calcule l'âge à partir de dateNaissance (format attendu : YYYY-MM-DD).
+  int _calculerAge() {
+    final dateStr = enfant.dateNaissance;
+    if (dateStr.isEmpty) return 0;
+
+    try {
+      final parts = dateStr.split('-');
+      if (parts.length != 3) return 0;
+
+      final year = int.parse(parts[0]);
+      final month = int.parse(parts[1]);
+      final day = int.parse(parts[2]);
+
+      final now = DateTime.now();
+      var age = now.year - year;
+
+      // Si l'anniversaire n'est pas encore passé cette année
+      if (now.month < month || (now.month == month && now.day < day)) {
+        age--;
+      }
+
+      return age < 0 ? 0 : age;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Progression visuelle sur une échelle de 0 à 10 — à ajuster si le
-    // barème réel de progression de l'app est différent.
     final progression = (enfant.niveauAtteint / 10).clamp(0.0, 1.0);
+    final age = _calculerAge();
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
@@ -65,7 +90,7 @@ class ChildCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             Text(
-              '${enfant.age} ans',
+              '$age ans',
               style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
             ),
             const SizedBox(height: 8),

@@ -19,6 +19,7 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.overview,
     routes: [
+      // ---------- Auth & Overview ----------
       GoRoute(
         path: AppRoutes.overview,
         name: AppRoutes.overviewName,
@@ -37,6 +38,7 @@ class AppRouter {
         builder: (context, state) => const RegisterPage(),
       ),
 
+      // ---------- Navigation principale (tabs) ----------
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AppBottomNavigation(navigationShell: navigationShell);
@@ -50,15 +52,17 @@ class AppRouter {
         ],
       ),
 
-      // Liste complète des enfants — poussée depuis le home,
+      // ---------- Routes “enfants” (hors shell) ----------
       ...childrenRoutes,
 
+      // ---------- Notifications ----------
       GoRoute(
         path: '/notifications',
+        // pas besoin de name si tu n’utilises pas pushNamed ici
         builder: (context, state) => const NotificationsPage(),
       ),
 
-      // Route Administration ajoutée
+      // ---------- Admin ----------
       GoRoute(
         path: AppRoutes.adminToys,
         name: AppRoutes.adminToysName,

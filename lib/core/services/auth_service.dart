@@ -76,4 +76,18 @@ class AuthService {
   Future<void> reinitialiserMotDePasse(String courriel) {
     return _auth.sendPasswordResetEmail(email: courriel.trim());
   }
+
+  /// Change le mot de passe de l'utilisateur connecte.
+  /// Firebase peut lever `requires-recent-login` si la session est trop
+  /// ancienne : dans ce cas il faut reauthentifier l'utilisateur
+  /// (reauthenticateWithCredential) avant de reessayer.
+  Future<void> modifierMotDePasse(String nouveauMotDePasse) async {
+    final firebaseUser = _auth.currentUser;
+
+    if (firebaseUser == null) {
+      throw Exception('Aucun utilisateur connecté.');
+    }
+
+    await firebaseUser.updatePassword(nouveauMotDePasse);
+  }
 }

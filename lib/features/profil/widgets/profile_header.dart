@@ -25,8 +25,8 @@ class ProfileHeader extends StatelessWidget {
         AppSpacing.verticalGapMd,
 
         Text(
-          name,
-          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+          name.toUpperCase(),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ],
     );
