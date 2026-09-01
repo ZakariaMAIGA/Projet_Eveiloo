@@ -1,0 +1,66 @@
+* [33mc9a537d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mzak[m[33m, [m[1;31morigin/zak[m[33m)[m Nouvelle branche zak
+[31m|[m * [33m4fe3590[m[33m ([m[1;35mrefs/stash[m[33m)[m WIP on main: c0796e8 j'ai fais les tabs , commencer le home pages , ajouter les activites de salif , les notif de kanouter et cree les modeles et repository journal progress , enfant , splt les routes and more......
+[31m|[m[31m/[m[33m|[m 
+[31m|[m * [33m06a93a0[m index on main: c0796e8 j'ai fais les tabs , commencer le home pages , ajouter les activites de salif , les notif de kanouter et cree les modeles et repository journal progress , enfant , splt les routes and more......
+[31m|[m[31m/[m  
+* [33mc0796e8[m[33m ([m[1;31morigin/moulaye[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m j'ai fais les tabs , commencer le home pages , ajouter les activites de salif , les notif de kanouter et cree les modeles et repository journal progress , enfant , splt les routes and more......
+[33m|[m * [33mc83d778[m[33m ([m[1;31morigin/soukouna[m[33m)[m modification de avec ib sur favoris
+[33m|[m *   [33m3a50612[m après git pull
+[33m|[m [35m|[m[33m\[m  
+[33m|[m [35m|[m[33m/[m  
+[33m|[m[33m/[m[35m|[m   
+[33m|[m * [33mc054e7a[m rienjuste configue
+[33m|[m * [33m3fa38d7[m Dév: Ajout des favoris et des composants widgets
+[33m|[m * [33me124dfc[m Dév: Ajout des favoris et des composants widgets
+[33m|[m [36m|[m * [33mbbc9b49[m[33m ([m[1;31morigin/revert-86-revert-84-zak[m[33m)[m Revert "Revert "Accueil""
+[33m|[m [36m|[m *   [33m4d4ed0c[m Merge pull request #86 from ZakariaMAIGA/revert-84-zak
+[33m|[m [36m|[m [1;32m|[m[1;33m\[m  
+[33m|[m [36m|[m [1;32m|[m * [33mf7d601d[m[33m ([m[1;31morigin/revert-84-zak[m[33m)[m Revert "Accueil"
+[33m|[m [36m|[m [1;32m|[m[1;32m/[m  
+[33m|[m [36m|[m * [33m0028a0e[m Merge pull request #84 from ZakariaMAIGA/zak
+[33m|[m [36m|[m[33m/[m[1;35m|[m 
+[33m|[m[33m/[m[36m|[m [1;35m|[m 
+[33m|[m [36m|[m *   [33m01e91b4[m Merge branch 'main' into zak
+[33m|[m [36m|[m [1;36m|[m[33m\[m  
+[33m|[m [36m|[m[33m_[m[1;36m|[m[33m/[m  
+[33m|[m[33m/[m[36m|[m [1;36m|[m   
+* [36m|[m [1;36m|[m   [33m0f107df[m Merge pull request #85 from ZakariaMAIGA/moulaye
+[32m|[m[33m\[m [36m\[m [1;36m\[m  
+[32m|[m * [36m\[m [1;36m\[m   [33m9430eff[m Merge branch 'main' into moulaye
+[32m|[m [34m|[m[32m\[m [36m\[m [1;36m\[m  
+[32m|[m [34m|[m[32m/[m [36m/[m [1;36m/[m  
+[32m|[m[32m/[m[34m|[m [36m|[m [1;36m|[m   
+* [34m|[m [36m|[m [1;36m|[m   [33m627f2c3[m Merge pull request #83 from ZakariaMAIGA/kanoute
+[36m|[m[1;31m\[m [34m\[m [36m\[m [1;36m\[m  
+[36m|[m * [34m\[m [36m\[m [1;36m\[m   [33m79b7704[m[33m ([m[1;31morigin/kanoute[m[33m)[m Merge branch 'main' into kanoute
+[36m|[m [1;32m|[m[36m\[m [34m\[m [36m\[m [1;36m\[m  
+[36m|[m [1;32m|[m[36m/[m [34m/[m [36m/[m [1;36m/[m  
+[36m|[m[36m/[m[1;32m|[m [34m|[m [36m|[m [1;36m|[m   
+* [1;32m|[m [34m|[m [36m|[m [1;36m|[m   [33m5108a3a[m Merge pull request #82 from ZakariaMAIGA/keita
+[1;34m|[m[1;35m\[m [1;32m\[m [34m\[m [36m\[m [1;36m\[m  
+[1;34m|[m * [1;32m\[m [34m\[m [36m\[m [1;36m\[m   [33m59c043d[m[33m ([m[1;31morigin/keita[m[33m)[m Merge branch 'main' into keita
+[1;34m|[m [1;36m|[m[1;34m\[m [1;32m\[m [34m\[m [36m\[m [1;36m\[m  
+[1;34m|[m [1;36m|[m[1;34m/[m [1;32m/[m [34m/[m [36m/[m [1;36m/[m  
+[1;34m|[m[1;34m/[m[1;36m|[m [1;32m|[m [34m|[m [36m|[m [1;36m|[m   
+[1;34m|[m * [1;32m|[m [34m|[m [36m|[m [1;36m|[m [33mb104586[m Enregistrement Catalogue et jouet
+[1;34m|[m [31m|[m * [34m|[m [36m|[m [1;36m|[m [33m8efcd1c[m notification
+[1;34m|[m [31m|[m[1;34m/[m [34m/[m [36m/[m [1;36m/[m  
+[1;34m|[m[1;34m/[m[31m|[m [34m|[m [36m|[m [1;36m|[m   
+[1;34m|[m [31m|[m * [36m|[m [1;36m|[m [33m4102398[m tabs done
+[1;34m|[m [31m|[m [31m|[m [36m|[m * [33mf408b53[m Accueil
+[1;34m|[m [31m|[m [31m|[m [36m|[m [31m|[m *   [33mc122852[m[33m ([m[1;31morigin/aichasylla[m[33m)[m activités et questions sylla
+[1;34m|[m [31m|[m [31m|[m [36m|[m [31m|[m [32m|[m[1;34m\[m  
+[1;34m|[m [31m|[m[1;34m_[m[31m|[m[1;34m_[m[36m|[m[1;34m_[m[31m|[m[1;34m_[m[32m|[m[1;34m/[m  
+[1;34m|[m[1;34m/[m[31m|[m [31m|[m [36m|[m [31m|[m [32m|[m   
+* [31m|[m [31m|[m [36m|[m [31m|[m [32m|[m   [33m68863fb[m Merge pull request #81 from ZakariaMAIGA/moulaye
+[34m|[m[35m\[m [31m\[m [31m\[m [36m\[m [31m\[m [32m\[m  
+[34m|[m * [31m\[m [31m\[m [36m\[m [31m\[m [32m\[m   [33m4110d24[m Merge branch 'main' into moulaye
+[34m|[m [31m|[m[34m\[m [31m\[m [31m\[m [36m\[m [31m\[m [32m\[m  
+[34m|[m [31m|[m[34m/[m [31m/[m [31m/[m [36m/[m [31m/[m [32m/[m  
+[34m|[m[34m/[m[31m|[m [31m|[m [31m/[m [36m/[m [31m/[m [32m/[m   
+[34m|[m [31m|[m [31m|[m[31m/[m [36m/[m [31m/[m [32m/[m    
+[34m|[m [31m|[m[31m/[m[31m|[m [36m|[m [31m|[m [32m|[m     
+[34m|[m * [31m|[m [36m|[m [31m|[m [32m|[m [33m04905f9[m Login, register and overview
+[34m|[m * [31m|[m [36m|[m [31m|[m [32m|[m [33mb648646[m Login, register and overview
+[34m|[m [1;31m|[m [31m|[m [36m|[m [31m|[m * [33m9aeb20a[m activités et questions par sylla
+[34m|[m [1;31m|[m [31m|[m [36m|[m [31m|[m[31m/[m  

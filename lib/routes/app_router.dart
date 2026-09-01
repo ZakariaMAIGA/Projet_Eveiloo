@@ -3,6 +3,7 @@ import 'package:eveiloo_enfant/features/activites/activitiesRoutes.dart';
 import 'package:eveiloo_enfant/features/auth/register_page.dart';
 import 'package:eveiloo_enfant/features/catalogues/catalogueRoutes.dart';
 import 'package:eveiloo_enfant/features/children/children_routes.dart';
+import 'package:eveiloo_enfant/features/commandes/mes_commandes_page.dart';
 import 'package:eveiloo_enfant/features/profil/profileRoutes.dart';
 import 'package:eveiloo_enfant/features/toys/admin_toys_page.dart';
 import 'package:eveiloo_enfant/features/tutorials/tutorialsRoutes.dart';
@@ -56,6 +57,11 @@ class AppRouter {
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationsPage(),
+      ),
+         GoRoute(
+        path:"/listeMesCommandes",
+        name: AppRoutes.listeMesCommandesName,
+        builder: (context, state) => const MesCommandesPage(),
       ),
 
       // Route Administration ajoutée
