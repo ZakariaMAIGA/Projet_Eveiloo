@@ -1,3 +1,4 @@
+import 'package:eveiloo_enfant/provider/CommandeProvider.dart';
 import 'package:eveiloo_enfant/routes/app_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,9 @@ void main() async {
       providers: [
         ChangeNotifierProvider<NotificationService>.value(
           value: notificationService,
+        ),
+        ChangeNotifierProvider(
+          create: (_) => CommandeProvider(),
         ),
       ],
       child: const MyApp(),
