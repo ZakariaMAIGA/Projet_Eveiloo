@@ -9,9 +9,10 @@ class TutorielModel {
   final int ageMin;
   final int ageMax;
   final String categorie;
-  final DateTime? dateCreation;
+  final DateTime dateCreation;
+  final List<String> materielIds; // Liste simple des IDs des jouets
 
-  const TutorielModel({
+  TutorielModel({
     required this.tutorielId,
     required this.titre,
     this.description = '',
@@ -19,9 +20,10 @@ class TutorielModel {
     this.urlImage = '',
     this.ageMin = 0,
     this.ageMax = 0,
-    this.categorie = '',
-    this.dateCreation,
-  });
+    required this.categorie,
+    DateTime? dateCreation,
+    this.materielIds = const [],
+  }) : dateCreation = dateCreation ?? DateTime.now();
 
   factory TutorielModel.fromMap(Map<String, dynamic> map, String id) {
     return TutorielModel(
@@ -30,10 +32,12 @@ class TutorielModel {
       description: map['description'] ?? '',
       urlVideo: map['urlVideo'] ?? '',
       urlImage: map['urlImage'] ?? '',
-      ageMin: (map['ageMin'] ?? 0) as int,
-      ageMax: (map['ageMax'] ?? 0) as int,
+      ageMin: (map['ageMin'] as num?)?.toInt() ?? 0,
+      ageMax: (map['ageMax'] as num?)?.toInt() ?? 0,
       categorie: map['categorie'] ?? '',
-      dateCreation: (map['dateCreation'] as Timestamp?)?.toDate(),
+      dateCreation:
+          (map['dateCreation'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      materielIds: List<String>.from(map['materiels'] ?? []),
     );
   }
 
@@ -52,33 +56,9 @@ class TutorielModel {
       'ageMin': ageMin,
       'ageMax': ageMax,
       'categorie': categorie,
-      'dateCreation': dateCreation != null
-          ? Timestamp.fromDate(dateCreation!)
-          : FieldValue.serverTimestamp(),
+      'dateCreation': Timestamp.fromDate(dateCreation),
+      'materiels':
+          materielIds, // On enregistre juste un tableau d'IDs (ex: ["toy_001", "toy_002"])
     };
-  }
-
-  TutorielModel copyWith({
-    String? tutorielId,
-    String? titre,
-    String? description,
-    String? urlVideo,
-    String? urlImage,
-    int? ageMin,
-    int? ageMax,
-    String? categorie,
-    DateTime? dateCreation,
-  }) {
-    return TutorielModel(
-      tutorielId: tutorielId ?? this.tutorielId,
-      titre: titre ?? this.titre,
-      description: description ?? this.description,
-      urlVideo: urlVideo ?? this.urlVideo,
-      urlImage: urlImage ?? this.urlImage,
-      ageMin: ageMin ?? this.ageMin,
-      ageMax: ageMax ?? this.ageMax,
-      categorie: categorie ?? this.categorie,
-      dateCreation: dateCreation ?? this.dateCreation,
-    );
   }
 }

@@ -282,7 +282,11 @@ class _LoginPageState extends State<LoginPage> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: _isLoading ? null : _motDePasseOublie,
+                        onPressed: _isLoading
+                            ? null
+                            : () => context.pushNamed(
+                                AppRoutes.forgotPasswordName,
+                              ),
                         child: const Text('Mot de passe oublié ?'),
                       ),
                     ),

@@ -50,4 +50,20 @@ class EnfantRepository {
   Future<void> supprimer(String parentId, String enfantId) {
     return _enfants(parentId).doc(enfantId).delete();
   }
+
+  Future<void> incrementerProgres(
+    String parentId,
+    String enfantId, {
+    required int points,
+  }) async {
+    await _firestore
+        .collection('utilisateurs')
+        .doc(parentId)
+        .collection('enfants')
+        .doc(enfantId)
+        .update({
+          'pointsGagnes': FieldValue.increment(points),
+          'activitesRealisees': FieldValue.increment(1),
+        });
+  }
 }

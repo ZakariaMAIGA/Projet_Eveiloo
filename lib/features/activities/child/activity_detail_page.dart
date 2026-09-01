@@ -1,4 +1,6 @@
+import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../models/activity_model.dart';
 import '../widgets/activity_category.dart';
@@ -6,11 +8,10 @@ import 'activity_play_page.dart';
 
 class ActivityDetailPage extends StatelessWidget {
   final ActivityModel activity;
+  final String? enfantId; // null => parent, lecture seule
 
-  const ActivityDetailPage({
-    super.key,
-    required this.activity,
-  });
+  const ActivityDetailPage({super.key, required this.activity, this.enfantId});
+  bool get modeJouable => enfantId != null;
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +23,20 @@ class ActivityDetailPage extends StatelessWidget {
         backgroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF29258F), size: 32),
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Color(0xFF29258F),
+            size: 24,
+          ),
         ),
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.bookmark_border, color: Color(0xFF29258F), size: 30),
+            icon: const Icon(
+              Icons.bookmark_border,
+              color: Color(0xFF29258F),
+              size: 24,
+            ),
           ),
         ],
       ),
@@ -36,7 +45,6 @@ class ActivityDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             Center(
               child: Hero(
                 tag: activity.activityId,
@@ -55,15 +63,21 @@ class ActivityDetailPage extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (_, error, stackTrace) =>
                                 const ColoredBox(
-                              color: Color(0xFFFFE4F0),
-                              child: Icon(Icons.broken_image_outlined,
-                                  color: Color(0xFFE91E9B), size: 52),
-                            ),
+                                  color: Color(0xFFFFE4F0),
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    color: Color(0xFFE91E9B),
+                                    size: 52,
+                                  ),
+                                ),
                           )
                         : const ColoredBox(
                             color: Color(0xFFFFE4F0),
-                            child: Icon(Icons.menu_book_rounded,
-                                color: Color(0xFFE91E9B), size: 52),
+                            child: Icon(
+                              Icons.menu_book_rounded,
+                              color: Color(0xFFE91E9B),
+                              size: 52,
+                            ),
                           ),
                   ),
                 ),
@@ -73,23 +87,25 @@ class ActivityDetailPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Text(
                     activity.title,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Color(0xFF29258F),
-                      fontSize: 30,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
 
                   const SizedBox(height: 10),
 
-                 
+                  Text(
+                    activity.description,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+
                   const SizedBox(height: 25),
 
                   Container(
@@ -102,17 +118,22 @@ class ActivityDetailPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Objectif', style: TextStyle(
-                          color: Color(0xFF29258F),
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        )),
+                        const Text(
+                          'Objectif',
+                          style: TextStyle(
+                            color: Color(0xFF29258F),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const SizedBox(height: 12),
-                        Text(activity.objective ?? activity.description,
-                            style: const TextStyle(
-                              color: Color(0xFF29258F),
-                              fontWeight: FontWeight.w600,
-                            )),
+                        Text(
+                          activity.objective ?? activity.description,
+                          style: const TextStyle(
+                            color: Color(0xFF29258F),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -121,13 +142,11 @@ class ActivityDetailPage extends StatelessWidget {
 
                   Row(
                     children: [
-
                       Expanded(
                         child: _InfoCard(
                           icon: Icons.star,
                           title: "Points",
-                            value:
-                              "${activity.rewardPoints}",
+                          value: "${activity.rewardPoints}",
                         ),
                       ),
 
@@ -137,11 +156,9 @@ class ActivityDetailPage extends StatelessWidget {
                         child: _InfoCard(
                           icon: Icons.timer,
                           title: "Durée",
-                            value:
-                              "${(activity.duration / 60).ceil()} min",
+                          value: "${(activity.duration / 60).ceil()} min",
                         ),
                       ),
-
                     ],
                   ),
 
@@ -149,18 +166,14 @@ class ActivityDetailPage extends StatelessWidget {
 
                   const Text(
                     "Progression",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
 
                   const SizedBox(height: 10),
 
                   ClipRRect(
-                    borderRadius:
-                        BorderRadius.circular(20),
-                      child: LinearProgressIndicator(
+                    borderRadius: BorderRadius.circular(20),
+                    child: LinearProgressIndicator(
                       value: progress,
                       minHeight: 14,
                       backgroundColor: Colors.grey.shade300,
@@ -170,43 +183,40 @@ class ActivityDetailPage extends StatelessWidget {
 
                   const SizedBox(height: 8),
 
-                  Text(
-                    "${activity.progress.toInt()} %",
-                  ),
+                  Text("${activity.progress.toInt()} %"),
 
                   const SizedBox(height: 40),
 
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: () {
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                ActivityPlayPage(
-                              activity: activity,
-                            ),
-                          ),
-                        );
-
-                      },
+                  if (modeJouable)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          context.pushNamed(
+                            AppRoutes.childActivityPlayName,
+                            extra: (activity: activity, enfantId: enfantId!),
+                          );
+                        },
+                        child: const Text("Commencer"),
+                      ),
+                    )
+                  else
+                    // rien, ou un simple bandeau informatif :
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F0F0),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       child: const Text(
-                        "Commencer",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        "Cette activité est jouable depuis le profil de l'enfant.",
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                  )
-
                 ],
               ),
-            )
-
+            ),
           ],
         ),
       ),
@@ -230,44 +240,23 @@ class _InfoCard extends StatelessWidget {
     return Card(
       elevation: 3,
 
-      shape: RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.circular(15),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
 
       child: Padding(
         padding: const EdgeInsets.all(16),
 
         child: Column(
-
           children: [
-
-            Icon(
-              icon,
-              size: 35,
-              color: Colors.deepPurple,
-            ),
+            Icon(icon, size: 28, color: Colors.deepPurple),
 
             const SizedBox(height: 10),
 
-            Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
 
             const SizedBox(height: 5),
 
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 18,
-              ),
-            )
-
+            Text(value, style: const TextStyle(fontSize: 16)),
           ],
-
         ),
       ),
     );

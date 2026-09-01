@@ -1,146 +1,147 @@
+import 'package:eveiloo_enfant/features/cart/cart_service.dart';
+import 'package:eveiloo_enfant/models/toy_model.dart';
+import 'package:eveiloo_enfant/core/constants/AppSpacing.dart';
 import 'package:flutter/material.dart';
-import '../../core/constants/AppFontSize.dart';
-import '../../core/constants/AppSpacing.dart';
-import '../../models/toy_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../models/cart_model.dart'; // CartItemModel
 
-class ToyDetailPage extends StatelessWidget {
+class ToyDetailPage extends StatefulWidget {
   final ToyModel toy;
 
   const ToyDetailPage({Key? key, required this.toy}) : super(key: key);
 
   @override
+  State<ToyDetailPage> createState() => _ToyDetailPageState();
+}
+
+class _ToyDetailPageState extends State<ToyDetailPage> {
+  final CartService _cartService = CartService();
+  bool _isAdding = false;
+
+  String? _getUserId() {
+    return FirebaseAuth.instance.currentUser?.uid;
+  }
+
+  Future<void> _addToCart() async {
+    final userId = _getUserId();
+    if (userId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Veuillez vous connecter pour ajouter au panier.'),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() => _isAdding = true);
+
+    final item = CartItemModel(
+      articlePanierId: '', // ignoré, sera généré par Firestore
+      jouetId: widget.toy.id,
+      nom: widget.toy.nom,
+      prixUnitaire: widget.toy.prix,
+      quantite: 1,
+      urlImage: widget.toy.imageUrl,
+    );
+
+    try {
+      await _cartService.ajouterArticle(utilisateurId: userId, article: item);
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Jouet ajouté au panier')));
+      }
+    } catch (e, stack) {
+      // Pour déboguer : regarde la console
+      debugPrint('Erreur ajout panier: $e');
+      debugPrint('Stack: $stack');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erreur lors de l’ajout au panier')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isAdding = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final toy = widget.toy;
 
     return Scaffold(
-      appBar: AppBar(title: Text(toy.nom), centerTitle: true),
+      appBar: AppBar(title: Text(toy.nom)),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image du jouet
-            Container(
-              height: 250,
-              width: double.infinity,
-              color: Colors.grey[200],
-              child: toy.imageUrl.isNotEmpty
-                  ? Image.network(
-                      toy.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.toys, size: 80, color: Colors.grey),
-                    )
-                  : const Icon(Icons.toys, size: 80, color: Colors.grey),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Nom et Note
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          toy.nom,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: AppFontSize.large,
-                          ),
+            // IMAGE DU JOUET AVEC ICÔNE PAR DÉFAAUT
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: double.infinity,
+                height: 240,
+                color: Colors.grey.shade200,
+                child: toy.imageUrl.isNotEmpty
+                    ? Image.network(
+                        toy.imageUrl,
+                        width: double.infinity,
+                        height: 240,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Icon(
+                              Icons.smart_toy_rounded,
+                              size: 64,
+                              color: Colors.grey,
+                            ),
+                          );
+                        },
+                      )
+                    : const Center(
+                        child: Icon(
+                          Icons.smart_toy_rounded,
+                          size: 64,
+                          color: Colors.grey,
                         ),
                       ),
-                      Row(
-                        children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 20),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${toy.note} (${toy.nombreAvis})',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  AppSpacing.verticalGapSm,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              toy.nom,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text('${toy.prix.toInt()} FCFA'),
+            Text('Âge : ${toy.ageRange}'),
+            const SizedBox(height: AppSpacing.md),
+            Text(toy.description),
+            const SizedBox(height: AppSpacing.lg),
 
-                  // Badge Tranche d'âge
-                  Chip(
-                    avatar: const Icon(Icons.child_care, size: 18),
-                    label: Text('Âge : ${toy.ageRange}'),
-                    backgroundColor: theme.primaryColor.withOpacity(0.1),
-                    labelStyle: TextStyle(color: theme.primaryColor),
-                  ),
-                  AppSpacing.verticalGapMd,
-
-                  // Description
-                  Text(
-                    'Description',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  AppSpacing.verticalGapXs,
-                  Text(
-                    toy.description,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                  AppSpacing.verticalGapLg,
-
-                  // Compétences stimulées (si disponibles)
-                  if (toy.competences.isNotEmpty) ...[
-                    Text(
-                      'Compétences stimulées',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    AppSpacing.verticalGapXs,
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: toy.competences
-                          .map(
-                            (comp) => Chip(
-                              label: Text(comp),
-                              backgroundColor: Colors.grey[200],
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ],
-                ],
+            // BOUTON AJOUTER AU PANIER
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isAdding ? null : _addToCart,
+                icon: _isAdding
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.shopping_cart),
+                label: Text(
+                  _isAdding ? 'Ajout en cours...' : 'Ajouter au panier',
+                ),
               ),
             ),
           ],
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${toy.nom} ajouté à votre sélection !'),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text(
-              'Ajouter à la sélection',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
         ),
       ),
     );

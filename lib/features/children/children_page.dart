@@ -1,4 +1,5 @@
 import 'package:eveiloo_enfant/core/provider/enfant_provider.dart';
+import 'package:eveiloo_enfant/core/provider/enfant_selectionne_provider.dart';
 import 'package:eveiloo_enfant/models/enfant.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:flutter/material.dart';
@@ -85,13 +86,13 @@ class MesEnfantsPage extends ConsumerWidget {
 // ---------------------------------------------------------------------------
 // Carte enfant
 // ---------------------------------------------------------------------------
-class _CarteEnfant extends StatelessWidget {
+class _CarteEnfant extends ConsumerWidget {
   final EnfantModel enfant;
 
   const _CarteEnfant({required this.enfant});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -109,11 +110,8 @@ class _CarteEnfant extends StatelessWidget {
         subtitle: Text(_calculerAge(enfant.dateNaissance)),
         trailing: const Icon(Icons.chevron_right, color: Colors.grey),
         onTap: () {
-          // Redirection vers le profil / dashboard de l'enfant
-          context.goNamed(
-            AppRoutes.childrenProfilName, // ← utilise le bon name
-            pathParameters: {'enfantId': enfant.enfantId},
-          );
+          ref.read(enfantSelectionneProvider.notifier).state = enfant.enfantId;
+          context.goNamed(AppRoutes.childHomeName);
         },
       ),
     );

@@ -94,7 +94,9 @@ class _ChildrenProfilState extends ConsumerState<ChildrenProfil> {
   Future<void> _ouvrirEntreeJournal(JournalProgresModel entree) async {
     if (entree.typeElement == TypeElementProgres.tutoriel) {
       if (!mounted) return;
-      context.go(AppRoutes.tutorials);
+      // Bascule vers la branche Tutoriels du shell enfant (index à ajuster
+      // selon l'ordre réel des branches dans childShellRoute)
+      StatefulNavigationShell.of(context).goBranch(2);
       return;
     }
 
@@ -103,7 +105,11 @@ class _ChildrenProfilState extends ConsumerState<ChildrenProfil> {
 
     if (activite == null || !mounted) return;
 
-    context.go(AppRoutes.childActivityDetail, extra: activite);
+    context.pushNamed(
+      AppRoutes.childActivityDetailName,
+      pathParameters: {'enfantId': widget.enfantId},
+      extra: (activity: activite, enfantId: widget.enfantId),
+    );
   }
 
   void _voirToutHistorique() {
@@ -145,13 +151,7 @@ class _ChildrenProfilState extends ConsumerState<ChildrenProfil> {
               size: 20,
             ),
           ),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go(AppRoutes.childrenList);
-            }
-          },
+          onPressed: () => context.goNamed(AppRoutes.childrenListName),
         ),
         title: const Text(
           'Profil',
@@ -278,7 +278,9 @@ class _ChildrenProfilState extends ConsumerState<ChildrenProfil> {
             },
           ),
           const SizedBox(height: 32),
-          const GrilleActionsPremium(),
+          GrilleActionsPremium(
+            enfantId: widget.enfantId,
+          ), // ← corrigé (pas const, pas "enfant")
         ],
       ),
     );

@@ -84,9 +84,7 @@ class ProfileMenu extends ConsumerWidget {
           ProfileMenuItem(
             icon: Icons.shopping_basket_outlined,
             title: 'Panier',
-            onTap: () {
-              // TODO: brancher sur la route existante de features/cart
-            },
+            onTap: () => context.pushNamed(AppRoutes.cartName),
           ),
 
           _divider(),
@@ -105,7 +103,7 @@ class ProfileMenu extends ConsumerWidget {
             icon: Icons.settings_outlined,
             title: 'Paramètres',
             onTap: () {
-              // TODO: créer la page + la route "paramètres"
+              context.pushNamed(AppRoutes.parametreName);
             },
           ),
 

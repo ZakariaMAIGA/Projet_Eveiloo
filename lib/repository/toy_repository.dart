@@ -61,4 +61,19 @@ class ToyRepository {
   Future<void> deleteToy(String toyId) async {
     await _firestore.collection('JOUETS').doc(toyId).delete();
   }
+
+  // Récupère la liste des objets ToyModel à partir d'une liste d'IDs
+  Future<List<ToyModel>> getJouetsParIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+
+    // Note: Firestore limite whereIn à 30 éléments par requête
+    final snapshot = await FirebaseFirestore.instance
+        .collection('JOUETS')
+        .where(FieldPath.documentId, whereIn: ids)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => ToyModel.fromFirestore(doc.data(), doc.id))
+        .toList();
+  }
 }

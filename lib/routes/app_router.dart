@@ -1,15 +1,22 @@
 import 'package:eveiloo_enfant/features/Nootifications/notification.dart';
 import 'package:eveiloo_enfant/features/activities/activitiesRoutes.dart';
+import 'package:eveiloo_enfant/features/auth/forgot_password_page.dart';
 import 'package:eveiloo_enfant/features/auth/register_page.dart';
+import 'package:eveiloo_enfant/features/auth/splash_page.dart';
+import 'package:eveiloo_enfant/features/cart/cart_page.dart';
 import 'package:eveiloo_enfant/features/catalogues/catalogueRoutes.dart';
 import 'package:eveiloo_enfant/features/children/children_routes.dart';
+import 'package:eveiloo_enfant/features/onboarding/onboarding_page.dart';
+import 'package:eveiloo_enfant/features/parametre/parametre.dart';
 import 'package:eveiloo_enfant/features/profil/profileRoutes.dart';
+import 'package:eveiloo_enfant/features/progression/progression.dart';
 import 'package:eveiloo_enfant/features/toys/admin_toys_page.dart';
 import 'package:eveiloo_enfant/features/tutorials/tutorialsRoutes.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:eveiloo_enfant/features/home/homeRoutes.dart';
 import 'package:eveiloo_enfant/features/auth/login_page.dart';
 import 'package:eveiloo_enfant/features/overview/overview_page.dart';
+import 'package:eveiloo_enfant/routes/child_shell_routes.dart';
 import 'package:eveiloo_enfant/widgets/app_bottom_navigation.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,9 +24,22 @@ class AppRouter {
   AppRouter._();
 
   static final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.overview,
+    initialLocation: AppRoutes.splash,
     routes: [
       // ---------- Auth & Overview ----------
+
+      GoRoute(
+        path: AppRoutes.splash,
+        name: AppRoutes.splashName,
+        builder: (context, state) => const SplashPage(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.onboarding,
+        name: AppRoutes.onboardingName,
+        builder: (context, state) => const OnboardingPage(),
+      ),
+
       GoRoute(
         path: AppRoutes.overview,
         name: AppRoutes.overviewName,
@@ -37,7 +57,11 @@ class AppRouter {
         name: AppRoutes.registerName,
         builder: (context, state) => const RegisterPage(),
       ),
-
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        name: AppRoutes.forgotPasswordName,
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
       // ---------- Navigation principale (tabs) ----------
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -52,6 +76,8 @@ class AppRouter {
         ],
       ),
 
+      // ---------- Shell ENFANT (hors shell parent) ----------
+      childShellRoute, // ←
       // ---------- Routes “enfants” (hors shell) ----------
       ...childrenRoutes,
 
@@ -60,6 +86,13 @@ class AppRouter {
         path: '/notifications',
         // pas besoin de name si tu n’utilises pas pushNamed ici
         builder: (context, state) => const NotificationsPage(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.parametre,
+        name: AppRoutes.parametreName,
+        // pas besoin de name si tu n’utilises pas pushNamed ici
+        builder: (context, state) => const ParametresPage(),
       ),
 
       // ---------- Admin ----------
@@ -73,6 +106,19 @@ class AppRouter {
             categorieId: categorieId,
             categorieNom: categorieNom,
           );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.cart, // '/cart'
+        name: AppRoutes.cartName,
+        builder: (context, state) => const CartPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.progression,
+        name: AppRoutes.progressionName,
+        builder: (context, state) {
+          final enfantId = state.pathParameters['enfantId']!;
+          return ProgressionPage(enfantId: enfantId);
         },
       ),
     ],

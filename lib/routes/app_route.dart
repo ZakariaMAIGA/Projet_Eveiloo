@@ -1,17 +1,31 @@
 abstract final class AppRoutes {
   // ---------- Routes principales ----------
+  static const splash = '/splash';
   static const overview = '/overview';
+  static const onboarding = '/onboarding';
 
   // Auth
   static const login = '/login';
   static const register = '/register';
-
+  static const forgotPassword = '/forgot-password';
+  static const forgotPasswordName = 'forgot-password';
   // Tabs principales
   static const home = '/home';
   static const activities = '/activities';
   static const tutorials = '/tutorials';
+  static const tutorialDetail = '/tutorials/detail';
+  static const tutorialDetailName = 'tutorial-detail';
   static const profile = '/profile';
   static const catalogue = '/catalogue';
+  static const favoris = '/favoris';
+  static const cart = '/cart';
+  static const cartName = 'cart';
+  static const progression = '/progression/:enfantId';
+  static const progressionName = 'progression';
+
+  // ---------- Routes d'activité ----------
+  static const activityDetail = '/activities/detail';
+  static const activityDetailName = 'activityDetail';
 
   // ---------- Routes “enfants” ----------
   // Liste des enfants
@@ -24,26 +38,27 @@ abstract final class AppRoutes {
   static const childrenDetail = '/children/:id';
   static const childrenDetailName = 'children-detail';
 
-  // Dashboard d’un enfant (si tu veux une route “principale” par enfant)
+  // ---------- Shell ENFANT ----------
+  static const childHome = '/child/home';
+  static const childHomeName = 'child-home';
 
-  static const childrenProfil = '/children/:enfantId/dashboard';
-  static const childrenProfilName = 'children-dashbborad';
-
-  // ---------- Activités enfant (sous-espace par enfant) ----------
-  static const childActivities = '/child/:enfantId/activities';
+  static const childActivities = '/child/activities';
   static const childActivitiesName = 'child-activities';
 
-  static const childActivityDetail = '/child/:enfantId/activities/:activityId';
+  static const childActivityDetail = '/child/activities/detail';
   static const childActivityDetailName = 'child-activity-detail';
 
-  static const childActivityPlay =
-      '/child/:enfantId/activities/:activityId/play';
+  static const childActivityPlay = '/child/activities/play';
   static const childActivityPlayName = 'child-activity-play';
 
-  static const childActivityResult =
-      '/child/:enfantId/activities/:activityId/result';
+  static const childActivityResult = '/child/activities/result';
   static const childActivityResultName = 'child-activity-result';
 
+  static const childTutorials = '/child/tutorials';
+  static const childTutorialsName = 'child-tutorials';
+
+  static const childTutorialDetail = '/child/tutorials/detail';
+  static const childTutorialDetailName = 'child-tutorial-detail';
   // ---------- Catalogue ----------
   static const categories = '/catalogue/categories';
   static const categoriesName = 'categories';
@@ -53,6 +68,10 @@ abstract final class AppRoutes {
 
   static const toyDetail = '/catalogue/toys/:toyId';
   static const toyDetailName = 'toy-detail';
+
+  // ---------- Catalogue ----------
+  static const parametre = '/parametre';
+  static const parametreName = 'parametre';
 
   // ---------- Admin ----------
   static const adminToys = '/admin-toys';
@@ -79,6 +98,8 @@ abstract final class AppRoutes {
 
   // ---------- Noms des routes principales ----------
   static const overviewName = 'overview';
+  static const splashName = 'splash';
+  static const onboardingName = 'onboarding';
 
   static const loginName = 'login';
   static const registerName = 'register';
@@ -88,4 +109,5 @@ abstract final class AppRoutes {
   static const tutorialsName = 'tutorials';
   static const profileName = 'profile';
   static const catalogueName = 'catalogue';
+  static const favorisName = 'favoris';
 }

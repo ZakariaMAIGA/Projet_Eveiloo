@@ -18,14 +18,4 @@ final List<GoRoute> childrenRoutes = [
     name: AppRoutes.childrenAddName,
     builder: (context, state) => const ProfilEnfantPage(),
   ),
-
-  // Dashboard / Profil de l'enfant
-  GoRoute(
-    path: AppRoutes.childrenProfil, // '/children/:id/dashboard'
-    name: AppRoutes.childrenProfilName,
-    builder: (context, state) {
-      final enfantId = state.pathParameters['enfantId']!;
-      return ChildrenProfil(enfantId: enfantId);
-    },
-  ),
 ];

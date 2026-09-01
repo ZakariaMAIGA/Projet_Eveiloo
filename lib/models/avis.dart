@@ -1,20 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// Modèle représentant l'avis d'un utilisateur sur un jouet.
 class AvisModel {
   final String avisId;
   final String jouetId;
   final String utilisateurId;
   final int note;
   final String commentaire;
-  final DateTime? date;
+  final DateTime date;
 
-  const AvisModel({
+  AvisModel({
     required this.avisId,
     required this.jouetId,
     required this.utilisateurId,
     required this.note,
     this.commentaire = '',
-    this.date,
+    required this.date,
   });
 
   factory AvisModel.fromMap(Map<String, dynamic> map, String id) {
@@ -22,14 +23,15 @@ class AvisModel {
       avisId: id,
       jouetId: map['jouetId'] ?? '',
       utilisateurId: map['utilisateurId'] ?? '',
-      note: (map['note'] ?? 0) as int,
+      note: map['note'] ?? 0,
       commentaire: map['commentaire'] ?? '',
-      date: (map['date'] as Timestamp?)?.toDate(),
+      date: (map['date'] as Timestamp).toDate(),
     );
   }
 
-  factory AvisModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
-    return AvisModel.fromMap(doc.data() ?? {}, doc.id);
+  factory AvisModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return AvisModel.fromMap(data, doc.id);
   }
 
   Map<String, dynamic> toMap() {
@@ -38,14 +40,11 @@ class AvisModel {
       'utilisateurId': utilisateurId,
       'note': note,
       'commentaire': commentaire,
-      'date': date != null
-          ? Timestamp.fromDate(date!)
-          : FieldValue.serverTimestamp(),
+      'date': Timestamp.fromDate(date),
     };
   }
 
   AvisModel copyWith({
-    String? avisId,
     String? jouetId,
     String? utilisateurId,
     int? note,
@@ -53,7 +52,7 @@ class AvisModel {
     DateTime? date,
   }) {
     return AvisModel(
-      avisId: avisId ?? this.avisId,
+      avisId: avisId,
       jouetId: jouetId ?? this.jouetId,
       utilisateurId: utilisateurId ?? this.utilisateurId,
       note: note ?? this.note,

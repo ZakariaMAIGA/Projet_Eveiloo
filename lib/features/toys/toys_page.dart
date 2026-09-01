@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/constants/AppFontSize.dart';
 import '../../core/constants/AppSpacing.dart';
 import '../../models/toy_model.dart';
 import '../../repository/toy_repository.dart';
+import '../../routes/app_route.dart';
 
 class ToysPage extends StatefulWidget {
   final String genre; // "fille" ou "garcon"
@@ -157,90 +159,94 @@ class _ToysPageState extends State<ToysPage> {
 
   // Carte Individuelle pour chaque Jouet
   Widget _buildToyCard(BuildContext context, ToyModel toy) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => context.pushNamed(
+        AppRoutes.toyDetailName,
+        pathParameters: {'toyId': toy.id},
+        extra: toy,
       ),
-      child: Row(
-        children: [
-          // Image de présentation
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.md),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: toy.imageUrl.isNotEmpty
-                  ? Image.network(
-                      toy.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: toy.imageUrl.isNotEmpty
+                    ? Image.network(
+                        toy.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(
+                              Icons.smart_toy_rounded,
+                              color: Colors.grey,
+                              size: 36,
+                            ),
+                      )
+                    : const Icon(
                         Icons.smart_toy_rounded,
                         color: Colors.grey,
                         size: 36,
                       ),
-                    )
-                  : const Icon(
-                      Icons.smart_toy_rounded,
-                      color: Colors.grey,
-                      size: 36,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    toy.nom,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: AppFontSize.medium,
                     ),
-            ),
-          ),
-          const SizedBox(width: 14),
-
-          // Contenu principal (Titre, Tranche d'âge, Étoiles)
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  toy.nom,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: AppFontSize.medium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Âge : ${toy.ageRange}',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: AppFontSize.small,
+                  const SizedBox(height: 4),
+                  Text(
+                    'Âge : ${toy.ageRange}',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: AppFontSize.small,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                _buildStarRating(toy.note),
-              ],
+                  const SizedBox(height: 6),
+                  _buildStarRating(toy.note),
+                ],
+              ),
             ),
-          ),
-
-          // Prix en FCFA
-          Text(
-            '${toy.prix.toInt()} FCFA',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: AppFontSize.medium,
-              color: Color(0xFF29B6F6),
+            Text(
+              '${toy.prix.toInt()} FCFA',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: AppFontSize.medium,
+                color: Color(0xFF29B6F6),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -256,6 +262,58 @@ class _ToysPageState extends State<ToysPage> {
           size: 16,
         );
       }),
+    );
+  }
+}
+
+class ToyDetailPage extends StatelessWidget {
+  final ToyModel toy;
+
+  const ToyDetailPage({Key? key, required this.toy}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(toy.nom)),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (toy.imageUrl.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.network(
+                  toy.imageUrl,
+                  width: double.infinity,
+                  height: 240,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: double.infinity,
+                    height: 240,
+                    color: Colors.grey.shade200,
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.broken_image_outlined,
+                      size: 48,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              toy.nom,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text('${toy.prix.toInt()} FCFA'),
+            Text('Âge : ${toy.ageRange}'),
+            const SizedBox(height: AppSpacing.md),
+            Text(toy.description),
+          ],
+        ),
+      ),
     );
   }
 }

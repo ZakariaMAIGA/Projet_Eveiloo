@@ -3,31 +3,43 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/journal_progres_model.dart';
 
 class JournalProgresRepository {
-  JournalProgresRepository({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static const String collection = 'journal_progres';
 
-  final FirebaseFirestore _firestore;
+  CollectionReference<Map<String, dynamic>> get _ref =>
+      _firestore.collection(collection);
 
-  CollectionReference<Map<String, dynamic>> get _journal =>
-      _firestore.collection('journal_progres');
+  /// Ajoute une entrée au journal de progrès (appelé quand l'enfant
+  /// termine une activité ou un tutoriel).
+  Future<void> ajouterEntree(JournalProgresModel entree) async {
+    await _ref.doc().set(entree.toMap());
+  }
 
-  /// Dernières entrées (activités/tutoriels) réalisées par un ensemble
-  /// d'enfants. `whereIn` est limité à 30 ids par Firestore — largement
-  /// suffisant pour une famille.
-  ///
-  /// NB : Firestore va demander de créer un index composite
-  /// (enfantId + dateRealisation) la première fois que cette requête
-  /// tourne en dev — le lien pour le créer apparaît dans la console/logs.
+  /// Flux des activités/tutoriels récents pour un ou plusieurs enfants.
+  /// Utilisé pour la section "Activités Récentes" du dashboard enfant.
   Stream<List<JournalProgresModel>> observerActivitesRecentes(
     List<String> enfantIds, {
-    int limite = 5,
+    int limite = 10,
   }) {
-    if (enfantIds.isEmpty) return Stream.value(const []);
+    if (enfantIds.isEmpty) return Stream.value([]);
 
-    return _journal
+    return _ref
         .where('enfantId', whereIn: enfantIds)
         .orderBy('dateRealisation', descending: true)
         .limit(limite)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => JournalProgresModel.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
+  }
+
+  /// Toutes les entrées du journal pour un enfant précis (sans tri Firestore,
+  /// pour éviter un index composite ; le tri/filtre se fait côté client).
+  Stream<List<JournalProgresModel>> observerToutesActivites(String enfantId) {
+    return _ref
+        .where('enfantId', isEqualTo: enfantId)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs

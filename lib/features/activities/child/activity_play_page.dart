@@ -1,5 +1,9 @@
 import 'dart:async';
 
+import 'package:eveiloo_enfant/core/provider/auth_provider.dart';
+import 'package:eveiloo_enfant/core/provider/enfant_provider.dart';
+import 'package:eveiloo_enfant/features/children/children_profil.dart';
+import 'package:eveiloo_enfant/models/journal_progres_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,10 +19,13 @@ import 'activity_result_page.dart';
 
 class ActivityPlayPage extends ConsumerStatefulWidget {
   final ActivityModel activity;
+  final String
+  enfantId; // obligatoire ici, on n'arrive dans cet écran qu'en mode enfant
 
   const ActivityPlayPage({
     super.key,
     required this.activity,
+    required this.enfantId,
   });
 
   @override
@@ -88,16 +95,50 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     super.dispose();
   }
 
-  void finishActivity([List<QuestionModel>? questions]) {
+ void finishActivity([List<QuestionModel>? questions]) async {
     if (activityFinished || !mounted) return;
     activityFinished = true;
     countdownTimer?.cancel();
+
+    final totalQuestions = questions?.length ?? totalQuestionCount;
+    final pointsGagnes =
+        ((score / (totalQuestions == 0 ? 1 : totalQuestions)) *
+                widget.activity.rewardPoints)
+            .round();
+
+    final parentId = ref.read(utilisateurCourantProvider).value?.utilisateurId;
+
+    if (parentId != null) {
+      await ref
+          .read(journalProgresRepositoryProvider)
+          .ajouterEntree(
+            JournalProgresModel(
+              journalId: '',
+              utilisateurId: parentId,
+              enfantId: widget.enfantId,
+              elementId: widget.activity.activityId,
+              typeElement: TypeElementProgres.activite,
+              titre: widget.activity.title,
+              score: totalQuestions == 0 ? 0 : (score / totalQuestions) * 100,
+              dureeSecondes: widget.activity.duration - remainingSeconds,
+              pointsGagnes: pointsGagnes,
+              dateRealisation: DateTime.now(),
+            ),
+          );
+
+      // Met à jour les compteurs de l'enfant (voir méthode ci-dessous)
+      await ref
+          .read(enfantRepositoryProvider)
+          .incrementerProgres(parentId, widget.enfantId, points: pointsGagnes);
+    }
+
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) => ActivityResultPage(
           score: score,
-          totalQuestions: questions?.length ?? totalQuestionCount,
+          totalQuestions: totalQuestions,
           activity: widget.activity,
         ),
       ),
@@ -125,16 +166,19 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     switch (question.type) {
       case QuestionType.multipleChoice:
         // For multiple choice, answer is a Proposition object
-        correct = answer is Proposition &&
-          (answer.id.toLowerCase() == question.correctAnswer.toLowerCase() ||
-            answer.texte.trim().toLowerCase() ==
-              question.correctAnswer.trim().toLowerCase());
+        correct =
+            answer is Proposition &&
+            (answer.id.toLowerCase() == question.correctAnswer.toLowerCase() ||
+                answer.texte.trim().toLowerCase() ==
+                    question.correctAnswer.trim().toLowerCase());
         break;
 
       case QuestionType.numeric:
         final value = double.tryParse(answer.toString());
         if (value != null && question.correctNumericAnswer != null) {
-          correct = (value - question.correctNumericAnswer!).abs() <= question.tolerance;
+          correct =
+              (value - question.correctNumericAnswer!).abs() <=
+              question.tolerance;
         }
         break;
 
@@ -142,7 +186,9 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
         if (question.caseSensitive) {
           correct = answer == question.freeTextAnswer;
         } else {
-          correct = answer.toString().toLowerCase() == question.freeTextAnswer.toLowerCase();
+          correct =
+              answer.toString().toLowerCase() ==
+              question.freeTextAnswer.toLowerCase();
         }
         break;
     }
@@ -178,16 +224,11 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
           text: proposition.texte,
           isSelected: selectedAnswer == proposition.texte,
           showResult: answered,
-          isCorrect: normalizeChoiceAnswer(
-                question.correctAnswer,
-                question.options,
-              ) ==
+          isCorrect:
+              normalizeChoiceAnswer(question.correctAnswer, question.options) ==
               proposition.id,
           onTap: () {
-            checkAnswer(
-              question,
-              proposition,
-            );
+            checkAnswer(question, proposition);
           },
         );
       },
@@ -201,9 +242,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
           controller: textController,
           keyboardType: TextInputType.number,
           enabled: !answered,
-          decoration: const InputDecoration(
-            hintText: "Votre réponse",
-          ),
+          decoration: const InputDecoration(hintText: "Votre réponse"),
         ),
         const SizedBox(height: 25),
         if (!answered)
@@ -212,15 +251,12 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
             child: ElevatedButton(
               onPressed: () {
                 if (textController.text.trim().isNotEmpty) {
-                  checkAnswer(
-                    question,
-                    textController.text.trim(),
-                  );
+                  checkAnswer(question, textController.text.trim());
                 }
               },
               child: const Text("Valider"),
             ),
-          )
+          ),
       ],
     );
   }
@@ -243,15 +279,12 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
             child: ElevatedButton(
               onPressed: () {
                 if (textController.text.trim().isNotEmpty) {
-                  checkAnswer(
-                    question,
-                    textController.text.trim(),
-                  );
+                  checkAnswer(question, textController.text.trim());
                 }
               },
               child: const Text("Valider"),
             ),
-          )
+          ),
       ],
     );
   }
@@ -260,85 +293,91 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     return SingleChildScrollView(
       child: Column(
         children: [
-        QuestionHeader(
-          current: 1,
-          total: totalQuestions,
-          title: widget.activity.title,
-          onClose: () => Navigator.pop(context),
-        ),
-        const SizedBox(height: 10),
-        _TimerBadge(seconds: remainingSeconds),
-        const SizedBox(height: 48),
-        const Text(
-          'Histoire 1',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Color(0xFF29258F),
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
+          QuestionHeader(
+            current: 1,
+            total: totalQuestions,
+            title: widget.activity.title,
+            onClose: () => Navigator.pop(context),
           ),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          widget.activity.title,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Color(0xFF29258F),
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 28),
-        if (widget.activity.imageUrl != null &&
-            widget.activity.imageUrl!.isNotEmpty)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.network(
-              widget.activity.imageUrl!,
-              height: 245,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (_, error, stackTrace) => const ColoredBox(
-                color: Color(0xFFDDF4FB),
-                child: Icon(Icons.broken_image_outlined,
-                    color: Color(0xFF2D8DD5), size: 72),
-              ),
-            ),
-          ),
-        if (widget.activity.imageUrl == null ||
-            widget.activity.imageUrl!.isEmpty)
-          Container(
-            height: 180,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFDDF4FB),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.menu_book_rounded,
-                color: Color(0xFF2D8DD5), size: 72),
-          ),
-        const SizedBox(height: 38),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            widget.activity.description,
-            style: const TextStyle(
+          const SizedBox(height: 10),
+          _TimerBadge(seconds: remainingSeconds),
+          const SizedBox(height: 48),
+          const Text(
+            'Histoire 1',
+            textAlign: TextAlign.center,
+            style: TextStyle(
               color: Color(0xFF29258F),
-              fontSize: 19,
-              height: 1.25,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
           ),
-        ),
-        const SizedBox(height: 36),
-        SizedBox(
-          width: double.infinity,
-          height: 55,
-          child: ElevatedButton(
-            onPressed: () => setState(() => readingStep = false),
-            child: const Text('Suivant', style: TextStyle(fontSize: 23)),
+          const SizedBox(height: 14),
+          Text(
+            widget.activity.title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Color(0xFF29258F),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
+          const SizedBox(height: 28),
+          if (widget.activity.imageUrl != null &&
+              widget.activity.imageUrl!.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.network(
+                widget.activity.imageUrl!,
+                height: 245,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, error, stackTrace) => const ColoredBox(
+                  color: Color(0xFFDDF4FB),
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    color: Color(0xFF2D8DD5),
+                    size: 56,
+                  ),
+                ),
+              ),
+            ),
+          if (widget.activity.imageUrl == null ||
+              widget.activity.imageUrl!.isEmpty)
+            Container(
+              height: 180,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: const Color(0xFFDDF4FB),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(
+                Icons.menu_book_rounded,
+                color: Color(0xFF2D8DD5),
+                size: 56,
+              ),
+            ),
+          const SizedBox(height: 38),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              widget.activity.description,
+              style: const TextStyle(
+                color: Color(0xFF29258F),
+                fontSize: 16,
+                height: 1.25,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 36),
+          SizedBox(
+            width: double.infinity,
+            height: 55,
+            child: ElevatedButton(
+              onPressed: () => setState(() => readingStep = false),
+              child: const Text('Suivant', style: TextStyle(fontSize: 18)),
+            ),
+          ),
         ],
       ),
     );
@@ -346,7 +385,9 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
 
   @override
   Widget build(BuildContext context) {
-    final questionsAsync = ref.watch(questionsProvider(widget.activity.activityId));
+    final questionsAsync = ref.watch(
+      questionsProvider(widget.activity.activityId),
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -357,18 +398,12 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
         foregroundColor: const Color(0xFF29258F),
       ),
       body: questionsAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        error: (e, s) => Center(
-          child: Text(e.toString()),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, s) => Center(child: Text(e.toString())),
         data: (questions) {
           totalQuestionCount = questions.length;
           if (questions.isEmpty) {
-            return const Center(
-              child: Text("Aucune question"),
-            );
+            return const Center(child: Text("Aucune question"));
           }
 
           if (hasReadingStep && readingStep) {
@@ -398,14 +433,12 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
                   question.statement,
                   style: const TextStyle(
                     color: Color(0xFF29258F),
-                    fontSize: 23,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 25),
-                Expanded(
-                  child: buildQuestionWidget(question),
-                ),
+                Expanded(child: buildQuestionWidget(question)),
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
@@ -413,7 +446,9 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
                   child: ElevatedButton(
                     onPressed: answered ? () => nextQuestion(questions) : null,
                     child: Text(
-                      currentQuestion == questions.length - 1 ? "Terminer" : "Suivant",
+                      currentQuestion == questions.length - 1
+                          ? "Terminer"
+                          : "Suivant",
                     ),
                   ),
                 ),
@@ -448,16 +483,20 @@ class _TimerBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.timer_outlined,
-                size: 20,
-                color: urgent ? const Color(0xFFD93025) : const Color(0xFF2D8DD5)),
+            Icon(
+              Icons.timer_outlined,
+              size: 20,
+              color: urgent ? const Color(0xFFD93025) : const Color(0xFF2D8DD5),
+            ),
             const SizedBox(width: 5),
             Text(
               minutes > 0
                   ? '$minutes:${remaining.toString().padLeft(2, '0')}'
                   : '${remaining}s',
               style: TextStyle(
-                color: urgent ? const Color(0xFFD93025) : const Color(0xFF29258F),
+                color: urgent
+                    ? const Color(0xFFD93025)
+                    : const Color(0xFF29258F),
                 fontWeight: FontWeight.bold,
               ),
             ),

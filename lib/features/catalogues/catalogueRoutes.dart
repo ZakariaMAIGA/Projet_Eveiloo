@@ -1,5 +1,4 @@
 import 'package:eveiloo_enfant/features/toys/categories_toys_page.dart';
-import 'package:eveiloo_enfant/features/toys/toy_detail_page.dart';
 import 'package:eveiloo_enfant/features/toys/toys_page.dart';
 import 'package:eveiloo_enfant/models/toy_model.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';

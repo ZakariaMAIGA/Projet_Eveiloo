@@ -40,7 +40,6 @@ class _HomePageState extends State<HomePage> {
     final parentId = _authService.utilisateurFirebase?.uid;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: const Text('Éveiloo'),
         actions: [
@@ -179,9 +178,10 @@ class _HomePageState extends State<HomePage> {
               return ChildCard(
                 enfant: enfant,
                 accentColor: couleur,
-                onTap: () {
-                  // TODO: naviguer vers la fiche détaillée de l'enfant
-                },
+                onTap: () => context.pushNamed(
+                  AppRoutes.progressionName,
+                  pathParameters: {'enfantId': enfant.enfantId},
+                ),
               );
             },
           );

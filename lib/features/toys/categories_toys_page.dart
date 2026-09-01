@@ -38,6 +38,13 @@ class _CategoriesToysPageState extends State<CategoriesToysPage> {
               context.push(AppRoutes.adminToys);
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.shopping_cart),
+            tooltip: 'Mon panier',
+            onPressed: () {
+              context.pushNamed(AppRoutes.cartName);
+            },
+          ),
         ],
       ),
       body: SafeArea(

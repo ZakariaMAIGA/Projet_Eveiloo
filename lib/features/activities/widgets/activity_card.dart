@@ -14,83 +14,96 @@ class ActivityCard extends StatelessWidget {
     final progress = (activity.progress / 100).clamp(0.0, 1.0);
     final category = categoryStyle(activity.competenceCategory);
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 12),
-        elevation: 4,
-        shadowColor: Colors.black26,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 9, 12, 9),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _ActivityImage(activity: activity),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                activity.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 20,
+    // Fond blanc + ombre manuelle (boxShadow) : rendu garanti sur tous les
+    // backends, y compris les émulateurs où les ombres d'élévation Material
+    // (Impeller/OpenGLES) ne s'affichent pas.
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(11),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(11),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 9, 12, 9),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _ActivityImage(activity: activity),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  activity.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${activity.progress.toInt()}%',
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 7),
-                        Text(
-                          activity.description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 16, height: 1.15),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: progress),
-                duration: const Duration(milliseconds: 850),
-                curve: Curves.easeOutCubic,
-                builder: (context, animatedProgress, child) {
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: animatedProgress,
-                      minHeight: 7,
-                      backgroundColor: const Color(0xFFE5E5E5),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        activity.progress >= 100
-                            ? const Color(0xFF36B86A)
-                            : category.accent,
+                              const SizedBox(width: 8),
+                              Text(
+                                '${activity.progress.toInt()}%',
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            activity.description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 14, height: 1.15),
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                },
-              ),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 10),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: progress),
+                  duration: const Duration(milliseconds: 850),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, animatedProgress, child) {
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: animatedProgress,
+                        minHeight: 7,
+                        backgroundColor: const Color(0xFFE5E5E5),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          activity.progress >= 100
+                              ? const Color(0xFF36B86A)
+                              : category.accent,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -107,8 +120,8 @@ class _ActivityImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final image = activity.imageUrl;
     return Container(
-      width: 75,
-      height: 75,
+      width: 58,
+      height: 58,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         shape: BoxShape.circle,

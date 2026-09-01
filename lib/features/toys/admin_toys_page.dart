@@ -230,7 +230,7 @@ class _AdminToysPageState extends State<AdminToysPage> {
                                 nom: nomController.text,
                                 description: descriptionController.text,
                                 prix: double.tryParse(prixController.text) ?? 0,
-                                imageUrl: imageUrlController.text,
+                                imageUrl: imageUrlController.text.trim(),
                                 images: [],
                                 categorieId: selectedCatId,
                                 genre: selectedGenre,

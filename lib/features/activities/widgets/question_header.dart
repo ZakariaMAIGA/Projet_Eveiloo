@@ -24,7 +24,7 @@ class QuestionHeader extends StatelessWidget {
               onPressed: onClose,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
-              icon: const Icon(Icons.close, color: Color(0xFF29258F), size: 40),
+              icon: const Icon(Icons.close, color: Color(0xFF29258F), size: 26),
             ),
             if (title.isNotEmpty) ...[
               const SizedBox(width: 28),
@@ -34,7 +34,7 @@ class QuestionHeader extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Color(0xFF29258F),
-                    fontSize: 24,
+                    fontSize: 18,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
