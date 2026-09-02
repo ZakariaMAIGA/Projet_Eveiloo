@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/activity_model.dart';
+import '../activities_page.dart';
+import '../child/activity_play_page.dart';
 import '../providers/activity_provider.dart';
 import 'add_activity_page.dart';
 import 'edit_activity_page.dart';
@@ -18,6 +20,21 @@ class ActivitiesAdminPage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text("Gestion des activités"),
         centerTitle: true,
+        actions: [
+          // Lien vers le côté enfant pour tester les activités.
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ActivitiesPage(),
+                ),
+              );
+            },
+            tooltip: 'Mode enfant',
+            icon: const Icon(Icons.child_care),
+          ),
+        ],
       ),
 
       floatingActionButton: FloatingActionButton.extended(
@@ -127,12 +144,35 @@ class _ActivityCard extends ConsumerWidget {
 
             const Divider(),
 
-            Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween,
+            // Wrap et non Row : les boutons passent à la ligne suivante
+            // au lieu de provoquer un débordement horizontal.
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              spacing: 0,
+              runSpacing: 0,
               children: [
+                TextButton.icon(
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  icon: const Icon(Icons.play_circle_outline),
+                  label: const Text("Tester"),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ActivityPlayPage(
+                          activity: activity,
+                        ),
+                      ),
+                    );
+                  },
+                ),
 
                 TextButton.icon(
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                  ),
                   icon: const Icon(Icons.quiz),
                   label: const Text("Questions"),
                   onPressed: () {
@@ -148,6 +188,9 @@ class _ActivityCard extends ConsumerWidget {
                 ),
 
                 TextButton.icon(
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                  ),
                   icon: const Icon(Icons.edit),
                   label: const Text("Modifier"),
                   onPressed: () {
@@ -163,6 +206,9 @@ class _ActivityCard extends ConsumerWidget {
                 ),
 
                 TextButton.icon(
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                  ),
                   icon: const Icon(
                     Icons.delete,
                     color: Colors.red,

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../models/activity_model.dart';
 import '../../../models/proposition.dart';
 import '../../../models/question_model.dart';
 import '../question_service.dart';
 import '../widgets/image_url_validation.dart';
 import '../widgets/question_answer_utils.dart';
+import '../child/activity_play_page.dart';
 
 String? _validateDouble(String? value) {
   if (value == null || value.trim().isEmpty) return null;
@@ -14,12 +16,23 @@ String? _validateDouble(String? value) {
       : null;
 }
 
+/// Retourne l'URL saisie ou null si le champ est vide.
+String? _optionalUrl(String value) {
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
+}
+
 class AddQuestionPage extends StatefulWidget {
   final String activityId;
+
+  /// Activité associée (optionnelle) : permet de lancer un test du parcours
+  /// enfant directement depuis la création de question.
+  final ActivityModel? activity;
 
   const AddQuestionPage({
     super.key,
     required this.activityId,
+    this.activity,
   });
 
   @override
@@ -41,6 +54,11 @@ class _AddQuestionPageState
   final optionBController = TextEditingController();
   final optionCController = TextEditingController();
   final optionDController = TextEditingController();
+
+  final optionAImageUrlController = TextEditingController();
+  final optionBImageUrlController = TextEditingController();
+  final optionCImageUrlController = TextEditingController();
+  final optionDImageUrlController = TextEditingController();
 
   final correctAnswerController =
       TextEditingController();
@@ -70,6 +88,10 @@ class _AddQuestionPageState
     optionBController.dispose();
     optionCController.dispose();
     optionDController.dispose();
+    optionAImageUrlController.dispose();
+    optionBImageUrlController.dispose();
+    optionCImageUrlController.dispose();
+    optionDImageUrlController.dispose();
     correctAnswerController.dispose();
     numericAnswerController.dispose();
     toleranceController.dispose();
@@ -86,10 +108,26 @@ class _AddQuestionPageState
 
     try {
       final options = [
-        Proposition(id: 'A', texte: optionAController.text.trim()),
-        Proposition(id: 'B', texte: optionBController.text.trim()),
-        Proposition(id: 'C', texte: optionCController.text.trim()),
-        Proposition(id: 'D', texte: optionDController.text.trim()),
+        Proposition(
+          id: 'A',
+          texte: optionAController.text.trim(),
+          imageUrl: _optionalUrl(optionAImageUrlController.text),
+        ),
+        Proposition(
+          id: 'B',
+          texte: optionBController.text.trim(),
+          imageUrl: _optionalUrl(optionBImageUrlController.text),
+        ),
+        Proposition(
+          id: 'C',
+          texte: optionCController.text.trim(),
+          imageUrl: _optionalUrl(optionCImageUrlController.text),
+        ),
+        Proposition(
+          id: 'D',
+          texte: optionDController.text.trim(),
+          imageUrl: _optionalUrl(optionDImageUrlController.text),
+        ),
       ];
       final normalizedAnswer = type == QuestionType.multipleChoice
           ? normalizeChoiceAnswer(correctAnswerController.text, options)
@@ -156,6 +194,20 @@ class _AddQuestionPageState
               icon: const Icon(Icons.arrow_back),
             ),
             title: const Text("Nouvelle question"),
+            actions: [
+              if (widget.activity != null)
+                IconButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          ActivityPlayPage(activity: widget.activity!),
+                    ),
+                  ),
+                  tooltip: 'Tester comme un enfant',
+                  icon: const Icon(Icons.play_circle_outline),
+                ),
+            ],
           ),
       body: Form(
         key: _formKey,
@@ -216,10 +268,34 @@ class _AddQuestionPageState
               const SizedBox(height: 10),
 
               TextFormField(
+                controller: optionAImageUrlController,
+                keyboardType: TextInputType.url,
+                decoration: const InputDecoration(
+                  labelText: "Image réponse A (URL)",
+                  hintText: "https://i.pinimg.com/.../image.jpg",
+                ),
+                validator: validateImageUrl,
+              ),
+
+              const SizedBox(height: 10),
+
+              TextFormField(
                 controller: optionBController,
                 decoration: const InputDecoration(
                   labelText: "Réponse B",
                 ),
+              ),
+
+              const SizedBox(height: 10),
+
+              TextFormField(
+                controller: optionBImageUrlController,
+                keyboardType: TextInputType.url,
+                decoration: const InputDecoration(
+                  labelText: "Image réponse B (URL)",
+                  hintText: "https://i.pinimg.com/.../image.jpg",
+                ),
+                validator: validateImageUrl,
               ),
 
               const SizedBox(height: 10),
@@ -234,10 +310,34 @@ class _AddQuestionPageState
               const SizedBox(height: 10),
 
               TextFormField(
+                controller: optionCImageUrlController,
+                keyboardType: TextInputType.url,
+                decoration: const InputDecoration(
+                  labelText: "Image réponse C (URL)",
+                  hintText: "https://i.pinimg.com/.../image.jpg",
+                ),
+                validator: validateImageUrl,
+              ),
+
+              const SizedBox(height: 10),
+
+              TextFormField(
                 controller: optionDController,
                 decoration: const InputDecoration(
                   labelText: "Réponse D",
                 ),
+              ),
+
+              const SizedBox(height: 10),
+
+              TextFormField(
+                controller: optionDImageUrlController,
+                keyboardType: TextInputType.url,
+                decoration: const InputDecoration(
+                  labelText: "Image réponse D (URL)",
+                  hintText: "https://i.pinimg.com/.../image.jpg",
+                ),
+                validator: validateImageUrl,
               ),
 
               const SizedBox(height: 15),

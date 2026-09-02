@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../models/activity_model.dart';
+import '../../routes/app_route.dart';
 import 'providers/activity_provider.dart';
 import 'widgets/activity_card.dart';
 import 'child/activity_detail_page.dart';
@@ -68,24 +70,36 @@ class _ActivityList extends StatelessWidget {
   Widget build(BuildContext context) {
         final visibleActivities = activities.where((activity) {
       if (selectedStatus == 'Toutes') return true;
-      return selectedStatus == 'Terminées'
-          ? activity.progress >= 100
-          : activity.progress < 100;
+      if (selectedStatus == 'Terminées') return activity.isCompleted;
+      // « En cours » : démarrée mais pas encore terminée.
+      return activity.isStarted && !activity.isCompleted;
     }).toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 34, 22, 20),
       children: [
-        Text(
-          'Activités',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: const Color(0xFF10158C),
-            fontSize: 26,
-            height: 1.1,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Activités',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF10158C),
+                  fontSize: 26,
+                  height: 1.1,
+                ),
+              ),
+            ),
+            // Lien vers le côté admin pour créer / gérer les activités.
+            IconButton(
+              onPressed: () => context.go(AppRoutes.adminActivities),
+              tooltip: 'Mode admin',
+              icon: const Icon(Icons.admin_panel_settings_outlined),
+              color: const Color(0xFF10158C),
+            ),
+          ],
         ),
-        const SizedBox(height: 20),
                 Row(
           children: [
             Expanded(child: _StatusTab(

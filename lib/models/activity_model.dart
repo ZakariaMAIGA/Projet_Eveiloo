@@ -1,6 +1,16 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
+
+/// Convertit une valeur de date Firestore (Timestamp, DateTime ou chaîne
+/// ISO 8601) en [DateTime], ou retourne null si vide/invalide.
+DateTime? _parseDate(dynamic value) {
+  if (value == null) return null;
+  if (value is Timestamp) return value.toDate();
+  if (value is DateTime) return value;
+  return DateTime.tryParse(value.toString());
+}
 
 /// Statut possible d'une activité vue par l'enfant :
 /// - [statusAFaire] : jamais sélectionnée
@@ -178,15 +188,9 @@ class ActivityModel extends Equatable {
       progress: (map['progress'] as num?)?.toDouble() ?? 0.0,
       imageUrl: map['imageUrl']?.toString(),
       objective: map['objective']?.toString(),
-      createdAt: map['createdAt'] != null
-          ? DateTime.parse(map['createdAt'].toString())
-          : DateTime.now(),
-      startedAt: map['startedAt'] != null
-          ? DateTime.tryParse(map['startedAt'].toString())
-          : null,
-      completedAt: map['completedAt'] != null
-          ? DateTime.tryParse(map['completedAt'].toString())
-          : null,
+      createdAt: _parseDate(map['createdAt']) ?? DateTime.now(),
+      startedAt: _parseDate(map['startedAt']),
+      completedAt: _parseDate(map['completedAt']),
     );
   }
 

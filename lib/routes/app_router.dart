@@ -23,9 +23,12 @@ class AppRouter {
   AppRouter._();
 
   static final GoRouter router = GoRouter(
-    // Point de démarrage temporaire : liste des activités côté enfant
-    // (pour les tests). Remettre AppRoutes.splash pour la version normale.
-    initialLocation: AppRoutes.childActivities,
+    // Point de démarrage temporaire (mode test) : création d'activité côté
+    // admin. Le bouton "Mode enfant" (icône enfant) de l'appBar permet de
+    // basculer vers le côté enfant, et l'icône admin de la liste enfant
+    // permet de revenir ici.
+    // Remettre AppRoutes.splash pour la version normale.
+    initialLocation: AppRoutes.adminAddActivity,
     routes: [
       GoRoute(
         path: AppRoutes.onboarding,

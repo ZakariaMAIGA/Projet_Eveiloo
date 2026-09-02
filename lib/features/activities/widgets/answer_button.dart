@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 class AnswerButton extends StatelessWidget {
   final String text;
+
+  /// URL d'une image optionnelle affichée à gauche du texte.
+  final String? imageUrl;
   final VoidCallback onTap;
   final bool isSelected;
   final bool isCorrect;
@@ -10,11 +13,14 @@ class AnswerButton extends StatelessWidget {
   const AnswerButton({
     super.key,
     required this.text,
+    this.imageUrl,
     required this.onTap,
     this.isSelected = false,
     this.isCorrect = false,
     this.showResult = false,
   });
+
+  bool get hasImage => imageUrl != null && imageUrl!.trim().isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +32,10 @@ class AnswerButton extends StatelessWidget {
         background = const Color(0xFFC8F7D4);
         border = const Color(0xFF20B24B);
       } else if (isSelected) {
-        background = const Color(0xFFFFE7E7);
-        border = Colors.red;
+        // Mauvaise réponse choisie : affichée en rouge en même temps que
+        // la bonne réponse en vert.
+        background = const Color(0xFFFFD9D9);
+        border = const Color(0xFFD93025);
       }
     } else if (isSelected) {
       background = Colors.deepPurple.shade50;
@@ -47,17 +55,25 @@ class AnswerButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(11),
           border: Border.all(
             color: border,
-            width: showResult && isCorrect ? 1 : 0,
+            // Bordure visible pour la bonne réponse (vert) ET pour la
+            // mauvaise réponse choisie (rouge), en même temps.
+            width: showResult && (isCorrect || isSelected) ? 1 : 0,
           ),
         ),
         child: Row(
           children: [
-            if (isSelected || showResult && isCorrect)
+            // Vignette d'image de la réponse : affichée dès qu'une URL est
+            // fournie, sinon le cadre coloré adapté à l'état.
+            if (hasImage)
+              _AnswerImageThumbnail(imageUrl: imageUrl!)
+            else if (isSelected || showResult && isCorrect)
               Container(
                 width: 64,
                 height: 74,
                 margin: const EdgeInsets.only(right: 14),
-                color: const Color(0xFFE9FFF0),
+                color: showResult && isSelected && !isCorrect
+                    ? const Color(0xFFFFD9D9)
+                    : const Color(0xFFE9FFF0),
               ),
             Expanded(
               child: Text(
@@ -74,6 +90,57 @@ class AnswerButton extends StatelessWidget {
             if (showResult && isSelected && !isCorrect)
               const Icon(Icons.cancel, color: Colors.red),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Vignette de l'image d'une réponse, chargée depuis une URL distante.
+class _AnswerImageThumbnail extends StatelessWidget {
+  final String imageUrl;
+
+  const _AnswerImageThumbnail({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 64,
+      height: 74,
+      margin: const EdgeInsets.only(right: 14),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDDF4FB),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          imageUrl.trim(),
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return const ColoredBox(
+              color: Color(0xFFDDF4FB),
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            );
+          },
+          errorBuilder: (_, error, stackTrace) => const ColoredBox(
+            color: Color(0xFFDDF4FB),
+            child: Icon(
+              Icons.broken_image_outlined,
+              color: Color(0xFF2D8DD5),
+              size: 26,
+            ),
+          ),
         ),
       ),
     );

@@ -4,7 +4,10 @@ import '../../models/activity_model.dart';
 import '../../models/question_model.dart';
 
 class ActivityService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  ActivityService({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
+
+  final FirebaseFirestore _firestore;
 
   final String collection = "activities";
 
@@ -39,6 +42,60 @@ class ActivityService {
     return session.id;
   }
 
+  /// Marque l'activité comme « En cours » côté enfant en écrivant [startedAt].
+  ///
+  /// Si l'activité est déjà terminée ([completedAt] renseigné), on ne fait
+  /// rien : refaire l'activité 1000 fois ne doit jamais faire régresser son
+  /// statut « Terminée » ni sa progression.
+  Future<void> markActivityStarted(String activityId) async {
+    final ref = _firestore.collection(collection).doc(activityId);
+    await _firestore.runTransaction((transaction) async {
+      final doc = await transaction.get(ref);
+      if (!doc.exists) return;
+
+      final data = doc.data()!;
+      final alreadyCompleted = data['completedAt'] != null &&
+          data['completedAt'].toString().isNotEmpty;
+      if (alreadyCompleted) return;
+
+      transaction.update(ref, {
+        'startedAt': DateTime.now().toIso8601String(),
+      });
+    });
+  }
+
+  /// Enregistre la progression d'une activité que l'enfant vient de terminer.
+  ///
+  /// - La progression = pourcentage du score de LA PREMIÈRE fois : si
+  ///   [completedAt] est déjà renseigné, on ne modifie strictement rien,
+  ///   même si l'enfant rejoue l'activité 1000 fois.
+  /// - Sinon, on écrit [completedAt] (date de fin) et [progress] (score).
+  Future<void> completeActivity(
+    String activityId, {
+    required int score,
+    required int totalQuestions,
+  }) async {
+    final ref = _firestore.collection(collection).doc(activityId);
+    final progress = totalQuestions == 0
+        ? 100.0
+        : ((score / totalQuestions) * 100).clamp(0.0, 100.0).toDouble();
+
+    await _firestore.runTransaction((transaction) async {
+      final doc = await transaction.get(ref);
+      if (!doc.exists) return;
+
+      final data = doc.data()!;
+      final alreadyCompleted = data['completedAt'] != null &&
+          data['completedAt'].toString().isNotEmpty;
+      if (alreadyCompleted) return;
+
+      transaction.update(ref, {
+        'progress': progress,
+        'completedAt': DateTime.now().toIso8601String(),
+      });
+    });
+  }
+
   Future<void> endActivitySession(String activityId, String sessionId) {
     return _activeSessions(activityId).doc(sessionId).delete();
   }
@@ -49,10 +106,31 @@ class ActivityService {
 
   /// Ajouter une activité
   Future<void> addActivity(ActivityModel activity) async {
-    await _firestore
+    final usersSnapshot = await _firestore
+        .collection('utilisateurs')
+        .where('role', isEqualTo: 'parent')
+        .get();
+
+    final batch = _firestore.batch();
+    final activityRef = _firestore
         .collection(collection)
-        .doc(activity.activityId)
-        .set(activity.toMap());
+        .doc(activity.activityId);
+    batch.set(activityRef, activity.toMap());
+
+    for (final user in usersSnapshot.docs) {
+      final notificationRef = _firestore.collection('notifications').doc();
+      batch.set(notificationRef, {
+        'idUtilisateur': user.id,
+        'titre': 'Nouvelle activité disponible',
+        'message': 'Découvre l’activité « ${activity.title} ».',
+        'type': 'nouvelle_activite',
+        'activityId': activity.activityId,
+        'lu': false,
+        'dateEnvoi': FieldValue.serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
   }
 
   /// Modifier une activité

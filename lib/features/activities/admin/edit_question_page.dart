@@ -3,7 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../models/proposition.dart';
 import '../../../models/question_model.dart';
 import '../question_service.dart';
+import '../widgets/image_url_validation.dart';
 import '../widgets/question_answer_utils.dart';
+
+/// Retourne l'URL saisie ou null si le champ est vide.
+String? _optionalUrl(String value) {
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
+}
 
 class EditQuestionPage extends StatefulWidget {
   final String activityId;
@@ -26,10 +33,17 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
 
   late TextEditingController statementController;
 
+  late TextEditingController imageUrlController;
+
   late TextEditingController optionAController;
   late TextEditingController optionBController;
   late TextEditingController optionCController;
   late TextEditingController optionDController;
+
+  late TextEditingController optionAImageUrlController;
+  late TextEditingController optionBImageUrlController;
+  late TextEditingController optionCImageUrlController;
+  late TextEditingController optionDImageUrlController;
 
   late TextEditingController correctAnswerController;
   late TextEditingController numericAnswerController;
@@ -50,6 +64,9 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
     statementController =
         TextEditingController(text: widget.question.statement);
 
+    imageUrlController =
+        TextEditingController(text: widget.question.image ?? '');
+
     optionAController =
         TextEditingController(text: options.isNotEmpty ? options[0].texte : "");
 
@@ -61,6 +78,22 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
 
     optionDController =
         TextEditingController(text: options.length > 3 ? options[3].texte : "");
+
+    optionAImageUrlController = TextEditingController(
+      text: options.isNotEmpty ? options[0].imageUrl ?? '' : '',
+    );
+
+    optionBImageUrlController = TextEditingController(
+      text: options.length > 1 ? options[1].imageUrl ?? '' : '',
+    );
+
+    optionCImageUrlController = TextEditingController(
+      text: options.length > 2 ? options[2].imageUrl ?? '' : '',
+    );
+
+    optionDImageUrlController = TextEditingController(
+      text: options.length > 3 ? options[3].imageUrl ?? '' : '',
+    );
 
     correctAnswerController =
         TextEditingController(text: widget.question.correctAnswer);
@@ -84,10 +117,15 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
   @override
   void dispose() {
     statementController.dispose();
+    imageUrlController.dispose();
     optionAController.dispose();
     optionBController.dispose();
     optionCController.dispose();
     optionDController.dispose();
+    optionAImageUrlController.dispose();
+    optionBImageUrlController.dispose();
+    optionCImageUrlController.dispose();
+    optionDImageUrlController.dispose();
     correctAnswerController.dispose();
     numericAnswerController.dispose();
     toleranceController.dispose();
@@ -103,10 +141,26 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
     });
 
     final options = [
-      Proposition(id: 'A', texte: optionAController.text.trim()),
-      Proposition(id: 'B', texte: optionBController.text.trim()),
-      Proposition(id: 'C', texte: optionCController.text.trim()),
-      Proposition(id: 'D', texte: optionDController.text.trim()),
+      Proposition(
+        id: 'A',
+        texte: optionAController.text.trim(),
+        imageUrl: _optionalUrl(optionAImageUrlController.text),
+      ),
+      Proposition(
+        id: 'B',
+        texte: optionBController.text.trim(),
+        imageUrl: _optionalUrl(optionBImageUrlController.text),
+      ),
+      Proposition(
+        id: 'C',
+        texte: optionCController.text.trim(),
+        imageUrl: _optionalUrl(optionCImageUrlController.text),
+      ),
+      Proposition(
+        id: 'D',
+        texte: optionDController.text.trim(),
+        imageUrl: _optionalUrl(optionDImageUrlController.text),
+      ),
     ];
     final normalizedAnswer = type == QuestionType.multipleChoice
         ? normalizeChoiceAnswer(correctAnswerController.text, options)
@@ -122,8 +176,15 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
     }
 
     try {
-      final updatedQuestion = widget.question.copyWith(
+      // Construction directe (et non copyWith) : cela permet de supprimer
+      // l'image de la question en vidant le champ (copyWith garderait
+      // l'ancienne valeur si on passe null).
+      final updatedQuestion = QuestionModel(
+        questionId: widget.question.questionId,
+        activityId: widget.question.activityId,
         statement: statementController.text.trim(),
+        objective: widget.question.objective,
+        image: _optionalUrl(imageUrlController.text),
         type: type,
         options: options,
         correctAnswer: normalizedAnswer ?? '',
@@ -135,6 +196,7 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
             : double.parse(toleranceController.text),
         freeTextAnswer: freeTextController.text.trim(),
         caseSensitive: caseSensitive,
+        createdAt: widget.question.createdAt,
       );
 
       await service.updateQuestion(widget.activityId, updatedQuestion);
@@ -167,8 +229,28 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
             ),
             const SizedBox(height: 10),
             TextFormField(
+              controller: optionAImageUrlController,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: "Image réponse A (URL)",
+                hintText: "https://i.pinimg.com/.../image.jpg",
+              ),
+              validator: validateImageUrl,
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
               controller: optionBController,
               decoration: const InputDecoration(labelText: "Réponse B"),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: optionBImageUrlController,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: "Image réponse B (URL)",
+                hintText: "https://i.pinimg.com/.../image.jpg",
+              ),
+              validator: validateImageUrl,
             ),
             const SizedBox(height: 10),
             TextFormField(
@@ -177,8 +259,28 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
             ),
             const SizedBox(height: 10),
             TextFormField(
+              controller: optionCImageUrlController,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: "Image réponse C (URL)",
+                hintText: "https://i.pinimg.com/.../image.jpg",
+              ),
+              validator: validateImageUrl,
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
               controller: optionDController,
               decoration: const InputDecoration(labelText: "Réponse D"),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: optionDImageUrlController,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: "Image réponse D (URL)",
+                hintText: "https://i.pinimg.com/.../image.jpg",
+              ),
+              validator: validateImageUrl,
             ),
             const SizedBox(height: 15),
             TextFormField(
@@ -276,6 +378,18 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
               decoration: const InputDecoration(
                 labelText: "Question",
               ),
+            ),
+
+            const SizedBox(height: 20),
+
+            TextFormField(
+              controller: imageUrlController,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: "Image de la question (URL)",
+                hintText: "https://i.pinimg.com/.../image.jpg",
+              ),
+              validator: validateImageUrl,
             ),
 
             const SizedBox(height: 20),

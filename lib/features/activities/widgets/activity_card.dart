@@ -94,7 +94,7 @@ class ActivityCard extends StatelessWidget {
                         minHeight: 7,
                         backgroundColor: const Color(0xFFE5E5E5),
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          activity.progress >= 100
+                          activity.isCompleted
                               ? const Color(0xFF36B86A)
                               : category.accent,
                         ),

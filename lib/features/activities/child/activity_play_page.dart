@@ -36,6 +36,11 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
   int totalQuestionCount = 0;
   String? sessionId;
   String? selectedAnswer;
+
+  /// ID de la proposition choisie (QCM) : permet de surligner en rouge la
+  /// mauvaise réponse sélectionnée en même temps que la bonne en vert,
+  /// même si deux propositions ont le même texte.
+  String? selectedAnswerId;
   final TextEditingController textController = TextEditingController();
 
   @override
@@ -49,7 +54,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
         if (remainingSeconds <= 1) {
           countdownTimer?.cancel();
           setState(() => remainingSeconds = 0);
-          finishActivity();
+          unawaited(finishActivity());
           return;
         }
         setState(() => remainingSeconds--);
@@ -63,6 +68,9 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
         widget.activity.activityId,
         widget.activity.duration,
       );
+      // Statut « En cours » : sauf si l'activité est déjà terminée
+      // (la progression de la première fois est conservée).
+      await ActivityService().markActivityStarted(widget.activity.activityId);
     } catch (_) {
       // The activity can still be played if the session marker cannot be written.
     }
@@ -88,10 +96,20 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     super.dispose();
   }
 
-  void finishActivity([List<QuestionModel>? questions]) {
+  Future<void> finishActivity([List<QuestionModel>? questions]) async {
     if (activityFinished || !mounted) return;
     activityFinished = true;
     countdownTimer?.cancel();
+
+    // Enregistre la progression dans Firestore : la PREMIÈRE fois termine
+    // l'activité définitivement (statut « Terminée » + pourcentage figé).
+    // Ne bloque jamais la navigation vers l'écran de résultat.
+    await _persistProgress(
+      score,
+      questions?.length ?? totalQuestionCount,
+    );
+
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -104,16 +122,30 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     );
   }
 
+  Future<void> _persistProgress(int score, int totalQuestions) async {
+    try {
+      await ActivityService().completeActivity(
+        widget.activity.activityId,
+        score: score,
+        totalQuestions: totalQuestions,
+      );
+    } catch (_) {
+      // Si l'écriture échoue, l'enfant garde son écran de résultat ;
+      // il pourra rejouer pour (re)valider la progression.
+    }
+  }
+
   void nextQuestion(List<QuestionModel> questions) {
     if (currentQuestion < questions.length - 1) {
       setState(() {
         currentQuestion++;
         answered = false;
         selectedAnswer = null;
+        selectedAnswerId = null;
         textController.clear();
       });
     } else {
-      finishActivity(questions);
+      unawaited(finishActivity(questions));
     }
   }
 
@@ -153,7 +185,15 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
 
     setState(() {
       answered = true;
-      selectedAnswer = answer.toString();
+      // Pour un QCM, [answer] est une Proposition : on mémorise son id
+      // (et son texte) pour surligner la réponse choisie en rouge pendant
+      // que la bonne réponse s'affiche en vert.
+      if (answer is Proposition) {
+        selectedAnswerId = answer.id;
+        selectedAnswer = answer.texte;
+      } else {
+        selectedAnswer = answer.toString();
+      }
     });
   }
 
@@ -168,30 +208,106 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     }
   }
 
-  Widget buildQCM(QuestionModel question) {
-    return ListView.builder(
-      itemCount: question.options.length,
-      itemBuilder: (context, index) {
-        final proposition = question.options[index];
+  bool questionHasImage(QuestionModel question) =>
+      question.image != null && question.image!.trim().isNotEmpty;
 
-        return AnswerButton(
-          text: proposition.texte,
-          isSelected: selectedAnswer == proposition.texte,
-          showResult: answered,
-          isCorrect: normalizeChoiceAnswer(
-                question.correctAnswer,
-                question.options,
-              ) ==
-              proposition.id,
-          onTap: () {
-            checkAnswer(
-              question,
-              proposition,
-            );
-          },
+  Widget buildAnswerButton(
+    QuestionModel question,
+    Proposition proposition,
+  ) {
+    return AnswerButton(
+      text: proposition.texte,
+      imageUrl: proposition.imageUrl,
+      isSelected: selectedAnswerId == proposition.id,
+      showResult: answered,
+      isCorrect: normalizeChoiceAnswer(
+            question.correctAnswer,
+            question.options,
+          ) ==
+          proposition.id,
+      onTap: () {
+        checkAnswer(
+          question,
+          proposition,
         );
       },
     );
+  }
+
+  Widget buildQCM(QuestionModel question) {
+    return ListView.builder(
+      itemCount: question.options.length,
+      itemBuilder: (context, index) =>
+          buildAnswerButton(question, question.options[index]),
+    );
+  }
+
+  /// Zone de contenu d'une question : l'image (si l'admin en a défini une)
+  /// s'affiche à hauteur fixe AU-DESSUS des réponses, le tout dans un seul
+  /// scrollable pour que les réponses restent toujours visibles.
+  Widget buildQuestionArea(QuestionModel question) {
+    if (!questionHasImage(question)) {
+      return buildQuestionWidget(question);
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.network(
+              question.image!.trim(),
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  height: 200,
+                  width: double.infinity,
+                  color: const Color(0xFFDDF4FB),
+                  alignment: Alignment.center,
+                  child: const CircularProgressIndicator(),
+                );
+              },
+              errorBuilder: (_, error, stackTrace) => Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDDF4FB),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(
+                  Icons.broken_image_outlined,
+                  color: Color(0xFF2D8DD5),
+                  size: 56,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          buildStaticQuestionContent(question),
+        ],
+      ),
+    );
+  }
+
+  /// Contenu de la question sans scrollable interne : utilisé sous l'image
+  /// à l'intérieur du SingleChildScrollView parent.
+  Widget buildStaticQuestionContent(QuestionModel question) {
+    switch (question.type) {
+      case QuestionType.multipleChoice:
+        return Column(
+          children: question.options
+              .map((proposition) => buildAnswerButton(question, proposition))
+              .toList(),
+        );
+      case QuestionType.numeric:
+        return buildNumeric(question);
+      case QuestionType.text:
+        return buildText(question);
+    }
   }
 
   Widget buildNumeric(QuestionModel question) {
@@ -291,17 +407,29 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
         const SizedBox(height: 28),
         if (widget.activity.imageUrl != null &&
             widget.activity.imageUrl!.isNotEmpty)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.network(
-              widget.activity.imageUrl!,
-              height: 245,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (_, error, stackTrace) => const ColoredBox(
-                color: Color(0xFFDDF4FB),
-                child: Icon(Icons.broken_image_outlined,
-                    color: Color(0xFF2D8DD5), size: 56),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.network(
+                widget.activity.imageUrl!,
+                height: 245,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, error, stackTrace) => const ColoredBox(
+                  color: Color(0xFFDDF4FB),
+                  child: Icon(Icons.broken_image_outlined,
+                      color: Color(0xFF2D8DD5), size: 56),
+                ),
               ),
             ),
           ),
@@ -404,7 +532,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
                 ),
                 const SizedBox(height: 25),
                 Expanded(
-                  child: buildQuestionWidget(question),
+                  child: buildQuestionArea(question),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
@@ -425,7 +553,6 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     );
   }
 }
-
 class _TimerBadge extends StatelessWidget {
   const _TimerBadge({required this.seconds});
 
@@ -467,3 +594,4 @@ class _TimerBadge extends StatelessWidget {
     );
   }
 }
+
