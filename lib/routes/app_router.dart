@@ -5,13 +5,17 @@ import 'package:eveiloo_enfant/features/auth/register_page.dart';
 import 'package:eveiloo_enfant/features/auth/splash_page.dart';
 import 'package:eveiloo_enfant/features/cart/cart_page.dart';
 import 'package:eveiloo_enfant/features/catalogues/catalogueRoutes.dart';
+import 'package:eveiloo_enfant/features/checkout/checkout_page.dart';
 import 'package:eveiloo_enfant/features/children/children_routes.dart';
 import 'package:eveiloo_enfant/features/onboarding/onboarding_page.dart';
+import 'package:eveiloo_enfant/features/orders/commande_detail_page.dart';
+import 'package:eveiloo_enfant/features/orders/commandes_page.dart';
 import 'package:eveiloo_enfant/features/parametre/parametre.dart';
 import 'package:eveiloo_enfant/features/profil/profileRoutes.dart';
 import 'package:eveiloo_enfant/features/progression/progression.dart';
 import 'package:eveiloo_enfant/features/toys/admin_toys_page.dart';
 import 'package:eveiloo_enfant/features/tutorials/tutorialsRoutes.dart';
+import 'package:eveiloo_enfant/models/cart_model.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:eveiloo_enfant/features/home/homeRoutes.dart';
 import 'package:eveiloo_enfant/features/auth/login_page.dart';
@@ -119,6 +123,28 @@ class AppRouter {
         builder: (context, state) {
           final enfantId = state.pathParameters['enfantId']!;
           return ProgressionPage(enfantId: enfantId);
+        },
+      ),
+
+      GoRoute(
+        path: AppRoutes.checkout,
+        name: AppRoutes.checkoutName,
+        builder: (context, state) {
+          final articles = state.extra as List<CartItemModel>;
+          return CheckoutPage(articles: articles);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.commandes,
+        name: AppRoutes.commandesName,
+        builder: (context, state) => const CommandesPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.commandeDetail,
+        name: AppRoutes.commandeDetailName,
+        builder: (context, state) {
+          final commandeId = state.pathParameters['commandeId']!;
+          return CommandeDetailPage(commandeId: commandeId);
         },
       ),
     ],

@@ -73,6 +73,14 @@ abstract final class AppRoutes {
   static const parametre = '/parametre';
   static const parametreName = 'parametre';
 
+  static const checkout = '/checkout';
+  static const checkoutName = 'checkout';
+
+  static const commandes = '/commandes';
+  static const commandesName = 'commandes';
+
+  static const commandeDetail = '/commandes/:commandeId';
+  static const commandeDetailName = 'commande-detail';
   // ---------- Admin ----------
   static const adminToys = '/admin-toys';
   static const adminToysName = 'admin-toys';

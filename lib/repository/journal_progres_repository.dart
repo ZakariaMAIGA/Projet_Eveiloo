@@ -23,16 +23,21 @@ class JournalProgresRepository {
   }) {
     if (enfantIds.isEmpty) return Stream.value([]);
 
-    return _ref
-        .where('enfantId', whereIn: enfantIds)
-        .orderBy('dateRealisation', descending: true)
-        .limit(limite)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => JournalProgresModel.fromMap(doc.data(), doc.id))
-              .toList(),
-        );
+    return _ref.where('enfantId', whereIn: enfantIds).snapshots().map((
+      snapshot,
+    ) {
+      final entrees = snapshot.docs
+          .map((doc) => JournalProgresModel.fromMap(doc.data(), doc.id))
+          .toList();
+
+      entrees.sort((a, b) {
+        final dateA = a.dateRealisation ?? DateTime(0);
+        final dateB = b.dateRealisation ?? DateTime(0);
+        return dateB.compareTo(dateA);
+      });
+
+      return entrees.take(limite).toList();
+    });
   }
 
   /// Toutes les entrées du journal pour un enfant précis (sans tri Firestore,

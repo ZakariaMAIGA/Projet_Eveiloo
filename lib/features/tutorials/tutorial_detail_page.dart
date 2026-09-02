@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../core/provider/auth_provider.dart';
 import '../../core/provider/enfant_provider.dart';
@@ -24,35 +24,37 @@ class TutorialDetailPage extends ConsumerStatefulWidget {
 }
 
 class _TutorialDetailPageState extends ConsumerState<TutorialDetailPage> {
+  YoutubePlayerController? _youtubeController;
   bool _dejaComptabilise = false;
+  bool _videoIndisponible = false;
 
-  Future<void> _regarder() async {
-    final videoUri = Uri.tryParse(widget.tutoriel.urlVideo);
-    if (videoUri == null || !videoUri.hasScheme || !videoUri.hasAbsolutePath) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Aucune vidéo disponible pour ce tutoriel.'),
-          ),
-        );
-      }
-      return;
+  @override
+  void initState() {
+    super.initState();
+
+    final videoId = YoutubePlayer.convertUrlToId(widget.tutoriel.urlVideo);
+
+    if (videoId == null) {
+      _videoIndisponible = true;
+    } else {
+      _youtubeController = YoutubePlayerController(
+        
+        initialVideoId: videoId,
+        flags: const YoutubePlayerFlags(autoPlay: false, mute: false),
+      )..addListener(_onPlayerStateChange);
     }
+  }
 
-    final ouvert = await launchUrl(
-      videoUri,
-      mode: LaunchMode.externalApplication,
-    );
-    if (!ouvert) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Impossible d\'ouvrir la vidéo.')),
-        );
-      }
-      return;
+  void _onPlayerStateChange() {
+    final controller = _youtubeController;
+    if (controller == null) return;
+
+    if (controller.value.isPlaying && !_dejaComptabilise) {
+      _comptabiliserProgres();
     }
+  }
 
-    // Comptabilisation uniquement en mode enfant.
+  Future<void> _comptabiliserProgres() async {
     if (widget.enfantId == null || _dejaComptabilise) return;
 
     final parentId = ref.read(utilisateurCourantProvider).value?.utilisateurId;
@@ -87,6 +89,13 @@ class _TutorialDetailPageState extends ConsumerState<TutorialDetailPage> {
   }
 
   @override
+  void dispose() {
+    _youtubeController?.removeListener(_onPlayerStateChange);
+    _youtubeController?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final jouetsAsync = ref.watch(
       jouetsTutorielProvider(widget.tutoriel.materielIds),
@@ -109,57 +118,25 @@ class _TutorialDetailPageState extends ConsumerState<TutorialDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // --- LECTEUR YOUTUBE INTÉGRÉ ---
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    widget.tutoriel.urlImage.isNotEmpty
-                        ? Image.network(
-                            widget.tutoriel.urlImage,
-                            width: double.infinity,
-                            height: 220,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  width: double.infinity,
-                                  height: 220,
-                                  color: Colors.grey.shade200,
-                                  child: const Icon(
-                                    Icons.image,
-                                    size: 46,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                          )
-                        : Container(
-                            width: double.infinity,
-                            height: 220,
-                            color: Colors.grey.shade200,
-                            child: const Icon(
-                              Icons.image,
-                              size: 46,
-                              color: Colors.grey,
-                            ),
-                          ),
-                    GestureDetector(
-                      onTap: _regarder,
-                      child: Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.8),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.play_arrow,
-                          size: 36,
-                          color: Color(0xFF1E88E5),
+                child: _videoIndisponible
+                    ? Container(
+                        width: double.infinity,
+                        height: 220,
+                        color: Colors.grey.shade200,
+                        child: const Center(child: Text('Vidéo indisponible')),
+                      )
+                    : YoutubePlayer(
+                        controller: _youtubeController!,
+                        showVideoProgressIndicator: true,
+                        progressIndicatorColor: const Color(0xFF1E88E5),
+                        progressColors: const ProgressBarColors(
+                          playedColor: Color(0xFF1E88E5),
+                          handleColor: Color(0xFF1E88E5),
                         ),
                       ),
-                    ),
-                  ],
-                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -233,41 +210,37 @@ class _TutorialDetailPageState extends ConsumerState<TutorialDetailPage> {
                 ),
               ],
               const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _regarder,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF87CEFF),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        widget.enfantId != null && _dejaComptabilise
-                            ? 'Terminé ✓'
-                            : 'Regarder',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+
+              // Statut de complétion (le lecteur intègre déjà ses propres
+              // contrôles play/pause, donc plus besoin d'un gros bouton
+              // "Regarder" séparé)
+              if (widget.enfantId != null)
+                Row(
+                  children: [
+                    Icon(
+                      _dejaComptabilise
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
+                      color: _dejaComptabilise
+                          ? Colors.green
+                          : Colors.grey.shade400,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _dejaComptabilise
+                          ? 'Terminé (+10 pts) ✨'
+                          : 'Regarde la vidéo pour valider',
+                      style: TextStyle(
+                        color: _dejaComptabilise
+                            ? Colors.green
+                            : Colors.grey.shade600,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+
               const SizedBox(height: 32),
             ],
           ),

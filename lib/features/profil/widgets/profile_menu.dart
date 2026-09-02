@@ -75,7 +75,7 @@ class ProfileMenu extends ConsumerWidget {
             icon: Icons.inventory_2_outlined,
             title: 'Mes commandes',
             onTap: () {
-              // TODO: créer la page + la route "mes commandes"
+              context.pushNamed(AppRoutes.commandesName);
             },
           ),
 

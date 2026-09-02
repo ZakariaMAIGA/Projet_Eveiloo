@@ -164,7 +164,6 @@ class _ToysPageState extends State<ToysPage> {
       onTap: () => context.pushNamed(
         AppRoutes.toyDetailName,
         pathParameters: {'toyId': toy.id},
-        extra: toy,
       ),
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -266,54 +265,3 @@ class _ToysPageState extends State<ToysPage> {
   }
 }
 
-class ToyDetailPage extends StatelessWidget {
-  final ToyModel toy;
-
-  const ToyDetailPage({Key? key, required this.toy}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(toy.nom)),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (toy.imageUrl.isNotEmpty)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  toy.imageUrl,
-                  width: double.infinity,
-                  height: 240,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: double.infinity,
-                    height: 240,
-                    color: Colors.grey.shade200,
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.broken_image_outlined,
-                      size: 48,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-              ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              toy.nom,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text('${toy.prix.toInt()} FCFA'),
-            Text('Âge : ${toy.ageRange}'),
-            const SizedBox(height: AppSpacing.md),
-            Text(toy.description),
-          ],
-        ),
-      ),
-    );
-  }
-}

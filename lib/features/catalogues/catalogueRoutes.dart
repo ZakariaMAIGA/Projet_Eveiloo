@@ -1,4 +1,5 @@
 import 'package:eveiloo_enfant/features/toys/categories_toys_page.dart';
+import 'package:eveiloo_enfant/features/toys/toy_detail_page.dart';
 import 'package:eveiloo_enfant/features/toys/toys_page.dart';
 import 'package:eveiloo_enfant/models/toy_model.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
@@ -22,11 +23,11 @@ final List<RouteBase> catalogueRoutes = [
         routes: [
           // /catalogue/toys/:toyId
           GoRoute(
-            path: AppRoutes.toyDetail,
+            path: AppRoutes.toyDetail, // ex: '/toys/:toyId'
             name: AppRoutes.toyDetailName,
             builder: (context, state) {
-              final toy = state.extra as ToyModel;
-              return ToyDetailPage(toy: toy);
+              final toyId = state.pathParameters['toyId']!;
+              return ToyDetailPage(toyId: toyId);
             },
           ),
         ],

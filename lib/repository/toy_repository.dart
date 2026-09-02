@@ -76,4 +76,11 @@ class ToyRepository {
         .map((doc) => ToyModel.fromFirestore(doc.data(), doc.id))
         .toList();
   }
+
+  Stream<ToyModel?> streamToy(String toyId) {
+    return _firestore.collection('JOUETS').doc(toyId).snapshots().map((doc) {
+      if (!doc.exists) return null;
+      return ToyModel.fromFirestore(doc.data()!, doc.id);
+    });
+  }
 }

@@ -2,8 +2,10 @@ import 'package:eveiloo_enfant/core/constants/AppFontSize.dart';
 import 'package:eveiloo_enfant/core/constants/AppSpacing.dart';
 import 'package:eveiloo_enfant/features/cart/cart_service.dart';
 import 'package:eveiloo_enfant/models/cart_model.dart';
+import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({Key? key}) : super(key: key);
@@ -122,7 +124,10 @@ class _CartPageState extends State<CartPage> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          // TODO: passer à la page de commande / paiement
+                          context.push(
+                            AppRoutes.checkout, // à ajouter dans app_route.dart
+                            extra: items, // List<CartItemModel>
+                          );
                         },
                         child: const Text('Passer la commande'),
                       ),
