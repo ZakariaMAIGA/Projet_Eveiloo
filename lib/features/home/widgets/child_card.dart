@@ -15,31 +15,30 @@ class ChildCard extends StatelessWidget {
   final Color accentColor;
   final VoidCallback? onTap;
 
-  /// Calcule l'âge à partir de dateNaissance (format attendu : YYYY-MM-DD).
+  /// Calcule l'âge à partir de dateNaissance au format "JJ/MM/AAAA".
   int _calculerAge() {
-    final dateStr = enfant.dateNaissance;
+    final dateStr = enfant.dateNaissance.trim();
     if (dateStr.isEmpty) return 0;
 
-    try {
-      final parts = dateStr.split('-');
-      if (parts.length != 3) return 0;
+    final parts = dateStr.split('/');
+    if (parts.length != 3) return 0;
 
-      final year = int.parse(parts[0]);
-      final month = int.parse(parts[1]);
-      final day = int.parse(parts[2]);
+    final jour = int.tryParse(parts[0]);
+    final mois = int.tryParse(parts[1]);
+    final annee = int.tryParse(parts[2]);
 
-      final now = DateTime.now();
-      var age = now.year - year;
+    if (jour == null || mois == null || annee == null) return 0;
 
-      // Si l'anniversaire n'est pas encore passé cette année
-      if (now.month < month || (now.month == month && now.day < day)) {
-        age--;
-      }
+    final naissance = DateTime(annee, mois, jour);
+    final now = DateTime.now();
+    var age = now.year - naissance.year;
 
-      return age < 0 ? 0 : age;
-    } catch (_) {
-      return 0;
+    if (now.month < naissance.month ||
+        (now.month == naissance.month && now.day < naissance.day)) {
+      age--;
     }
+
+    return age < 0 ? 0 : age;
   }
 
   @override

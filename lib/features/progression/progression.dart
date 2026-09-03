@@ -31,11 +31,35 @@ class _ProgressionPageState extends ConsumerState<ProgressionPage> {
     }
   }
 
-  String _formaterDuree(int totalSecondes) {
-    final h = totalSecondes ~/ 3600;
-    final m = (totalSecondes % 3600) ~/ 60;
-    if (h == 0) return '${m}m';
-    return '${h}h${m.toString().padLeft(2, '0')}m';
+  String _formaterDate(DateTime date) {
+    final maintenant = DateTime.now();
+    final aujourdHui = DateTime(
+      maintenant.year,
+      maintenant.month,
+      maintenant.day,
+    );
+    final jourEntree = DateTime(date.year, date.month, date.day);
+    final diff = aujourdHui.difference(jourEntree).inDays;
+
+    if (diff == 0) return 'Aujourd\'hui';
+    if (diff == 1) return 'Hier';
+    if (diff < 7) return 'Il y a $diff jours';
+
+    const mois = [
+      'jan',
+      'fév',
+      'mar',
+      'avr',
+      'mai',
+      'juin',
+      'juil',
+      'août',
+      'sep',
+      'oct',
+      'nov',
+      'déc',
+    ];
+    return '${date.day} ${mois[date.month - 1]}';
   }
 
   @override
@@ -165,10 +189,13 @@ class _ProgressionPageState extends ConsumerState<ProgressionPage> {
 
                   final activitesCompletees = activites.length;
 
-                  final tempsTotalSecondes = filtrees.fold<int>(
-                    0,
-                    (somme, e) => somme + e.dureeSecondes,
-                  );
+                  final tutoriels = filtrees
+                      .where(
+                        (e) => e.typeElement == TypeElementProgres.tutoriel,
+                      )
+                      .toList();
+
+                  final tutorielsCompletes = tutoriels.length;
 
                   final resultatMoyenne = activites.isEmpty
                       ? 0.0
@@ -202,13 +229,13 @@ class _ProgressionPageState extends ConsumerState<ProgressionPage> {
                         borderColor: isDark
                             ? Colors.blue.shade900
                             : const Color(0xFFD0E8FF),
-                        icon: Icons.timer_outlined,
+                        icon: Icons.movie_creation_outlined,
                         iconBgColor: isDark
                             ? Colors.blue.shade900.withOpacity(0.5)
                             : const Color(0xFFD6EBFF),
                         iconColor: const Color(0xFF29B6F6),
-                        title: 'Temps d\'apprentissage',
-                        value: _formaterDuree(tempsTotalSecondes),
+                        title: 'Tutoriels complétés',
+                        value: '$tutorielsCompletes',
                       ),
                       const SizedBox(height: 16),
                       _buildStatCard(
@@ -262,6 +289,23 @@ class _ProgressionPageState extends ConsumerState<ProgressionPage> {
                           ),
                         ],
                       ),
+
+                      const SizedBox(height: 32),
+
+                      // --- HISTORIQUE DÉTAILLÉ (activités + tutoriels) ---
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Historique',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildHistorique(isDark, filtrees),
                     ],
                   );
                 },
@@ -333,6 +377,143 @@ class _ProgressionPageState extends ConsumerState<ProgressionPage> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- HISTORIQUE ---
+
+  Widget _buildHistorique(bool isDark, List<JournalProgresModel> entrees) {
+    if (entrees.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: Text(
+            'Aucune activité sur cette période.',
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
+        ),
+      );
+    }
+
+    // Tri décroissant : le plus récent en premier
+    final triees = List<JournalProgresModel>.from(entrees)
+      ..sort((a, b) {
+        final dateA = a.dateRealisation ?? DateTime(0);
+        final dateB = b.dateRealisation ?? DateTime(0);
+        return dateB.compareTo(dateA);
+      });
+
+    return Column(
+      children: triees
+          .map((entree) => _buildHistoriqueTile(isDark, entree))
+          .toList(),
+    );
+  }
+
+  Widget _buildHistoriqueTile(bool isDark, JournalProgresModel entree) {
+    final estActivite = entree.typeElement == TypeElementProgres.activite;
+
+    final icon = estActivite
+        ? Icons.extension_rounded
+        : Icons.movie_creation_outlined;
+    final iconColor = estActivite
+        ? const Color(0xFFFF80AB)
+        : const Color(0xFF29B6F6);
+    final iconBg = estActivite
+        ? (isDark
+              ? Colors.pink.shade900.withOpacity(0.3)
+              : const Color(0xFFFFE3EE))
+        : (isDark
+              ? Colors.blue.shade900.withOpacity(0.3)
+              : const Color(0xFFD6EBFF));
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entree.titre,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Text(
+                      estActivite ? 'Activité' : 'Tutoriel',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    if (entree.dateRealisation != null) ...[
+                      const Text(' · ', style: TextStyle(color: Colors.grey)),
+                      Text(
+                        _formaterDate(entree.dateRealisation!),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                    if (estActivite && entree.score > 0) ...[
+                      const Text(' · ', style: TextStyle(color: Colors.grey)),
+                      Text(
+                        '${entree.score.round()}%',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF29B6F6).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '+${entree.pointsGagnes} pts',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF29B6F6),
+              ),
             ),
           ),
         ],
