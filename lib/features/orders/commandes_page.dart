@@ -71,7 +71,7 @@ class CommandesPage extends StatelessWidget {
               return Card(
                 child: ListTile(
                   title: Text(
-                    'Commande #${commande.commandeId.substring(0, 6)}',
+                    'Commande #${commande.numeroCommande}',
                   ),
                   subtitle: Text(commande.dateCommande?.toString() ?? ''),
                   trailing: Chip(
