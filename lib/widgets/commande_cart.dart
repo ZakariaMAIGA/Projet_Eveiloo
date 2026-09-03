@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/Commande.dart';
 
 class CommandeCard extends StatelessWidget {
@@ -44,23 +45,26 @@ class CommandeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color statusColor = _getStatusColor();
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
+    return InkWell(
+      borderRadius: BorderRadius.circular(22),
+      onTap: () => context.push('/commandes/${commande.commandeId}'),
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 20),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
           /// Première ligne
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -122,7 +126,8 @@ class CommandeCard extends StatelessWidget {
               ),
             ],
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

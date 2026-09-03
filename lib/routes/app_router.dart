@@ -8,7 +8,7 @@ import 'package:eveiloo_enfant/features/catalogues/catalogueRoutes.dart';
 import 'package:eveiloo_enfant/features/checkout/checkout_page.dart';
 import 'package:eveiloo_enfant/features/children/children_routes.dart';
 import 'package:eveiloo_enfant/features/onboarding/onboarding_page.dart';
-import 'package:eveiloo_enfant/features/orders/commande_detail_page.dart';
+import 'package:eveiloo_enfant/widgets/CommandeDetails.dart';
 import 'package:eveiloo_enfant/features/commandes/mes_Commandes_page.dart';
 import 'package:eveiloo_enfant/features/parametre/parametre.dart';
 import 'package:eveiloo_enfant/features/profil/profileRoutes.dart';
