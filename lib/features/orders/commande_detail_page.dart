@@ -60,7 +60,7 @@ class CommandeDetailPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Commande #${commande.commandeId.substring(0, 6)}',
+                              'Commande #${commande.numeroCommande}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: AppFontSize.medium,
