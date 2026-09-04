@@ -1,0 +1,50 @@
+import 'package:flutter/material.dart';
+
+import '../../../models/avis.dart';
+
+class AvisTile extends StatelessWidget {
+  const AvisTile({super.key, required this.avis});
+
+  final AvisModel avis;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              ...List.generate(5, (index) {
+                return Icon(
+                  index < avis.note ? Icons.star : Icons.star_border,
+                  size: 18,
+                  color: Colors.amber,
+                );
+              }),
+              const Spacer(),
+              Text(
+                _formaterDate(avis.date),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          if (avis.commentaire.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              avis.commentaire,
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _formaterDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
+  }
+}

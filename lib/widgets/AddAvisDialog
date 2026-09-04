@@ -1,0 +1,109 @@
+import 'package:flutter/material.dart';
+
+import '../../../models/avis.dart';
+import '../../../repository/avisRepository.dart';
+
+/// Boîte de dialogue permettant à un utilisateur de laisser un avis
+/// (note en étoiles + commentaire) sur un jouet.
+class AddAvisDialog extends StatefulWidget {
+  const AddAvisDialog({
+    super.key,
+    required this.jouetId,
+    required this.utilisateurId,
+  });
+
+  final String jouetId;
+  final String utilisateurId;
+
+  @override
+  State<AddAvisDialog> createState() => _AddAvisDialogState();
+}
+
+class _AddAvisDialogState extends State<AddAvisDialog> {
+  final AvisRepository _avisRepository = AvisRepository();
+
+  int _note = 5;
+  final _commentaireController = TextEditingController();
+  bool _envoiEnCours = false;
+
+  @override
+  void dispose() {
+    _commentaireController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _envoyer() async {
+    setState(() => _envoiEnCours = true);
+
+    final avis = AvisModel(
+      avisId: '',
+      jouetId: widget.jouetId,
+      utilisateurId: widget.utilisateurId,
+      note: _note,
+      commentaire: _commentaireController.text.trim(),
+      date: DateTime.now(),
+    );
+
+    try {
+      await _avisRepository.creer(avis);
+      if (mounted) Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) {
+        setState(() => _envoiEnCours = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : $error')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Donner mon avis'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (index) {
+              final valeur = index + 1;
+              return IconButton(
+                onPressed: () => setState(() => _note = valeur),
+                icon: Icon(
+                  valeur <= _note ? Icons.star : Icons.star_border,
+                  color: Colors.amber,
+                ),
+              );
+            }),
+          ),
+          TextField(
+            controller: _commentaireController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              hintText: 'Votre commentaire (facultatif)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _envoiEnCours ? null : () => Navigator.of(context).pop(),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: _envoiEnCours ? null : _envoyer,
+          child: _envoiEnCours
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Envoyer'),
+        ),
+      ],
+    );
+  }
+}
