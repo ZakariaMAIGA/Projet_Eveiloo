@@ -1,16 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:eveiloo_enfant/models/CategorieJouetModel.dart';
+import '../models/category_model.dart';
 import '../models/toy_model.dart';
 
 class ToyRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Récupérer la liste des catégories
-  Stream<List<CategorieJouetModel>> getCategories() {
+  Stream<List<CategoryModel>> getCategories() {
     return _firestore.collection('CATEGORIES').snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
         final data = doc.data();
-        return CategorieJouetModel.fromMap(Map<String, dynamic>.from(data));
+        return CategoryModel.fromFirestore(
+          Map<String, dynamic>.from(data),
+          doc.id,
+        );
       }).toList();
     });
   }
@@ -52,6 +55,34 @@ class ToyRepository {
     });
   }
 
+  // Récupérer plusieurs jouets par leurs ids (utile pour les favoris).
+  // Découpe automatiquement en lots de 10, limite Firestore pour `whereIn`
+  // sur l'id du document.
+  Future<List<ToyModel>> getJouetsParIds(List<String> toyIds) async {
+    if (toyIds.isEmpty) return [];
+
+    final resultats = <ToyModel>[];
+    for (var i = 0; i < toyIds.length; i += 10) {
+      final fin = (i + 10 > toyIds.length) ? toyIds.length : i + 10;
+      final lot = toyIds.sublist(i, fin);
+
+      final snapshot = await _firestore
+          .collection('JOUETS')
+          .where(FieldPath.documentId, whereIn: lot)
+          .get();
+
+      resultats.addAll(
+        snapshot.docs.map(
+              (doc) => ToyModel.fromFirestore(
+            Map<String, dynamic>.from(doc.data()),
+            doc.id,
+          ),
+        ),
+      );
+    }
+    return resultats;
+  }
+
   // Ajouter un nouveau jouet dans Firestore
   Future<void> addToy(ToyModel toy) async {
     await _firestore.collection('JOUETS').add(toy.toMap());
@@ -60,27 +91,5 @@ class ToyRepository {
   // Supprimer un jouet
   Future<void> deleteToy(String toyId) async {
     await _firestore.collection('JOUETS').doc(toyId).delete();
-  }
-
-  // Récupère la liste des objets ToyModel à partir d'une liste d'IDs
-  Future<List<ToyModel>> getJouetsParIds(List<String> ids) async {
-    if (ids.isEmpty) return [];
-
-    // Note: Firestore limite whereIn à 30 éléments par requête
-    final snapshot = await FirebaseFirestore.instance
-        .collection('JOUETS')
-        .where(FieldPath.documentId, whereIn: ids)
-        .get();
-
-    return snapshot.docs
-        .map((doc) => ToyModel.fromFirestore(doc.data(), doc.id))
-        .toList();
-  }
-
-  Stream<ToyModel?> streamToy(String toyId) {
-    return _firestore.collection('JOUETS').doc(toyId).snapshots().map((doc) {
-      if (!doc.exists) return null;
-      return ToyModel.fromFirestore(doc.data()!, doc.id);
-    });
   }
 }

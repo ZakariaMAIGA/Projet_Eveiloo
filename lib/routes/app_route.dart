@@ -21,7 +21,7 @@ abstract final class AppRoutes {
   static const categories = 'categories'; // -> /catalogue/categories
   static const toys = 'toys'; // -> /catalogue/toys
   static const toyDetail = ':toyId'; // -> /catalogue/toys/:toyId
-  static const favoris = '/favoris';
+  static const favoris = '/favoris/:enfantId';
   static const cart = '/cart';
   static const cartName = 'cart';
   static const progression = '/progression/:enfantId';
@@ -75,7 +75,7 @@ abstract final class AppRoutes {
 
   // routes admin
   static const String adminToys = '/admin-toys';
-  static const favoris = '/favoris';
+  static const favoris = '/favoris/:enfantId';
   // ---------- Catalogue ----------
   static const parametre = '/parametre';
   static const parametreName = 'parametre';
@@ -134,5 +134,5 @@ abstract final class AppRoutes {
 
   // routes name admin
   static const String adminToysName = 'adminToys';
-  // static const Favoris = '/favoris';
+  // static const favoris = '/favoris/:enfantId';
 }
