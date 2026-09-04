@@ -17,6 +17,10 @@ abstract final class AppRoutes {
   static const tutorialDetailName = 'tutorial-detail';
   static const profile = '/profile';
   static const catalogue = '/catalogue';
+  // Sous-routes du catalogue (imbriquées, relatives à /catalogue)
+  static const categories = 'categories'; // -> /catalogue/categories
+  static const toys = 'toys'; // -> /catalogue/toys
+  static const toyDetail = ':toyId'; // -> /catalogue/toys/:toyId
   static const favoris = '/favoris';
   static const cart = '/cart';
   static const cartName = 'cart';
@@ -69,6 +73,9 @@ abstract final class AppRoutes {
   static const toyDetail = '/catalogue/toys/:toyId';
   static const toyDetailName = 'toy-detail';
 
+  // routes admin
+  static const String adminToys = '/admin-toys';
+  static const favoris = '/favoris';
   // ---------- Catalogue ----------
   static const parametre = '/parametre';
   static const parametreName = 'parametre';
@@ -117,5 +124,15 @@ abstract final class AppRoutes {
   static const tutorialsName = 'tutorials';
   static const profileName = 'profile';
   static const catalogueName = 'catalogue';
+
+  static const categoriesName = 'categories';
+  static const toysName = 'toys';
+  static const toyDetailName = 'toy-detail';
+
+  static const childrenListName = 'children';
   static const favorisName = 'favoris';
+
+  // routes name admin
+  static const String adminToysName = 'adminToys';
+  // static const Favoris = '/favoris';
 }

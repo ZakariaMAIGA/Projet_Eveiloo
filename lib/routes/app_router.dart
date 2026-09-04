@@ -17,6 +17,7 @@ import 'package:eveiloo_enfant/features/toys/admin_toys_page.dart';
 import 'package:eveiloo_enfant/features/tutorials/tutorialsRoutes.dart';
 import 'package:eveiloo_enfant/models/cart_model.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
+import 'package:eveiloo_enfant/features/favoris/favoris.dart';
 import 'package:eveiloo_enfant/features/home/homeRoutes.dart';
 import 'package:eveiloo_enfant/features/auth/login_page.dart';
 import 'package:eveiloo_enfant/features/overview/overview_page.dart';
@@ -91,7 +92,18 @@ class AppRouter {
         // pas besoin de name si tu n’utilises pas pushNamed ici
         builder: (context, state) => const NotificationsPage(),
       ),
+      GoRoute(
+        path: AppRoutes.favoris, // ex: '/favoris/:enfantId'
+        name: AppRoutes.favorisName,
+        builder: (context, state) {
+          final enfantId = state.pathParameters['enfantId'] ?? '';
 
+          return Favoris(
+            enfantId: enfantId,
+          );
+        },
+      ),
+      // Route Administration ajoutée
       GoRoute(
         path: AppRoutes.parametre,
         name: AppRoutes.parametreName,

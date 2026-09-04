@@ -1,0 +1,108 @@
+import 'package:flutter/material.dart';
+
+import '../../../models/avis.dart';
+import '../../../repository/avisRepository.dart';
+import 'widgets/add_avis_dialog.dart';
+import 'widgets/avis_tile.dart';
+
+/// Section "Avis" à intégrer dans une page de détail jouet (ex: après la
+/// description). Affiche la note moyenne, la liste des avis, et un bouton
+/// pour en laisser un.
+class AvisSection extends StatefulWidget {
+  const AvisSection({
+    super.key,
+    required this.jouetId,
+    required this.utilisateurId,
+  });
+
+  final String jouetId;
+  final String utilisateurId;
+
+  @override
+  State<AvisSection> createState() => _AvisSectionState();
+}
+
+class _AvisSectionState extends State<AvisSection> {
+  final AvisRepository _avisRepository = AvisRepository();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Avis',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            TextButton.icon(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => AddAvisDialog(
+                  jouetId: widget.jouetId,
+                  utilisateurId: widget.utilisateurId,
+                ),
+              ),
+              icon: const Icon(Icons.rate_review_outlined, size: 18),
+              label: const Text('Donner mon avis'),
+            ),
+          ],
+        ),
+        StreamBuilder<List<AvisModel>>(
+          stream: _avisRepository.observerParJouet(widget.jouetId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text('Erreur : ${snapshot.error}'),
+              );
+            }
+
+            final avis = snapshot.data ?? [];
+
+            if (avis.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  'Aucun avis pour le moment. Soyez le premier à en laisser un !',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              );
+            }
+
+            final noteMoyenne =
+                avis.fold<int>(0, (somme, a) => somme + a.note) / avis.length;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber, size: 20),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${noteMoyenne.toStringAsFixed(1)} (${avis.length} avis)',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                ...avis.map<Widget>((a) => AvisTile(avis: a)),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
