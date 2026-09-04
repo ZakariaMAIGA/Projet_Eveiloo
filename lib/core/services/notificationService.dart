@@ -1,58 +1,57 @@
+// core/services/notification_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:developer' as dev;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/notifications.dart';
 
 class NotificationService extends ChangeNotifier {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Initialisation de FCM (Abonnements + Enregistrement Firestore à la réception)
+  bool _initialized = false;
+
   Future<void> initNotifications() async {
+    if (_initialized) return;
+    _initialized = true;
+
     // 1. Demande de permission
-    NotificationSettings settings = await _fcm.requestPermission(
+    final settings = await _fcm.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     );
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      // Affichage du token FCM pour tes tests
-      String? token = await _fcm.getToken();
-      if (kDebugMode) {
-        dev.log("========================================");
-        dev.log("FCM TOKEN : $token");
-        dev.log("========================================");
+    if (settings.authorizationStatus != AuthorizationStatus.authorized) {
+      return;
+    }
+
+    // 2. Token (optionnel : à logger ou envoyer à ton backend)
+    final token = await _fcm.getToken();
+    debugPrint('FCM TOKEN : $token');
+
+    // 3. Abonnements aux topics
+    await _fcm.subscribeToTopic('nouveau_tutoriel');
+    await _fcm.subscribeToTopic('nouvel_article');
+
+    // 4. Écoute des messages en foreground
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      debugPrint('Notification FCM reçue : ${message.notification?.title}');
+
+      if (message.notification != null) {
+        await _sauvegarderNotificationFCM(
+          titre: message.notification!.title ?? '',
+          message: message.notification!.body ?? '',
+          type: message.data['type'] ?? 'tutoriel',
+        );
       }
 
-      
+      notifyListeners();
+    });
 
-      // 2. Abonnement aux thèmes
-      await _fcm.subscribeToTopic('nouveau_tutoriel');
-      await _fcm.subscribeToTopic('nouvel_article');
-
-      // 3. Écoute en direct des messages FCM + SAUVEGARDE FIRESTORE
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-        if (kDebugMode) {
-          print('Notification FCM reçue : ${message.notification?.title}');
-        }
-
-        // Si la notification contient un titre/message, on l'ajoute à Firestore
-        if (message.notification != null) {
-          await _sauvegarderNotificationFCM(
-            titre: message.notification!.title ?? '',
-            message: message.notification!.body ?? '',
-            type: message.data['type'] ?? 'tutoriel',
-          );
-        }
-
-        notifyListeners();
-      });
-    }
+    // (Optionnel) Gérer onMessageOpenedApp / onBackgroundMessage si besoin
   }
 
-  // Enregistre automatiquement la notification FCM reçue dans la BDD Firestore
   Future<void> _sauvegarderNotificationFCM({
     required String titre,
     required String message,
@@ -68,13 +67,10 @@ class NotificationService extends ChangeNotifier {
         'dateEnvoi': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      if (kDebugMode) {
-        print("Erreur lors de la sauvegarde Firestore : $e");
-      }
+      debugPrint('Erreur lors de la sauvegarde Firestore : $e');
     }
   }
 
-  // Écouter les notifications Firestore en TEMPS RÉEL (avec tri local en Dart)
   Stream<List<Notification>> getNotification(String idUtilisateur) {
     return _firestore
         .collection('notification')
@@ -85,23 +81,18 @@ class NotificationService extends ChangeNotifier {
               .map((doc) => Notification.fromFirestore(doc))
               .toList();
 
-          // Tri local par date décroissante
           list.sort((a, b) => b.dateEnvoi.compareTo(a.dateEnvoi));
           return list;
         });
   }
 
-  // Marquer une notification comme lue dans Firestore
   Future<void> marquerCommeLue(String idNotification) async {
     try {
-      await _firestore
-          .collection('notification')
-          .doc(idNotification)
-          .update({'lu': true});
+      await _firestore.collection('notification').doc(idNotification).update({
+        'lu': true,
+      });
     } catch (e) {
-      if (kDebugMode) {
-        print("Erreur lors de la mise à jour 'lu' : $e");
-      }
+      debugPrint("Erreur lors de la mise à jour 'lu' : $e");
     }
   }
 }

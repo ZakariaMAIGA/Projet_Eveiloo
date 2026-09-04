@@ -20,21 +20,7 @@ class OverviewPage extends StatelessWidget {
             children: [
               AppSpacing.verticalGapMd,
 
-              // Indicateur d'étape "01" en haut à gauche
-              Align(
-                alignment: Alignment.topLeft,
-                child: Text(
-                  '01',
-                  style: TextStyle(
-                    fontSize: AppFontSize.medium,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade400,
-                  ),
-                ),
-              ),
-
-              const Spacer(flex: 2),
-
+              
               // Logo / mascotte (remplacer par l'asset réel du logo Eveiloo)
               Image.asset(
                 'assets/images/logo_eveiloo.png',

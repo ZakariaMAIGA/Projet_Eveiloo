@@ -1,19 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/category_model.dart';
+import 'package:eveiloo_enfant/models/CategorieJouetModel.dart';
 import '../models/toy_model.dart';
 
 class ToyRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Récupérer la liste des catégories
-  Stream<List<CategoryModel>> getCategories() {
+  Stream<List<CategorieJouetModel>> getCategories() {
     return _firestore.collection('CATEGORIES').snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
         final data = doc.data();
-        return CategoryModel.fromFirestore(
-          Map<String, dynamic>.from(data),
-          doc.id,
-        );
+        return CategorieJouetModel.fromMap(Map<String, dynamic>.from(data));
       }).toList();
     });
   }
@@ -63,5 +60,27 @@ class ToyRepository {
   // Supprimer un jouet
   Future<void> deleteToy(String toyId) async {
     await _firestore.collection('JOUETS').doc(toyId).delete();
+  }
+
+  // Récupère la liste des objets ToyModel à partir d'une liste d'IDs
+  Future<List<ToyModel>> getJouetsParIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+
+    // Note: Firestore limite whereIn à 30 éléments par requête
+    final snapshot = await FirebaseFirestore.instance
+        .collection('JOUETS')
+        .where(FieldPath.documentId, whereIn: ids)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => ToyModel.fromFirestore(doc.data(), doc.id))
+        .toList();
+  }
+
+  Stream<ToyModel?> streamToy(String toyId) {
+    return _firestore.collection('JOUETS').doc(toyId).snapshots().map((doc) {
+      if (!doc.exists) return null;
+      return ToyModel.fromFirestore(doc.data()!, doc.id);
+    });
   }
 }

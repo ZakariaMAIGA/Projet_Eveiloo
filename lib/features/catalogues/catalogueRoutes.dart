@@ -23,11 +23,11 @@ final List<RouteBase> catalogueRoutes = [
         routes: [
           // /catalogue/toys/:toyId
           GoRoute(
-            path: AppRoutes.toyDetail,
+            path: AppRoutes.toyDetail, // ex: '/toys/:toyId'
             name: AppRoutes.toyDetailName,
             builder: (context, state) {
-              final toy = state.extra as ToyModel;
-              return ToyDetailPage(toy: toy);
+              final toyId = state.pathParameters['toyId']!;
+              return ToyDetailPage(toyId: toyId);
             },
           ),
         ],

@@ -1,44 +1,48 @@
-import 'package:eveiloo_enfant/core/services/auth_service.dart';
-import 'package:eveiloo_enfant/routes/app_route.dart';
+import 'package:eveiloo_enfant/core/provider/auth_provider.dart';
+import 'package:eveiloo_enfant/features/profil/widgets/profile_header.dart';
+import 'package:eveiloo_enfant/features/profil/widgets/profile_menu.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ProfilPage extends StatelessWidget {
+class ProfilPage extends ConsumerWidget {
   const ProfilPage({super.key});
 
   @override
- Widget build(BuildContext context) {
-    final authService = AuthService();
-    final utilisateur = authService.utilisateurFirebase;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final utilisateurAsync = ref.watch(utilisateurCourantProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mon profil')),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircleAvatar(radius: 36, child: Icon(Icons.person, size: 40)),
-            const SizedBox(height: 12),
-            Text(
-              utilisateur?.displayName ?? 'Parent',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 4),
-            Text(utilisateur?.email ?? ''),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: () async {
-                await authService.deconnexion();
+      backgroundColor: Colors.white,
 
-                if (!context.mounted) return;
+      appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
 
-                context.goNamed(AppRoutes.loginName);
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Se déconnecter'),
-            ),
-          ],
-        ),
+      body: utilisateurAsync.when(
+        data: (utilisateur) {
+          final nomComplet = utilisateur == null
+              ? 'Utilisateur'
+              : '${utilisateur.prenom} ${utilisateur.nom}'.trim();
+
+          return Column(
+            children: [
+              const SizedBox(height: 10),
+
+              ProfileHeader(
+                name: nomComplet.isEmpty ? 'Utilisateur' : nomComplet,
+                photoUrl: utilisateur?.urlAvatar,
+              ),
+
+              const SizedBox(height: 20),
+
+              // Ici ton menu prend tout l'espace restant
+              const Expanded(
+                child: SingleChildScrollView(child: ProfileMenu()),
+              ),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) =>
+            Center(child: Text('Erreur de chargement du profil : $error')),
       ),
     );
   }

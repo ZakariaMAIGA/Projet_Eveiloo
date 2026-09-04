@@ -40,26 +40,18 @@ class _HomePageState extends State<HomePage> {
     final parentId = _authService.utilisateurFirebase?.uid;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Éveiloo'),
+        title: Image.asset(
+          'assets/images/logo_eveiloo.png', // ← adapte selon ton projet
+          height: 50, // ajuste la hauteur du logo
+          fit: BoxFit.contain,
+        ),
         actions: [
           IconButton(
             tooltip: 'Notifications',
             icon: const Icon(Icons.notifications_none_outlined),
             onPressed: () {
               context.push('/notifications');
-            },
-          ),
-          IconButton(
-            tooltip: 'Déconnexion',
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await _authService.deconnexion();
-
-              if (!context.mounted) return;
-
-              context.goNamed(AppRoutes.loginName);
             },
           ),
         ],
@@ -179,9 +171,10 @@ class _HomePageState extends State<HomePage> {
               return ChildCard(
                 enfant: enfant,
                 accentColor: couleur,
-                onTap: () {
-                  // TODO: naviguer vers la fiche détaillée de l'enfant
-                },
+                onTap: () => context.pushNamed(
+                  AppRoutes.progressionName,
+                  pathParameters: {'enfantId': enfant.enfantId},
+                ),
               );
             },
           );
@@ -194,7 +187,7 @@ class _HomePageState extends State<HomePage> {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () {
-        // TODO: naviguer vers le formulaire d'ajout d'enfant
+        context.pushNamed(AppRoutes.childrenAddName);
       },
       child: Container(
         width: 140,
@@ -281,8 +274,18 @@ class _HomePageState extends State<HomePage> {
               );
             }
 
+            // Trier par date (plus récent en premier) et garder les 2 premières
+            final entreesTriees = List<JournalProgresModel>.from(entrees)
+              ..sort((a, b) {
+                final dateA = a.dateRealisation ?? DateTime(0);
+                final dateB = b.dateRealisation ?? DateTime(0);
+                return dateB.compareTo(dateA);
+              });
+
+            final deuxDernieres = entreesTriees.take(2).toList();
+
             return Column(
-              children: entrees
+              children: deuxDernieres
                   .map(
                     (entree) => RecentActivityTile(
                       entree: entree,

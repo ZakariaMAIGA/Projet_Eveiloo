@@ -1,11 +1,11 @@
+import 'package:eveiloo_enfant/core/constants/app_colors.dart';
+import 'package:eveiloo_enfant/models/JouetModel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/constants/AppColors.dart';
 import '../../core/constants/AppFontSize.dart';
 import '../../core/constants/AppSpacing.dart';
 import '../../models/favoris.dart' as model; // Alias pour éviter la collision de nom
-import '../../models/jouetModel.dart';
 import '../../repository/favoriRepository.dart';
 // import '../../repository/jouetRepository.dart';
 import '../../widgets/favori_toy_row.dart';
