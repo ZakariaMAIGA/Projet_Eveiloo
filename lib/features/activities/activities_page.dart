@@ -1,17 +1,45 @@
-import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/provider/activite_progress_provider.dart';
+import '../../models/activite_progress_model.dart';
 import '../../models/activity_model.dart';
+import '../../routes/app_route.dart';
+import '../children/children_profil.dart'; // enfantParIdProvider
 import 'providers/activity_provider.dart';
 import 'widgets/activity_card.dart';
-import 'child/activity_detail_page.dart';
+
+/// Calcule l'âge à partir d'une date au format "JJ/MM/AAAA".
+int _calculerAge(String dateNaissance) {
+  final dateStr = dateNaissance.trim();
+  if (dateStr.isEmpty) return 0;
+
+  final parts = dateStr.split('/');
+  if (parts.length != 3) return 0;
+
+  final jour = int.tryParse(parts[0]);
+  final mois = int.tryParse(parts[1]);
+  final annee = int.tryParse(parts[2]);
+  if (jour == null || mois == null || annee == null) return 0;
+
+  final naissance = DateTime(annee, mois, jour);
+  final now = DateTime.now();
+  var age = now.year - naissance.year;
+  if (now.month < naissance.month ||
+      (now.month == naissance.month && now.day < naissance.day)) {
+    age--;
+  }
+  return age < 0 ? 0 : age;
+}
 
 class ActivitiesPage extends ConsumerStatefulWidget {
-  final String? enfantId; // null = vue parent (lecture seule)
+  /// null = vue parent (catalogue complet, lecture seule, pas de
+  /// progression). non-null = vue enfant (filtrée par âge, avec
+  /// progression individuelle et possibilité de jouer).
+  final String? enfantId;
 
-  const ActivitiesPage({super.key, this.enfantId});
+  const ActivitiesPage({super.key, required this.enfantId});
 
   @override
   ConsumerState<ActivitiesPage> createState() => _ActivitiesPageState();
@@ -20,116 +48,173 @@ class ActivitiesPage extends ConsumerStatefulWidget {
 class _ActivitiesPageState extends ConsumerState<ActivitiesPage> {
   String _selectedStatus = 'Toutes';
 
+  void _onActivityTap(ActivityModel activity) {
+    if (widget.enfantId != null) {
+      context.pushNamed(
+        AppRoutes.childActivityDetailName,
+        extra: (activity: activity, enfantId: widget.enfantId!),
+      );
+    } else {
+      // Mode parent : aperçu en lecture seule (pas de bouton "Jouer").
+      context.pushNamed(AppRoutes.activityDetailName, extra: activity);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final activities = ref.watch(activitiesProvider);
+    final activitiesAsync = ref.watch(activitiesProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: widget.enfantId == null
+          ? AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              foregroundColor: const Color(0xFF10158C),
+              title: const Text(
+                'Activités',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(activitiesProvider),
-        child: activities.when(
-          data: (list) => _ActivityList(
-            activities: list,
-            selectedStatus: _selectedStatus,
-            onStatusSelected: (status) {
-              setState(() => _selectedStatus = status);
-            },
-            onActivityTap: (activity) {
-              if (widget.enfantId != null) {
-                context.pushNamed(
-                  AppRoutes.childActivityDetailName,
-                  extra: (activity: activity, enfantId: widget.enfantId!),
-                );
-              } else {
-                context.pushNamed(
-                  AppRoutes.activityDetailName,
-                  extra: activity,
-                );
-              }
-            },
-          ),
+        child: activitiesAsync.when(
+          data: (activites) => widget.enfantId == null
+              ? _buildVueParent(activites)
+              : _buildVueEnfant(activites, widget.enfantId!),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, stackTrace) =>
+          error: (_, __) =>
               _LoadError(onRetry: () => ref.invalidate(activitiesProvider)),
         ),
       ),
     );
   }
-}
 
-class _ActivityList extends StatelessWidget {
-  final List<ActivityModel> activities;
-  final String selectedStatus;
-  final ValueChanged<String> onStatusSelected;
-  final ValueChanged<ActivityModel> onActivityTap;
-
-  const _ActivityList({
-    required this.activities,
-    required this.selectedStatus,
-    required this.onStatusSelected,
-    required this.onActivityTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final visibleActivities = activities.where((activity) {
-      if (selectedStatus == 'Toutes') return true;
-      return selectedStatus == 'Terminées'
-          ? activity.progress >= 100
-          : activity.progress < 100;
-    }).toList();
-
+  // ---------------------------------------------------------------------
+  // MODE PARENT : catalogue complet, aucune notion de progression/statut.
+  // ---------------------------------------------------------------------
+  Widget _buildVueParent(List<ActivityModel> activites) {
+    if (activites.isEmpty) {
+      return const _EmptyActivities();
+    }
     return ListView(
-      padding: const EdgeInsets.fromLTRB(22, 34, 22, 20),
-      children: [
-        Text(
-          'Activités',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: const Color(0xFF10158C),
-            fontSize: 26,
-            height: 1.1,
+      padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
+      children: activites
+          .map(
+            (activite) => ActivityCard(
+              activity: activite,
+              onTap: () => _onActivityTap(activite),
+              // progress: null ⇒ ActivityCard n'affiche aucune progression
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // MODE ENFANT : filtré par âge + progression individuelle + onglets.
+  // ---------------------------------------------------------------------
+  Widget _buildVueEnfant(List<ActivityModel> activites, String enfantId) {
+    final enfantAsync = ref.watch(enfantParIdProvider(enfantId));
+    final progressionAsync = ref.watch(activiteProgressMapProvider(enfantId));
+
+    return enfantAsync.when(
+      data: (enfant) {
+        if (enfant == null) {
+          return const Center(child: Text('Enfant introuvable.'));
+        }
+
+        final age = _calculerAge(enfant.dateNaissance);
+        final activitesAdaptees = activites
+            .where((a) => a.estAdapteeA(age))
+            .toList();
+
+        return progressionAsync.when(
+          data: (progressions) {
+            final visibles = activitesAdaptees.where((activite) {
+              final progress = progressions[activite.activityId];
+              switch (_selectedStatus) {
+                case 'Terminées':
+                  return progress?.isCompleted ?? false;
+                case 'En cours':
+                  return (progress?.isStarted ?? false) &&
+                      !(progress?.isCompleted ?? false);
+                case 'Toutes':
+                default:
+                  return true;
+              }
+            }).toList();
+
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
+              children: [
+                Text(
+                  'Activités',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF10158C),
+                    fontSize: 26,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _StatusTab(
+                        label: 'Toutes',
+                        selected: _selectedStatus == 'Toutes',
+                        onTap: () => setState(() => _selectedStatus = 'Toutes'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _StatusTab(
+                        label: 'En cours',
+                        selected: _selectedStatus == 'En cours',
+                        onTap: () =>
+                            setState(() => _selectedStatus = 'En cours'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _StatusTab(
+                        label: 'Terminées',
+                        selected: _selectedStatus == 'Terminées',
+                        onTap: () =>
+                            setState(() => _selectedStatus = 'Terminées'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                if (visibles.isEmpty)
+                  const _EmptyActivities()
+                else
+                  ...visibles.map((activite) {
+                    final ActiviteProgressModel? progress =
+                        progressions[activite.activityId];
+                    return ActivityCard(
+                      activity: activite,
+                      progress:
+                          progress?.score ??
+                          (progress?.isCompleted == true ? 100 : 0),
+                      onTap: () => _onActivityTap(activite),
+                    );
+                  }),
+              ],
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, __) => const Center(
+            child: Text('Erreur de chargement de la progression.'),
           ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: _StatusTab(
-                label: 'Toutes',
-                selected: selectedStatus == 'Toutes',
-                onTap: () => onStatusSelected('Toutes'),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _StatusTab(
-                label: 'En cours',
-                selected: selectedStatus == 'En cours',
-                onTap: () => onStatusSelected('En cours'),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _StatusTab(
-                label: 'Terminées',
-                selected: selectedStatus == 'Terminées',
-                onTap: () => onStatusSelected('Terminées'),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 18),
-        if (visibleActivities.isEmpty)
-          const _EmptyActivities()
-        else
-          ...visibleActivities.map(
-            (activity) => ActivityCard(
-              activity: activity,
-              onTap: () => onActivityTap(activity),
-            ),
-          ),
-      ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) =>
+          const Center(child: Text('Erreur de chargement de l\'enfant.')),
     );
   }
 }
@@ -165,79 +250,6 @@ class _StatusTab extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ChildNavigationBar extends StatelessWidget {
-  final VoidCallback onHomePressed;
-
-  const _ChildNavigationBar({required this.onHomePressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomAppBar(
-      color: Colors.white,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _NavigationItem(
-            icon: Icons.home_rounded,
-            label: 'Accueil',
-            onTap: onHomePressed,
-          ),
-          const _NavigationItem(
-            icon: Icons.live_tv_outlined,
-            label: 'Tutoriel',
-          ),
-          const _NavigationItem(icon: Icons.toys_outlined, label: 'Jouets'),
-          const _NavigationItem(
-            icon: Icons.directions_run_rounded,
-            label: 'Activités',
-            selected: true,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavigationItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  const _NavigationItem({
-    required this.icon,
-    required this.label,
-    this.selected = false,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: selected ? const Color(0xFF4CAF50) : Colors.black54,
-            ),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: selected ? const Color(0xFF4CAF50) : Colors.black54,
-              ),
-            ),
-          ],
         ),
       ),
     );

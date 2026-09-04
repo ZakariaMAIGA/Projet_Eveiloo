@@ -10,9 +10,13 @@ final enfantRepositoryProvider = Provider<EnfantRepository>((ref) {
 
 /// Enfants de l'utilisateur connecte, derives automatiquement de son id
 /// (aucun besoin de passer le parentId manuellement dans les widgets).
-final mesEnfantsProvider = StreamProvider<List<EnfantModel>>((ref) {
+final mesEnfantsProvider = StreamProvider.autoDispose<List<EnfantModel>>((ref) {
+  final sessionId = ref.watch(sessionProvider).value;
+
   final utilisateur = ref.watch(utilisateurCourantProvider).value;
-  if (utilisateur == null) return Stream.value(<EnfantModel>[]);
+  if (utilisateur == null || sessionId == null) {
+    return Stream.value(<EnfantModel>[]);
+  }
 
   return ref
       .watch(enfantRepositoryProvider)

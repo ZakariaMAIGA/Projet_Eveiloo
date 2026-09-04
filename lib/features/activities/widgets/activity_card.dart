@@ -7,16 +7,23 @@ class ActivityCard extends StatelessWidget {
   final ActivityModel activity;
   final VoidCallback onTap;
 
-  const ActivityCard({super.key, required this.activity, required this.onTap});
+  /// null = mode parent : pas de progression à afficher du tout.
+  /// non-null = mode enfant : pourcentage 0-100 pour cet enfant précis.
+  final double? progress;
+
+  const ActivityCard({
+    super.key,
+    required this.activity,
+    required this.onTap,
+    this.progress,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final progress = (activity.progress / 100).clamp(0.0, 1.0);
     final category = categoryStyle(activity.competenceCategory);
+    final afficherProgression = progress != null;
+    final progressValue = ((progress ?? 0) / 100).clamp(0.0, 1.0);
 
-    // Fond blanc + ombre manuelle (boxShadow) : rendu garanti sur tous les
-    // backends, y compris les émulateurs où les ombres d'élévation Material
-    // (Impeller/OpenGLES) ne s'affichent pas.
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -63,10 +70,11 @@ class ActivityCard extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                '${activity.progress.toInt()}%',
-                                style: const TextStyle(fontSize: 13),
-                              ),
+                              if (afficherProgression)
+                                Text(
+                                  '${progress!.toInt()}%',
+                                  style: const TextStyle(fontSize: 13),
+                                ),
                             ],
                           ),
                           const SizedBox(height: 7),
@@ -76,36 +84,54 @@ class ActivityCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 14, height: 1.15),
                           ),
+                          const SizedBox(height: 6),
+                          _badgeAge(),
                         ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: progress),
-                  duration: const Duration(milliseconds: 850),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, animatedProgress, child) {
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: animatedProgress,
-                        minHeight: 7,
-                        backgroundColor: const Color(0xFFE5E5E5),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          activity.progress >= 100
-                              ? const Color(0xFF36B86A)
-                              : category.accent,
+                if (afficherProgression) ...[
+                  const SizedBox(height: 10),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: progressValue),
+                    duration: const Duration(milliseconds: 850),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, animatedProgress, child) {
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: animatedProgress,
+                          minHeight: 7,
+                          backgroundColor: const Color(0xFFE5E5E5),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            (progress ?? 0) >= 100
+                                ? const Color(0xFF36B86A)
+                                : category.accent,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
+                ],
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _badgeAge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F2F7),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        '${activity.minAge}-${activity.maxAge} ans',
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
       ),
     );
   }

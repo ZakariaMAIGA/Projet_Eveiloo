@@ -7,7 +7,11 @@ import '../../core/constants/AppSpacing.dart';
 import '../../repository/toy_repository.dart';
 
 class CategoriesToysPage extends StatefulWidget {
-  const CategoriesToysPage({Key? key}) : super(key: key);
+  /// null = mode parent (accès admin, panier). non-null = mode enfant
+  /// (lecture seule + favoris uniquement).
+  final String? enfantId;
+
+  const CategoriesToysPage({Key? key, this.enfantId}) : super(key: key);
 
   @override
   State<CategoriesToysPage> createState() => _CategoriesToysPageState();
@@ -15,7 +19,9 @@ class CategoriesToysPage extends StatefulWidget {
 
 class _CategoriesToysPageState extends State<CategoriesToysPage> {
   final ToyRepository _toyRepository = ToyRepository();
-  String _selectedGenre = 'fille'; // Genre par défaut
+  String _selectedGenre = 'fille';
+
+  bool get modeEnfant => widget.enfantId != null;
 
   @override
   Widget build(BuildContext context) {
@@ -29,23 +35,20 @@ class _CategoriesToysPageState extends State<CategoriesToysPage> {
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
-        actions: [
-          // Bouton Admin pour naviguer vers la page d'administration des jouets
-          IconButton(
-            icon: const Icon(Icons.admin_panel_settings),
-            tooltip: 'Espace Admin',
-            onPressed: () {
-              context.push(AppRoutes.adminToys);
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            tooltip: 'Mon panier',
-            onPressed: () {
-              context.pushNamed(AppRoutes.cartName);
-            },
-          ),
-        ],
+        actions: modeEnfant
+            ? null
+            : [
+                IconButton(
+                  icon: const Icon(Icons.admin_panel_settings),
+                  tooltip: 'Espace Admin',
+                  onPressed: () => context.push(AppRoutes.adminToys),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.shopping_cart),
+                  tooltip: 'Mon panier',
+                  onPressed: () => context.pushNamed(AppRoutes.cartName),
+                ),
+              ],
       ),
       body: SafeArea(
         child: Padding(
@@ -62,7 +65,9 @@ class _CategoriesToysPageState extends State<CategoriesToysPage> {
               ),
               AppSpacing.verticalGapXs,
               Text(
-                'Sélectionnez un univers de jouets adapté au développement de votre enfant.',
+                modeEnfant
+                    ? 'Découvre des jouets adaptés à ton âge !'
+                    : 'Sélectionnez un univers de jouets adapté au développement de votre enfant.',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: Colors.grey[600],
                   fontSize: AppFontSize.medium,
@@ -144,8 +149,7 @@ class _CategoriesToysPageState extends State<CategoriesToysPage> {
                       itemCount: categories.length,
                       gridDelegate:
                           const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent:
-                                280, // Adaptabilité Web / Mobile
+                            maxCrossAxisExtent: 280,
                             crossAxisSpacing: AppSpacing.md,
                             mainAxisSpacing: AppSpacing.md,
                             childAspectRatio: 0.85,
@@ -172,23 +176,21 @@ class _CategoriesToysPageState extends State<CategoriesToysPage> {
     final theme = Theme.of(context);
 
     return Card(
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade300, width: 1),
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: Colors.grey.shade200, width: 1),
       ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
         onTap: () {
-          // Transmission du genre et de la catégorie via GoRouter
-          context.pushNamed(
-            'toys',
-            queryParameters: {
-              'genre': _selectedGenre,
-              'categorieId': category.categorieId,
-              'categorieNom': category.nom,
-            },
-          );
+          final params = <String, String>{
+            'genre': _selectedGenre,
+            'categorieId': category.categorieId,
+            'categorieNom': category.nom,
+            if (widget.enfantId != null) 'enfantId': widget.enfantId!,
+          };
+          context.pushNamed('toys', queryParameters: params);
         },
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -196,10 +198,17 @@ class _CategoriesToysPageState extends State<CategoriesToysPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 56,
-                height: 56,
+                width: 60,
+                height: 60,
                 decoration: BoxDecoration(
-                  color: theme.primaryColor.withOpacity(0.1),
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.primaryColor.withOpacity(0.15),
+                      theme.primaryColor.withOpacity(0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: category.icone != null && category.icone!.isNotEmpty

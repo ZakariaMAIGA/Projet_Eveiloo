@@ -1,4 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:eveiloo_enfant/core/constants/app_colors.dart';
+import 'package:eveiloo_enfant/models/JouetModel.dart';
+import 'package:eveiloo_enfant/models/toy_model.dart';
+import 'package:eveiloo_enfant/repository/toy_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -30,7 +34,7 @@ class Favoris extends StatefulWidget {
 
 class _FavorisState extends State<Favoris> {
   final FavoriRepository _favoriRepository = FavoriRepository();
-  final ToyRepository _toyRepository = ToyRepository();
+  final ToyRepository _jouetRepository = ToyRepository();
 
   static const _filtreTous = 'Tous';
   String _filtreActif = _filtreTous;
@@ -38,15 +42,13 @@ class _FavorisState extends State<Favoris> {
   List<String> _dernierIdsDemandes = [];
   Future<List<ToyModel>>? _jouetsFuture;
 
-  /// Id du parent connecté (les favoris sont stockés sous
-  /// utilisateurs/{parentId}/enfants/{enfantId}/favoris).
-  String? get _parentId => FirebaseAuth.instance.currentUser?.uid;
-
   Future<List<ToyModel>> _obtenirJouets(List<String> ids) {
+    if (ids.isEmpty) return Future.value([]);
+
     final idsTries = [...ids]..sort();
     if (_jouetsFuture == null || !listEquals(idsTries, _dernierIdsDemandes)) {
       _dernierIdsDemandes = idsTries;
-      _jouetsFuture = _toyRepository.getJouetsParIds(ids);
+      _jouetsFuture = _jouetRepository.getJouetsParIds(ids);
     }
     return _jouetsFuture!;
   }
@@ -79,10 +81,7 @@ class _FavorisState extends State<Favoris> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.black87,
-                    ),
+                    icon: const Icon(Icons.arrow_back, color: Colors.black87),
                   ),
                 ],
               ),
@@ -106,9 +105,7 @@ class _FavorisState extends State<Favoris> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (snapshot.hasError) {
-                    return Center(
-                      child: Text('Erreur : ${snapshot.error}'),
-                    );
+                    return Center(child: Text('Erreur : ${snapshot.error}'));
                   }
 
                   final tousLesFavoris = snapshot.data ?? [];
@@ -127,7 +124,8 @@ class _FavorisState extends State<Favoris> {
                   return FutureBuilder<List<ToyModel>>(
                     future: _obtenirJouets(ids),
                     builder: (context, jouetsSnapshot) {
-                      if (jouetsSnapshot.connectionState == ConnectionState.waiting &&
+                      if (jouetsSnapshot.connectionState ==
+                              ConnectionState.waiting &&
                           !jouetsSnapshot.hasData) {
                         return const Center(child: CircularProgressIndicator());
                       }
@@ -298,11 +296,7 @@ class _EtatVide extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.favorite_border,
-              size: 48,
-              color: Colors.grey,
-            ),
+            const Icon(Icons.favorite_border, size: 48, color: Colors.grey),
             AppSpacing.verticalGapMd,
             const Text(
               'Aucun jouet en favoris pour le moment.',

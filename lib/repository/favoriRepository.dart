@@ -1,10 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/favoris.dart';
 
 class FavoriRepository {
-  FavoriRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
-
   final FirebaseFirestore _firestore;
 
   /// Référence vers la sous-collection "favoris" d'un enfant, elle-même
@@ -45,9 +43,24 @@ class FavoriRepository {
       ) async {
     final document = await _favorisRef(parentId, enfantId).doc(favoriId).get();
 
-    if (!document.exists) return null;
+  Future<void> ajouter({
+    required String enfantId,
+    required String elementId,
+    String type = 'jouet',
+  }) async {
+    final existant = await _ref
+        .where('enfantId', isEqualTo: enfantId)
+        .where('elementId', isEqualTo: elementId)
+        .limit(1)
+        .get();
+    if (existant.docs.isNotEmpty) return; // déjà en favori
 
-    return Favoris.fromFirestore(document);
+    await _ref.add({
+      'enfantId': enfantId,
+      'elementId': elementId,
+      'type': type,
+      'dateAjout': Timestamp.now(),
+    });
   }
 
   /// Écoute en temps réel la sous-collection de l'enfant
@@ -67,6 +80,17 @@ class FavoriRepository {
         .limit(1)
         .get();
 
-    return snapshot.docs.isNotEmpty;
+    if (existant.docs.isNotEmpty) {
+      for (final doc in existant.docs) {
+        await doc.reference.delete();
+      }
+    } else {
+      await _ref.add({
+        'enfantId': enfantId,
+        'elementId': elementId,
+        'type': type,
+        'dateAjout': Timestamp.now(),
+      });
+    }
   }
 }

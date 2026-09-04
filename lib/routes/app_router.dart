@@ -1,5 +1,7 @@
+// routes/app_router.dart
 import 'package:eveiloo_enfant/features/Nootifications/notification.dart';
 import 'package:eveiloo_enfant/features/activities/activitiesRoutes.dart';
+import 'package:eveiloo_enfant/features/auth/AuthGate.dart';
 import 'package:eveiloo_enfant/features/auth/forgot_password_page.dart';
 import 'package:eveiloo_enfant/features/auth/register_page.dart';
 import 'package:eveiloo_enfant/features/auth/splash_page.dart';
@@ -29,10 +31,18 @@ class AppRouter {
   AppRouter._();
 
   static final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.splash,
+    // Point d’entrée principal : AuthGate décidera login vs home
+    initialLocation: '/',
     routes: [
-      // ---------- Auth & Overview ----------
+      // ---------- Route racine avec AuthGate ----------
+      GoRoute(
+        path: '/',
+        // pas de name obligatoire, mais tu peux en mettre un si tu veux
+        name: 'root',
+        builder: (context, state) => const AuthGate(),
+      ),
 
+      // ---------- Auth & Overview ----------
       GoRoute(
         path: AppRoutes.splash,
         name: AppRoutes.splashName,
@@ -62,11 +72,13 @@ class AppRouter {
         name: AppRoutes.registerName,
         builder: (context, state) => const RegisterPage(),
       ),
+
       GoRoute(
         path: AppRoutes.forgotPassword,
         name: AppRoutes.forgotPasswordName,
         builder: (context, state) => const ForgotPasswordPage(),
       ),
+
       // ---------- Navigation principale (tabs) ----------
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -82,14 +94,14 @@ class AppRouter {
       ),
 
       // ---------- Shell ENFANT (hors shell parent) ----------
-      childShellRoute, // ←
+      childShellRoute,
+
       // ---------- Routes “enfants” (hors shell) ----------
       ...childrenRoutes,
 
       // ---------- Notifications ----------
       GoRoute(
         path: '/notifications',
-        // pas besoin de name si tu n’utilises pas pushNamed ici
         builder: (context, state) => const NotificationsPage(),
       ),
       GoRoute(
@@ -107,7 +119,6 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.parametre,
         name: AppRoutes.parametreName,
-        // pas besoin de name si tu n’utilises pas pushNamed ici
         builder: (context, state) => const ParametresPage(),
       ),
 
@@ -124,11 +135,13 @@ class AppRouter {
           );
         },
       ),
+
       GoRoute(
-        path: AppRoutes.cart, // '/cart'
+        path: AppRoutes.cart,
         name: AppRoutes.cartName,
         builder: (context, state) => const CartPage(),
       ),
+
       GoRoute(
         path: AppRoutes.progression,
         name: AppRoutes.progressionName,
@@ -146,11 +159,13 @@ class AppRouter {
           return CheckoutPage(articles: articles);
         },
       ),
+
       GoRoute(
         path: AppRoutes.commandes,
         name: AppRoutes.commandesName,
         builder: (context, state) => const MesCommandesPage(),
       ),
+
       GoRoute(
         path: AppRoutes.commandeDetail,
         name: AppRoutes.commandeDetailName,

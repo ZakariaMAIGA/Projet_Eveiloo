@@ -1,22 +1,24 @@
 import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/provider/activite_progress_provider.dart';
 import '../../../models/activity_model.dart';
 import '../widgets/activity_category.dart';
-import 'activity_play_page.dart';
 
-class ActivityDetailPage extends StatelessWidget {
+class ActivityDetailPage extends ConsumerWidget {
   final ActivityModel activity;
   final String? enfantId; // null => parent, lecture seule
 
   const ActivityDetailPage({super.key, required this.activity, this.enfantId});
+
   bool get modeJouable => enfantId != null;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final category = categoryStyle(activity.competenceCategory);
-    final progress = (activity.progress / 100).clamp(0.0, 1.0);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -29,18 +31,7 @@ class ActivityDetailPage extends StatelessWidget {
             size: 24,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.bookmark_border,
-              color: Color(0xFF29258F),
-              size: 24,
-            ),
-          ),
-        ],
       ),
-
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,7 +74,6 @@ class ActivityDetailPage extends StatelessWidget {
                 ),
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -98,16 +88,30 @@ class ActivityDetailPage extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   Text(
                     activity.description,
                     style: const TextStyle(fontSize: 16),
                   ),
-
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF2F2F7),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${activity.minAge}-${activity.maxAge} ans',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 25),
-
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
@@ -137,9 +141,7 @@ class ActivityDetailPage extends StatelessWidget {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 30),
-
                   Row(
                     children: [
                       Expanded(
@@ -149,9 +151,7 @@ class ActivityDetailPage extends StatelessWidget {
                           value: "${activity.rewardPoints}",
                         ),
                       ),
-
                       const SizedBox(width: 15),
-
                       Expanded(
                         child: _InfoCard(
                           icon: Icons.timer,
@@ -162,28 +162,52 @@ class ActivityDetailPage extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 30),
-
-                  const Text(
-                    "Progression",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 14,
-                      backgroundColor: Colors.grey.shade300,
-                      valueColor: AlwaysStoppedAnimation(category.accent),
+                  // --- PROGRESSION : uniquement en mode enfant. Le parent
+                  // n'a besoin ni de la voir ni de la comprendre (point 1).
+                  if (modeJouable) ...[
+                    const SizedBox(height: 30),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final progressionAsync = ref.watch(
+                          activiteProgressMapProvider(enfantId!),
+                        );
+                        return progressionAsync.when(
+                          data: (progressions) {
+                            final progress = progressions[activity.activityId];
+                            final valeur = progress?.score ?? 0;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Progression",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: LinearProgressIndicator(
+                                    value: (valeur / 100).clamp(0.0, 1.0),
+                                    minHeight: 14,
+                                    backgroundColor: Colors.grey.shade300,
+                                    valueColor: AlwaysStoppedAnimation(
+                                      category.accent,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text("${valeur.toInt()} %"),
+                              ],
+                            );
+                          },
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        );
+                      },
                     ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Text("${activity.progress.toInt()} %"),
+                  ],
 
                   const SizedBox(height: 40),
 
@@ -202,7 +226,6 @@ class ActivityDetailPage extends StatelessWidget {
                       ),
                     )
                   else
-                    // rien, ou un simple bandeau informatif :
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
@@ -239,22 +262,15 @@ class _InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 3,
-
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-
       child: Padding(
         padding: const EdgeInsets.all(16),
-
         child: Column(
           children: [
             Icon(icon, size: 28, color: Colors.deepPurple),
-
             const SizedBox(height: 10),
-
             Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-
             const SizedBox(height: 5),
-
             Text(value, style: const TextStyle(fontSize: 16)),
           ],
         ),

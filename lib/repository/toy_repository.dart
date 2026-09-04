@@ -18,10 +18,12 @@ class ToyRepository {
     });
   }
 
-  // Récupérer les jouets filtrés par genre et âge
+  /// Récupère les jouets filtrés par genre, tranche d'âge (bucket exact,
+  /// ex: "4-6 ans") et optionnellement par catégorie.
   Stream<List<ToyModel>> getToysByGenreAndAge({
     required String genre,
     required String ageFilter,
+    String? categorieId,
   }) {
     Query<Map<String, dynamic>> query = _firestore
         .collection('JOUETS')
@@ -29,6 +31,10 @@ class ToyRepository {
 
     if (ageFilter != 'Tous') {
       query = query.where('ageRange', isEqualTo: ageFilter);
+    }
+
+    if (categorieId != null && categorieId.isNotEmpty) {
+      query = query.where('categorieId', isEqualTo: categorieId);
     }
 
     return query.snapshots().map((snapshot) {
@@ -39,7 +45,7 @@ class ToyRepository {
     });
   }
 
-  // Récupérer les jouets par catégorie (si besoin)
+  // Récupérer les jouets par catégorie (si besoin, sans filtre genre/âge)
   Stream<List<ToyModel>> getToys({String? categorieId}) {
     Query<Map<String, dynamic>> query = _firestore.collection('JOUETS');
 
@@ -81,6 +87,12 @@ class ToyRepository {
       );
     }
     return resultats;
+  /// Écoute en temps réel un jouet précis (page détail).
+  Stream<ToyModel?> streamToy(String toyId) {
+    return _firestore.collection('JOUETS').doc(toyId).snapshots().map((doc) {
+      if (!doc.exists) return null;
+      return ToyModel.fromFirestore(doc.data()!, doc.id);
+    });
   }
 
   // Ajouter un nouveau jouet dans Firestore
@@ -91,5 +103,19 @@ class ToyRepository {
   // Supprimer un jouet
   Future<void> deleteToy(String toyId) async {
     await _firestore.collection('JOUETS').doc(toyId).delete();
+  }
+
+  // Récupère la liste des objets ToyModel à partir d'une liste d'IDs
+  Future<List<ToyModel>> getJouetsParIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+
+    final snapshot = await _firestore
+        .collection('JOUETS')
+        .where(FieldPath.documentId, whereIn: ids)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => ToyModel.fromFirestore(doc.data(), doc.id))
+        .toList();
   }
 }

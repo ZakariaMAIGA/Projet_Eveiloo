@@ -3,6 +3,8 @@ import 'package:eveiloo_enfant/features/activities/child/activity_detail_page.da
 import 'package:eveiloo_enfant/features/activities/child/activity_play_page.dart';
 import 'package:eveiloo_enfant/features/activities/child/activity_result_page.dart';
 import 'package:eveiloo_enfant/features/children/children_profil.dart';
+import 'package:eveiloo_enfant/features/toys/child_catalogue_page.dart';
+import 'package:eveiloo_enfant/features/toys/toy_detail_page.dart';
 import 'package:eveiloo_enfant/features/tutorials/tutorial_detail_page.dart';
 import 'package:eveiloo_enfant/features/tutorials/tutorial_page.dart';
 import 'package:eveiloo_enfant/models/TutorielModel.dart';
@@ -19,11 +21,11 @@ final StatefulShellRoute childShellRoute = StatefulShellRoute.indexedStack(
   builder: (context, state, navigationShell) =>
       ChildBottomNavigation(navigationShell: navigationShell),
   branches: [
-    // Branche 1 : Accueil (dashboard enfant)
+    // Branche 1 : Accueil (dashboard enfant / profil)
     StatefulShellBranch(
       routes: [
         GoRoute(
-          path: AppRoutes.childHome, // '/child/home'
+          path: AppRoutes.childHome,
           name: AppRoutes.childHomeName,
           builder: (context, state) => _AvecEnfantSelectionne(
             builder: (enfantId) => ChildrenProfil(enfantId: enfantId),
@@ -32,11 +34,63 @@ final StatefulShellRoute childShellRoute = StatefulShellRoute.indexedStack(
       ],
     ),
 
-    // Branche 2 : Activités
+    // Branche 2 : Catalogue Enfant
     StatefulShellBranch(
       routes: [
         GoRoute(
-          path: AppRoutes.childActivities, // '/child/activities'
+          path: AppRoutes.childCatalogue, // '/child-catalogue'
+          name: AppRoutes.childCatalogueName,
+          builder: (context, state) => _AvecEnfantSelectionne(
+            builder: (enfantId) => ChildCataloguePage(enfantId: enfantId),
+          ),
+          // ---> AJOUT DE LA SOUS-ROUTE ICI :
+          routes: [
+            GoRoute(
+              path: 'detail/:toyId',
+              name: AppRoutes.childToyDetailName,
+              builder: (context, state) {
+                final toyId = state.pathParameters['toyId']!;
+                final enfantId = state.uri.queryParameters['enfantId'];
+                return ToyDetailPage(toyId: toyId, enfantId: enfantId);
+              },
+            ),
+          ],
+        ),
+      ],
+    ),
+
+    // Branche 3 : Tutoriels
+    StatefulShellBranch(
+      routes: [
+        GoRoute(
+          path: AppRoutes.childTutorials,
+          name: AppRoutes.childTutorialsName,
+          builder: (context, state) => _AvecEnfantSelectionne(
+            builder: (enfantId) => TutorialsPage(enfantId: enfantId),
+          ),
+          routes: [
+            GoRoute(
+              path: 'detail',
+              name: AppRoutes.childTutorialDetailName,
+              builder: (context, state) {
+                final params =
+                    state.extra as ({TutorielModel tutoriel, String enfantId});
+                return TutorialDetailPage(
+                  tutoriel: params.tutoriel,
+                  enfantId: params.enfantId,
+                );
+              },
+            ),
+          ],
+        ),
+      ],
+    ),
+
+    // Branche 4 : Activités
+    StatefulShellBranch(
+      routes: [
+        GoRoute(
+          path: AppRoutes.childActivities,
           name: AppRoutes.childActivitiesName,
           builder: (context, state) => _AvecEnfantSelectionne(
             builder: (enfantId) => ActivitiesPage(enfantId: enfantId),
@@ -81,33 +135,7 @@ final StatefulShellRoute childShellRoute = StatefulShellRoute.indexedStack(
                   activity: result.activity,
                   score: result.score,
                   totalQuestions: result.totalQuestions,
-                );
-              },
-            ),
-          ],
-        ),
-      ],
-    ),
-
-    // Branche 3 : Tutoriels
-    StatefulShellBranch(
-      routes: [
-        GoRoute(
-          path: AppRoutes.childTutorials,
-          name: AppRoutes.childTutorialsName,
-          builder: (context, state) => _AvecEnfantSelectionne(
-            builder: (enfantId) => TutorialsPage(enfantId: enfantId),
-          ),
-          routes: [
-            GoRoute(
-              path: 'detail',
-              name: AppRoutes.childTutorialDetailName,
-              builder: (context, state) {
-                final params =
-                    state.extra as ({TutorielModel tutoriel, String enfantId});
-                return TutorialDetailPage(
-                  tutoriel: params.tutoriel,
-                  enfantId: params.enfantId,
+                  pointsGagnes: result.activity.rewardPoints,
                 );
               },
             ),
@@ -118,9 +146,6 @@ final StatefulShellRoute childShellRoute = StatefulShellRoute.indexedStack(
   ],
 );
 
-/// Petit wrapper qui lit l'enfant sélectionné et affiche un écran de secours
-/// si jamais on arrive sur ces routes sans être passé par MesEnfantsPage
-/// (deep link direct, retour arrière inattendu, etc.)
 class _AvecEnfantSelectionne extends ConsumerWidget {
   final Widget Function(String enfantId) builder;
 
@@ -130,7 +155,6 @@ class _AvecEnfantSelectionne extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final enfantId = ref.watch(enfantSelectionneProvider);
     if (enfantId == null) {
-      // Filet de sécurité : redirige vers la liste des enfants.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         GoRouter.of(context).goNamed(AppRoutes.childrenListName);
       });

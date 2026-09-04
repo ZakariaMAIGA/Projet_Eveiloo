@@ -8,7 +8,8 @@ final List<RouteBase> activitiesRoutes = [
   GoRoute(
     path: AppRoutes.activities,
     name: AppRoutes.activitiesName,
-    builder: (context, state) => const ActivitiesPage(), // enfantId null
+    builder: (context, state) =>
+        const ActivitiesPage(enfantId: null), // enfantId null
     routes: [
       GoRoute(
         path: 'detail',

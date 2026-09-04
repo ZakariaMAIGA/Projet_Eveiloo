@@ -45,6 +45,7 @@ final estAdminProvider = Provider<bool>((ref) {
 /// Actions d'authentification (inscription, connexion, deconnexion...).
 /// state expose un AsyncValue<void> pour piloter loading/erreur dans l'UI
 /// (ex: ref.watch(authActionsProvider).isLoading dans un bouton).
+// core/provider/auth_provider.dart (inchangé dans l’idée)
 class AuthActions extends AsyncNotifier<void> {
   @override
   Future<void> build() async {}
@@ -96,3 +97,9 @@ class AuthActions extends AsyncNotifier<void> {
 final authActionsProvider = AsyncNotifierProvider<AuthActions, void>(
   AuthActions.new,
 );
+
+final sessionProvider = StreamProvider<String?>((ref) {
+  return ref.watch(authServiceProvider).authStateChanges.map((user) {
+    return user?.uid; // null si déconnecté, uid si connecté
+  });
+});
