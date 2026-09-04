@@ -1,13 +1,10 @@
 import 'package:eveiloo_enfant/core/constants/app_colors.dart';
-import 'package:eveiloo_enfant/models/JouetModel.dart';
+import 'package:eveiloo_enfant/models/toy_model.dart';
 import 'package:flutter/material.dart';
 
 import '../core/constants/AppFontSize.dart';
 import '../core/constants/AppSpacing.dart';
 
-/// Ligne présentant un jouet mis en favori : image, nom, étoile pour retirer
-/// le favori, bouton "Voir le jouet" et prix — tel que sur la maquette
-/// "Mes Favoris".
 class FavoriToyRow extends StatelessWidget {
   const FavoriToyRow({
     super.key,
@@ -16,11 +13,13 @@ class FavoriToyRow extends StatelessWidget {
     required this.onRetirerDesFavoris,
   });
 
-  final JouetModel jouet;
+  final ToyModel jouet;
   final VoidCallback onVoirLeJouet;
   final VoidCallback onRetirerDesFavoris;
 
-  String get _prixFormate => '${jouet.prix.toStringAsFixed(0)}CFA';
+  String get _prixFormate {
+    return '${jouet.prix.toStringAsFixed(0)} CFA';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,12 +31,13 @@ class FavoriToyRow extends StatelessWidget {
           child: SizedBox(
             width: 72,
             height: 72,
-            child: jouet.images.isNotEmpty
+            child: jouet.imageUrl.isNotEmpty
                 ? Image.network(
-                    jouet.images,
+                    jouet.imageUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        _imagePlaceholder(),
+                    errorBuilder: (context, error, stackTrace) {
+                      return _imagePlaceholder();
+                    },
                   )
                 : _imagePlaceholder(),
           ),
@@ -79,35 +79,10 @@ class FavoriToyRow extends StatelessWidget {
                 children: [
                   ElevatedButton(
                     onPressed: onVoirLeJouet,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.starFilled,
-                      foregroundColor: AppColors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                        vertical: AppSpacing.sm,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Voir le jouet',
-                      style: TextStyle(
-                        fontSize: AppFontSize.small,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    child: const Text('Voir le jouet'),
                   ),
                   const Spacer(),
-                  Text(
-                    _prixFormate,
-                    style: const TextStyle(
-                      fontSize: AppFontSize.medium,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
+                  Text(_prixFormate),
                 ],
               ),
             ],

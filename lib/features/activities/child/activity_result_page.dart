@@ -7,11 +7,18 @@ class ActivityResultPage extends StatelessWidget {
   final int score;
   final int totalQuestions;
 
+  /// Points réellement crédités (calculés au prorata du score par la page
+  /// de jeu). Ne PAS recalculer ici — score * rewardPoints donnerait un
+  /// montant totalement faux (ex: 8 bonnes réponses * 50 pts = 400 pts
+  /// au lieu des ~40 pts réellement dus).
+  final int pointsGagnes;
+
   const ActivityResultPage({
     super.key,
     required this.activity,
     required this.score,
     required this.totalQuestions,
+    required this.pointsGagnes,
   });
 
   double get percentage {
@@ -81,7 +88,7 @@ class ActivityResultPage extends StatelessWidget {
                     _ResultSummary(
                       score: score,
                       totalQuestions: totalQuestions,
-                      points: score * activity.rewardPoints,
+                      points: pointsGagnes,
                     ),
                     const SizedBox(height: 28),
                     _ProgressSummary(
@@ -118,7 +125,6 @@ class ActivityResultPage extends StatelessWidget {
                 ),
               ),
             ),
-            // const _ResultNavigationBar(),
           ],
         ),
       ),
@@ -255,7 +261,7 @@ class _ProgressSummary extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Progression de l’activité',
+            'Progression de l\'activité',
             style: TextStyle(
               color: Color(0xFF29258F),
               fontSize: 16,
@@ -264,7 +270,7 @@ class _ProgressSummary extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '$score/$totalQuestions histoires lues',
+            '$score/$totalQuestions bonnes réponses',
             style: const TextStyle(
               color: Color(0xFF29258F),
               fontSize: 16,
@@ -277,7 +283,7 @@ class _ProgressSummary extends StatelessWidget {
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: progress),
               duration: const Duration(milliseconds: 700),
-              builder: (_, value, _) => LinearProgressIndicator(
+              builder: (_, value, __) => LinearProgressIndicator(
                 value: value,
                 minHeight: 15,
                 backgroundColor: const Color(0xFFD0D0D0),
@@ -290,4 +296,3 @@ class _ProgressSummary extends StatelessWidget {
     );
   }
 }
-

@@ -1,24 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/AppFontSize.dart';
 import '../../core/constants/AppSpacing.dart';
 import '../../models/toy_model.dart';
 import '../../repository/toy_repository.dart';
 import '../../routes/app_route.dart';
+import '../children/children_profil.dart'; // enfantParIdProvider
 
-class ToysPage extends StatefulWidget {
-  final String genre; // "fille" ou "garcon"
-
-  const ToysPage({Key? key, required this.genre}) : super(key: key);
-
-  @override
-  State<ToysPage> createState() => _ToysPageState();
+/// Détermine le bucket d'âge (schéma existant en base : "4-6 ans",
+/// "7-9 ans", "10-12 ans") correspondant à l'âge réel d'un enfant.
+String _bucketPourAge(int age) {
+  if (age <= 6) return '4-6 ans';
+  if (age <= 9) return '7-9 ans';
+  return '10-12 ans';
 }
 
-class _ToysPageState extends State<ToysPage> {
+class ToysPage extends ConsumerStatefulWidget {
+  final String genre; // "fille" ou "garcon"
+  final String? categorieId;
+  final String? categorieNom;
+
+  /// null = mode parent (filtre d'âge manuel via chips).
+  /// non-null = mode enfant (filtre d'âge automatique, pas de chips).
+  final String? enfantId;
+
+  const ToysPage({
+    Key? key,
+    required this.genre,
+    this.categorieId,
+    this.categorieNom,
+    this.enfantId,
+  }) : super(key: key);
+
+  @override
+  ConsumerState<ToysPage> createState() => _ToysPageState();
+}
+
+class _ToysPageState extends ConsumerState<ToysPage> {
   final ToyRepository _toyRepository = ToyRepository();
 
-  // Liste des tranches d'âge disponibles pour le filtrage
   final List<String> _ageCategories = [
     'Tous',
     '4-6 ans',
@@ -27,15 +48,18 @@ class _ToysPageState extends State<ToysPage> {
   ];
   String _selectedAge = 'Tous';
 
+  bool get modeEnfant => widget.enfantId != null;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: Text(
-          widget.genre.toLowerCase() == 'fille'
-              ? 'Jouets Filles'
-              : 'Jouets Garçons',
+          widget.categorieNom ??
+              (widget.genre.toLowerCase() == 'fille'
+                  ? 'Jouets Filles'
+                  : 'Jouets Garçons'),
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -44,71 +68,116 @@ class _ToysPageState extends State<ToysPage> {
         foregroundColor: Colors.black,
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: AppSpacing.sm),
-
-            // 1. Barre Horizontale de Filtres par Âge
-            _buildAgeFilterChips(),
-
-            const SizedBox(height: AppSpacing.sm),
-
-            // 2. Flux de Données Firestore (StreamBuilder)
-            Expanded(
-              child: StreamBuilder<List<ToyModel>>(
-                stream: _toyRepository.getToysByGenreAndAge(
-                  genre: widget.genre,
-                  ageFilter: _selectedAge,
-                ),
-                builder: (context, snapshot) {
-                  // État de chargement
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  // État d'erreur
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Text(
-                        'Erreur lors du chargement des jouets.',
-                        style: TextStyle(color: Colors.red.shade700),
-                      ),
-                    );
-                  }
-
-                  final toys = snapshot.data ?? [];
-
-                  // Liste vide
-                  if (toys.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'Aucun jouet trouvé pour ce filtre.',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    );
-                  }
-
-                  // Affichage de la liste
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.xs,
-                    ),
-                    itemCount: toys.length,
-                    itemBuilder: (context, index) {
-                      return _buildToyCard(context, toys[index]);
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+        child: modeEnfant ? _buildCorpsEnfant() : _buildCorpsParent(),
       ),
     );
   }
 
-  // Barre Horizontale de Puces de Filtrage
+  // -----------------------------------------------------------------
+  // MODE PARENT : filtre d'âge manuel via chips.
+  // -----------------------------------------------------------------
+  Widget _buildCorpsParent() {
+    return Column(
+      children: [
+        const SizedBox(height: AppSpacing.sm),
+        _buildAgeFilterChips(),
+        const SizedBox(height: AppSpacing.sm),
+        Expanded(
+          child: StreamBuilder<List<ToyModel>>(
+            stream: _toyRepository.getToysByGenreAndAge(
+              genre: widget.genre,
+              ageFilter: _selectedAge,
+              categorieId: widget.categorieId,
+            ),
+            builder: (context, snapshot) => _buildListe(snapshot),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // -----------------------------------------------------------------
+  // MODE ENFANT : pas de chips, filtre automatique selon son âge.
+  // -----------------------------------------------------------------
+  Widget _buildCorpsEnfant() {
+    final enfantAsync = ref.watch(enfantParIdProvider(widget.enfantId!));
+
+    return enfantAsync.when(
+      data: (enfant) {
+        if (enfant == null) {
+          return const Center(child: Text('Enfant introuvable.'));
+        }
+        final age = _calculerAge(enfant.dateNaissance);
+        final bucket = _bucketPourAge(age);
+
+        return StreamBuilder<List<ToyModel>>(
+          stream: _toyRepository.getToysByGenreAndAge(
+            genre: widget.genre,
+            ageFilter: bucket,
+            categorieId: widget.categorieId,
+          ),
+          builder: (context, snapshot) => _buildListe(snapshot),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const Center(child: Text('Erreur de chargement.')),
+    );
+  }
+
+  int _calculerAge(String dateNaissance) {
+    final dateStr = dateNaissance.trim();
+    if (dateStr.isEmpty) return 0;
+    final parts = dateStr.split('/');
+    if (parts.length != 3) return 0;
+    final jour = int.tryParse(parts[0]);
+    final mois = int.tryParse(parts[1]);
+    final annee = int.tryParse(parts[2]);
+    if (jour == null || mois == null || annee == null) return 0;
+    final naissance = DateTime(annee, mois, jour);
+    final now = DateTime.now();
+    var age = now.year - naissance.year;
+    if (now.month < naissance.month ||
+        (now.month == naissance.month && now.day < naissance.day)) {
+      age--;
+    }
+    return age < 0 ? 0 : age;
+  }
+
+  Widget _buildListe(AsyncSnapshot<List<ToyModel>> snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (snapshot.hasError) {
+      return Center(
+        child: Text(
+          'Erreur lors du chargement des jouets.',
+          style: TextStyle(color: Colors.red.shade700),
+        ),
+      );
+    }
+
+    final toys = snapshot.data ?? [];
+
+    if (toys.isEmpty) {
+      return const Center(
+        child: Text(
+          'Aucun jouet trouvé pour ce filtre.',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      itemCount: toys.length,
+      itemBuilder: (context, index) => _buildToyCard(context, toys[index]),
+    );
+  }
+
   Widget _buildAgeFilterChips() {
     return SizedBox(
       height: 40,
@@ -144,11 +213,7 @@ class _ToysPageState extends State<ToysPage> {
               ),
               showCheckmark: false,
               onSelected: (selected) {
-                if (selected) {
-                  setState(() {
-                    _selectedAge = age;
-                  });
-                }
+                if (selected) setState(() => _selectedAge = age);
               },
             ),
           );
@@ -157,13 +222,15 @@ class _ToysPageState extends State<ToysPage> {
     );
   }
 
-  // Carte Individuelle pour chaque Jouet
   Widget _buildToyCard(BuildContext context, ToyModel toy) {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () => context.pushNamed(
         AppRoutes.toyDetailName,
         pathParameters: {'toyId': toy.id},
+        queryParameters: {
+          if (widget.enfantId != null) 'enfantId': widget.enfantId!,
+        },
       ),
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -250,7 +317,6 @@ class _ToysPageState extends State<ToysPage> {
     );
   }
 
-  // Composant d'Évaluation par Étoiles
   Widget _buildStarRating(double rating) {
     int fullStars = rating.floor();
     return Row(
@@ -264,4 +330,3 @@ class _ToysPageState extends State<ToysPage> {
     );
   }
 }
-

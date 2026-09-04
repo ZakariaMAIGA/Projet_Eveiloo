@@ -1,12 +1,10 @@
 import 'dart:async';
 
 import 'package:eveiloo_enfant/core/provider/auth_provider.dart';
-import 'package:eveiloo_enfant/core/provider/enfant_provider.dart';
-import 'package:eveiloo_enfant/features/children/children_profil.dart';
-import 'package:eveiloo_enfant/models/journal_progres_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/provider/activite_progress_provider.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/proposition.dart';
 import '../../../models/question_model.dart';
@@ -49,6 +47,15 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
   void initState() {
     super.initState();
     _startSession();
+    // Marque l'activité comme démarrée pour CET enfant (idempotent : ne
+    // touche rien si déjà démarrée/terminée, donc pas de risque à appeler
+    // ceci à chaque ouverture de la page).
+    ref
+        .read(activiteProgressRepositoryProvider)
+        .marquerDemarree(
+          enfantId: widget.enfantId,
+          activityId: widget.activity.activityId,
+        );
     remainingSeconds = widget.activity.duration;
     if (remainingSeconds > 0) {
       countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -95,12 +102,15 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     super.dispose();
   }
 
- void finishActivity([List<QuestionModel>? questions]) async {
+  void finishActivity([List<QuestionModel>? questions]) async {
     if (activityFinished || !mounted) return;
     activityFinished = true;
     countdownTimer?.cancel();
 
     final totalQuestions = questions?.length ?? totalQuestionCount;
+    final scorePourcentage = totalQuestions == 0
+        ? 0.0
+        : (score / totalQuestions) * 100;
     final pointsGagnes =
         ((score / (totalQuestions == 0 ? 1 : totalQuestions)) *
                 widget.activity.rewardPoints)
@@ -109,27 +119,19 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
     final parentId = ref.read(utilisateurCourantProvider).value?.utilisateurId;
 
     if (parentId != null) {
+      // Une seule source de vérité : le repository écrit la progression
+      // par enfant + le journal + les points, de façon idempotente (rejouer
+      // l'activité ne recrédite jamais les points une deuxième fois).
       await ref
-          .read(journalProgresRepositoryProvider)
-          .ajouterEntree(
-            JournalProgresModel(
-              journalId: '',
-              utilisateurId: parentId,
-              enfantId: widget.enfantId,
-              elementId: widget.activity.activityId,
-              typeElement: TypeElementProgres.activite,
-              titre: widget.activity.title,
-              score: totalQuestions == 0 ? 0 : (score / totalQuestions) * 100,
-              dureeSecondes: widget.activity.duration - remainingSeconds,
-              pointsGagnes: pointsGagnes,
-              dateRealisation: DateTime.now(),
-            ),
+          .read(activiteProgressRepositoryProvider)
+          .marquerTerminee(
+            parentId: parentId,
+            enfantId: widget.enfantId,
+            activite: widget.activity,
+            score: scorePourcentage,
+            pointsGagnes: pointsGagnes,
+            dureeSecondes: widget.activity.duration - remainingSeconds,
           );
-
-      // Met à jour les compteurs de l'enfant (voir méthode ci-dessous)
-      await ref
-          .read(enfantRepositoryProvider)
-          .incrementerProgres(parentId, widget.enfantId, points: pointsGagnes);
     }
 
     if (!mounted) return;
@@ -140,6 +142,7 @@ class _ActivityPlayPageState extends ConsumerState<ActivityPlayPage> {
           score: score,
           totalQuestions: totalQuestions,
           activity: widget.activity,
+          pointsGagnes: pointsGagnes,
         ),
       ),
     );

@@ -14,7 +14,7 @@ class CategorieJouetModel {
   // Créer un CategorieJouetModel à partir d'une Map
   factory CategorieJouetModel.fromMap(Map<String, dynamic> map) {
     return CategorieJouetModel(
-      categorieId: map['categorie_id'] ?? '',
+      categorieId: map['categorieId'] ?? '',
       nom: map['nom'] ?? '',
       icone: map['icone'] ?? '',
       description: map['description'] ?? '',
@@ -24,7 +24,7 @@ class CategorieJouetModel {
   // Transformer le modèle en Map
   Map<String, dynamic> toMap() {
     return {
-      'categorie_id': categorieId,
+      'categorieId': categorieId,
       'nom': nom,
       'icone': icone,
       'description': description,

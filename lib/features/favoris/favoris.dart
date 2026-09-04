@@ -1,13 +1,14 @@
 import 'package:eveiloo_enfant/core/constants/app_colors.dart';
 import 'package:eveiloo_enfant/models/JouetModel.dart';
+import 'package:eveiloo_enfant/models/toy_model.dart';
+import 'package:eveiloo_enfant/repository/toy_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/constants/AppFontSize.dart';
 import '../../core/constants/AppSpacing.dart';
-import '../../models/favoris.dart' as model; // Alias pour éviter la collision de nom
+import '../../models/favoris.dart' as model;
 import '../../repository/favoriRepository.dart';
-// import '../../repository/jouetRepository.dart';
 import '../../widgets/favori_toy_row.dart';
 
 /// Écran "Mes Favoris"
@@ -29,19 +30,21 @@ class Favoris extends StatefulWidget {
 
 class _FavorisState extends State<Favoris> {
   final FavoriRepository _favoriRepository = FavoriRepository();
-  // final JouetRepository _jouetRepository = JouetRepository();
+  final ToyRepository _jouetRepository = ToyRepository();
 
   static const _filtreTous = 'Tous';
   String _filtreActif = _filtreTous;
 
   List<String> _dernierIdsDemandes = [];
-  Future<List<JouetModel>>? _jouetsFuture;
+  Future<List<ToyModel>>? _jouetsFuture;
 
-  Future<List<JouetModel>> _obtenirJouets(List<String> ids) {
+  Future<List<ToyModel>> _obtenirJouets(List<String> ids) {
+    if (ids.isEmpty) return Future.value([]);
+
     final idsTries = [...ids]..sort();
     if (_jouetsFuture == null || !listEquals(idsTries, _dernierIdsDemandes)) {
       _dernierIdsDemandes = idsTries;
-      // _jouetsFuture = _jouetRepository.obtenirParIds(ids);
+      _jouetsFuture = _jouetRepository.getJouetsParIds(ids);
     }
     return _jouetsFuture!;
   }
@@ -64,10 +67,7 @@ class _FavorisState extends State<Favoris> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.black87,
-                    ),
+                    icon: const Icon(Icons.arrow_back, color: Colors.black87),
                   ),
                 ],
               ),
@@ -88,9 +88,7 @@ class _FavorisState extends State<Favoris> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (snapshot.hasError) {
-                    return Center(
-                      child: Text('Erreur : ${snapshot.error}'),
-                    );
+                    return Center(child: Text('Erreur : ${snapshot.error}'));
                   }
 
                   final tousLesFavoris = snapshot.data ?? [];
@@ -106,10 +104,11 @@ class _FavorisState extends State<Favoris> {
 
                   final ids = favorisFiltres.map((f) => f.elementId).toList();
 
-                  return FutureBuilder<List<JouetModel>>(
+                  return FutureBuilder<List<ToyModel>>(
                     future: _obtenirJouets(ids),
                     builder: (context, jouetsSnapshot) {
-                      if (jouetsSnapshot.connectionState == ConnectionState.waiting &&
+                      if (jouetsSnapshot.connectionState ==
+                              ConnectionState.waiting &&
                           !jouetsSnapshot.hasData) {
                         return const Center(child: CircularProgressIndicator());
                       }
@@ -121,7 +120,7 @@ class _FavorisState extends State<Favoris> {
 
                       final jouetsParId = {
                         for (final jouet in jouetsSnapshot.data ?? [])
-                          jouet.jouetId: jouet,
+                          jouet.id: jouet,
                       };
 
                       return ListView.separated(
@@ -144,7 +143,7 @@ class _FavorisState extends State<Favoris> {
                           return FavoriToyRow(
                             jouet: jouet,
                             onVoirLeJouet: () =>
-                                widget.onVoirLeJouet?.call(jouet.jouetId),
+                                widget.onVoirLeJouet?.call(jouet.id),
                             onRetirerDesFavoris: () =>
                                 _retirerDesFavoris(favori.elementId),
                           );
@@ -206,8 +205,9 @@ class _FavorisAppBar extends StatelessWidget {
           CircleAvatar(
             radius: 24,
             backgroundColor: AppColors.chipBackground,
-            backgroundImage:
-                avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+            backgroundImage: avatarUrl != null
+                ? NetworkImage(avatarUrl!)
+                : null,
             child: avatarUrl == null
                 ? const Icon(Icons.person, color: AppColors.textSecondary)
                 : null,
@@ -280,11 +280,7 @@ class _EtatVide extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.favorite_border,
-              size: 48,
-              color: Colors.grey,
-            ),
+            const Icon(Icons.favorite_border, size: 48, color: Colors.grey),
             AppSpacing.verticalGapMd,
             const Text(
               'Aucun jouet en favoris pour le moment.',

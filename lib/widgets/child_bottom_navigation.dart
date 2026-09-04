@@ -16,9 +16,7 @@ class ChildBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color actif = Color(
-      0xFF6C63FF,
-    ); // violet ludique, cohérent avec ChildrenProfil
+    const Color actif = Color(0xFF6C63FF);
     const Color inactif = Colors.grey;
 
     return Scaffold(
@@ -39,14 +37,19 @@ class ChildBottomNavigation extends StatelessWidget {
             label: 'Accueil',
           ),
           NavigationDestination(
-            icon: Icon(Icons.extension_outlined, color: inactif),
-            selectedIcon: Icon(Icons.extension_rounded, color: actif),
-            label: 'Activités',
+            icon: Icon(Icons.storefront_outlined, color: inactif),
+            selectedIcon: Icon(Icons.storefront_rounded, color: actif),
+            label: 'Catalogue',
           ),
           NavigationDestination(
             icon: Icon(Icons.smart_display_outlined, color: inactif),
             selectedIcon: Icon(Icons.smart_display_rounded, color: actif),
             label: 'Tutoriels',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.extension_outlined, color: inactif),
+            selectedIcon: Icon(Icons.extension_rounded, color: actif),
+            label: 'Activités',
           ),
         ],
       ),

@@ -11,9 +11,7 @@ String? _validateInteger(String? value) {
   if (value == null || value.trim().isEmpty) {
     return 'Champ obligatoire';
   }
-  return int.tryParse(value.trim()) == null
-      ? 'Entrez un nombre entier'
-      : null;
+  return int.tryParse(value.trim()) == null ? 'Entrez un nombre entier' : null;
 }
 
 String? _validateAge(String? value) {
@@ -75,9 +73,11 @@ class _AddActivityPageState extends State<AddActivityPage> {
     final maxAge = int.parse(_maxAgeController.text.trim());
     if (minAge > maxAge) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(
-          'L’âge minimum ne peut pas être supérieur à l’âge maximum',
-        )),
+        const SnackBar(
+          content: Text(
+            'L’âge minimum ne peut pas être supérieur à l’âge maximum',
+          ),
+        ),
       );
       return;
     }
@@ -92,8 +92,8 @@ class _AddActivityPageState extends State<AddActivityPage> {
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         objective: _objectiveController.text.trim().isEmpty
-          ? null
-          : _objectiveController.text.trim(),
+            ? null
+            : _objectiveController.text.trim(),
         imageUrl: _imageController.text.trim().isEmpty
             ? null
             : _imageController.text.trim(),
@@ -104,7 +104,6 @@ class _AddActivityPageState extends State<AddActivityPage> {
         duration: int.parse(_durationController.text),
         rewardPoints: int.parse(_rewardController.text),
         successThreshold: int.parse(_successController.text),
-        progress: 0.0,
         createdAt: DateTime.now(),
       );
 
@@ -154,14 +153,10 @@ class _AddActivityPageState extends State<AddActivityPage> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: "Titre",
-              ),
-              validator: (value) =>
-                  value!.isEmpty ? "Champ obligatoire" : null,
+              decoration: const InputDecoration(labelText: "Titre"),
+              validator: (value) => value!.isEmpty ? "Champ obligatoire" : null,
             ),
 
             const SizedBox(height: 15),
@@ -171,7 +166,8 @@ class _AddActivityPageState extends State<AddActivityPage> {
               maxLines: 3,
               decoration: const InputDecoration(
                 labelText: "Texte à lire",
-                hintText: "Écris ici l'histoire que l'enfant doit lire avant les questions",
+                hintText:
+                    "Écris ici l'histoire que l'enfant doit lire avant les questions",
               ),
             ),
 
@@ -182,7 +178,8 @@ class _AddActivityPageState extends State<AddActivityPage> {
               maxLines: 3,
               decoration: const InputDecoration(
                 labelText: "Objectif",
-                hintText: "Ex. Lis attentivement l'histoire et réponds aux questions",
+                hintText:
+                    "Ex. Lis attentivement l'histoire et réponds aux questions",
               ),
             ),
 
@@ -214,31 +211,17 @@ class _AddActivityPageState extends State<AddActivityPage> {
             DropdownButtonFormField<String>(
               initialValue: activityType,
               items: const [
-                DropdownMenuItem(
-                  value: "Lecture",
-                  child: Text("Lecture"),
-                ),
-                DropdownMenuItem(
-                  value: "Maths",
-                  child: Text("Maths"),
-                ),
-                DropdownMenuItem(
-                  value: "Mémoire",
-                  child: Text("Mémoire"),
-                ),
-                DropdownMenuItem(
-                  value: "Logique",
-                  child: Text("Logique"),
-                ),
+                DropdownMenuItem(value: "Lecture", child: Text("Lecture")),
+                DropdownMenuItem(value: "Maths", child: Text("Maths")),
+                DropdownMenuItem(value: "Mémoire", child: Text("Mémoire")),
+                DropdownMenuItem(value: "Logique", child: Text("Logique")),
               ],
               onChanged: (value) {
                 setState(() {
                   activityType = value!;
                 });
               },
-              decoration: const InputDecoration(
-                labelText: "Type d'activité",
-              ),
+              decoration: const InputDecoration(labelText: "Type d'activité"),
             ),
 
             const SizedBox(height: 15),
@@ -246,38 +229,26 @@ class _AddActivityPageState extends State<AddActivityPage> {
             DropdownButtonFormField<String>(
               initialValue: competenceCategory,
               items: const [
-                DropdownMenuItem(
-                  value: "Lecture",
-                  child: Text("Lecture"),
-                ),
-                DropdownMenuItem(
-                  value: "Maths",
-                  child: Text("Maths"),
-                ),
+                DropdownMenuItem(value: "Lecture", child: Text("Lecture")),
+                DropdownMenuItem(value: "Maths", child: Text("Maths")),
                 DropdownMenuItem(
                   value: "Créativité",
                   child: Text("Créativité"),
                 ),
-                DropdownMenuItem(
-                  value: "Logique",
-                  child: Text("Logique"),
-                ),
+                DropdownMenuItem(value: "Logique", child: Text("Logique")),
               ],
               onChanged: (value) {
                 setState(() {
                   competenceCategory = value!;
                 });
               },
-              decoration: const InputDecoration(
-                labelText: "Compétence",
-              ),
+              decoration: const InputDecoration(labelText: "Compétence"),
             ),
 
             const SizedBox(height: 15),
 
             Row(
               children: [
-
                 Expanded(
                   child: TextFormField(
                     controller: _minAgeController,
@@ -301,7 +272,6 @@ class _AddActivityPageState extends State<AddActivityPage> {
                     validator: _validateAge,
                   ),
                 ),
-
               ],
             ),
 
@@ -309,14 +279,11 @@ class _AddActivityPageState extends State<AddActivityPage> {
 
             Row(
               children: [
-
                 Expanded(
                   child: TextFormField(
                     controller: _rewardController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Points",
-                    ),
+                    decoration: const InputDecoration(labelText: "Points"),
                     validator: _validateInteger,
                   ),
                 ),
@@ -327,13 +294,10 @@ class _AddActivityPageState extends State<AddActivityPage> {
                   child: TextFormField(
                     controller: _successController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Seuil (%)",
-                    ),
+                    decoration: const InputDecoration(labelText: "Seuil (%)"),
                     validator: _validateInteger,
                   ),
                 ),
-
               ],
             ),
 
@@ -347,7 +311,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
                     ? const CircularProgressIndicator()
                     : const Text("Enregistrer"),
               ),
-            )
+            ),
           ],
         ),
       ),

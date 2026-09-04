@@ -1,5 +1,6 @@
 import 'package:eveiloo_enfant/features/cart/cart_service.dart';
 import 'package:eveiloo_enfant/models/toy_model.dart';
+import 'package:eveiloo_enfant/models/enfant.dart';
 import 'package:eveiloo_enfant/core/constants/AppSpacing.dart';
 import 'package:eveiloo_enfant/core/constants/AppFontSize.dart';
 import 'package:flutter/material.dart';
@@ -7,12 +8,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/cart_model.dart';
 import '../../repository/toy_repository.dart';
+import '../../repository/favoriRepository.dart';
+import '../../repository/enfant_repository.dart';
 import '../../routes/app_route.dart';
 
 class ToyDetailPage extends StatefulWidget {
   final String toyId;
 
-  const ToyDetailPage({Key? key, required this.toyId}) : super(key: key);
+  /// null = mode parent (peut acheter ; favori demande de choisir l'enfant).
+  /// non-null = mode enfant (pas d'achat ; favori direct pour cet enfant).
+  final String? enfantId;
+
+  const ToyDetailPage({Key? key, required this.toyId, this.enfantId})
+    : super(key: key);
 
   @override
   State<ToyDetailPage> createState() => _ToyDetailPageState();
@@ -21,9 +29,13 @@ class ToyDetailPage extends StatefulWidget {
 class _ToyDetailPageState extends State<ToyDetailPage> {
   final CartService _cartService = CartService();
   final ToyRepository _toyRepository = ToyRepository();
+  final FavoriRepository _favoriRepository = FavoriRepository();
+  final EnfantRepository _enfantRepository = EnfantRepository();
   final PageController _pageController = PageController();
   bool _isAdding = false;
   int _currentImage = 0;
+
+  bool get modeEnfant => widget.enfantId != null;
 
   String? _getUserId() => FirebaseAuth.instance.currentUser?.uid;
 
@@ -83,6 +95,87 @@ class _ToyDetailPageState extends State<ToyDetailPage> {
     }
   }
 
+  /// Mode enfant : bascule directement le favori pour cet enfant.
+  Future<void> _basculerFavoriEnfant(ToyModel toy) async {
+    await _favoriRepository.basculerFavori(
+      enfantId: widget.enfantId!,
+      elementId: toy.id,
+      type: 'jouet',
+    );
+  }
+
+  /// Mode parent : demande d'abord quel enfant, puis bascule pour lui.
+  Future<void> _choisirEnfantPourFavori(ToyModel toy) async {
+    final userId = _getUserId();
+    if (userId == null) return;
+
+    final enfants = await _enfantRepository.observerEnfants(userId).first;
+
+    if (!mounted) return;
+
+    if (enfants.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Ajoutez d\'abord un enfant pour utiliser les favoris.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final enfantChoisi = await showDialog<EnfantModel>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ajouter aux favoris de...'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: enfants.length,
+            itemBuilder: (context, index) {
+              final enfant = enfants[index];
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: enfant.urlAvatar.isNotEmpty
+                      ? NetworkImage(enfant.urlAvatar)
+                      : null,
+                  child: enfant.urlAvatar.isEmpty
+                      ? const Icon(Icons.face)
+                      : null,
+                ),
+                title: Text(enfant.prenom),
+                onTap: () => Navigator.of(context).pop(enfant),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Annuler'),
+          ),
+        ],
+      ),
+    );
+
+    if (enfantChoisi == null) return;
+
+    await _favoriRepository.basculerFavori(
+      enfantId: enfantChoisi.enfantId,
+      elementId: toy.id,
+      type: 'jouet',
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Favori mis à jour pour ${enfantChoisi.prenom}'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,7 +205,6 @@ class _ToyDetailPageState extends State<ToyDetailPage> {
 
           return CustomScrollView(
             slivers: [
-              // --- APPBAR AVEC IMAGE EN CARROUSEL ---
               SliverAppBar(
                 expandedHeight: 320,
                 pinned: true,
@@ -120,11 +212,39 @@ class _ToyDetailPageState extends State<ToyDetailPage> {
                 foregroundColor: Colors.black,
                 elevation: 0,
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.shopping_cart_outlined),
-                    tooltip: 'Voir le panier',
-                    onPressed: () => context.pushNamed(AppRoutes.cartName),
-                  ),
+                  // --- FAVORIS ---
+                  if (modeEnfant)
+                    StreamBuilder<bool>(
+                      stream: _favoriRepository.estFavori(
+                        enfantId: widget.enfantId!,
+                        elementId: toy.id,
+                      ),
+                      builder: (context, favSnapshot) {
+                        final estFavori = favSnapshot.data ?? false;
+                        return IconButton(
+                          icon: Icon(
+                            estFavori ? Icons.favorite : Icons.favorite_border,
+                            color: estFavori ? Colors.red : null,
+                          ),
+                          tooltip: 'Favoris',
+                          onPressed: () => _basculerFavoriEnfant(toy),
+                        );
+                      },
+                    )
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.favorite_border),
+                      tooltip: 'Ajouter aux favoris',
+                      onPressed: () => _choisirEnfantPourFavori(toy),
+                    ),
+
+                  // --- PANIER : uniquement en mode parent ---
+                  if (!modeEnfant)
+                    IconButton(
+                      icon: const Icon(Icons.shopping_cart_outlined),
+                      tooltip: 'Voir le panier',
+                      onPressed: () => context.pushNamed(AppRoutes.cartName),
+                    ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: Stack(
@@ -151,7 +271,6 @@ class _ToyDetailPageState extends State<ToyDetailPage> {
                                   images[index],
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    debugPrint('❌ Erreur image: $error');
                                     return Container(
                                       color: Colors.grey.shade200,
                                       child: const Center(
@@ -196,8 +315,6 @@ class _ToyDetailPageState extends State<ToyDetailPage> {
                   ),
                 ),
               ),
-
-              // --- CONTENU ---
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
@@ -216,14 +333,15 @@ class _ToyDetailPageState extends State<ToyDetailPage> {
                               ),
                             ),
                           ),
-                          Text(
-                            '${toy.prix.toInt()} FCFA',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF29B6F6),
+                          if (!modeEnfant)
+                            Text(
+                              '${toy.prix.toInt()} FCFA',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF29B6F6),
+                              ),
                             ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -357,67 +475,73 @@ class _ToyDetailPageState extends State<ToyDetailPage> {
         },
       ),
 
-      // --- BARRE D'ACTION FIXE EN BAS ---
-      bottomNavigationBar: StreamBuilder<ToyModel?>(
-        stream: _toyRepository.streamToy(widget.toyId),
-        builder: (context, snapshot) {
-          final toy = snapshot.data;
-          return Container(
-            padding: EdgeInsets.only(
-              left: AppSpacing.md,
-              right: AppSpacing.md,
-              top: AppSpacing.sm,
-              bottom: AppSpacing.sm + MediaQuery.of(context).padding.bottom,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              top: false,
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF29B6F6),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
+      // --- BARRE D'ACTION FIXE : uniquement en mode parent (achat) ---
+      bottomNavigationBar: modeEnfant
+          ? null
+          : StreamBuilder<ToyModel?>(
+              stream: _toyRepository.streamToy(widget.toyId),
+              builder: (context, snapshot) {
+                final toy = snapshot.data;
+                return Container(
+                  padding: EdgeInsets.only(
+                    left: AppSpacing.md,
+                    right: AppSpacing.md,
+                    top: AppSpacing.sm,
+                    bottom:
+                        AppSpacing.sm + MediaQuery.of(context).padding.bottom,
                   ),
-                  onPressed: (_isAdding || toy == null)
-                      ? null
-                      : () => _addToCart(toy),
-                  icon: _isAdding
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 10,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF29B6F6),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                        )
-                      : const Icon(Icons.shopping_cart, color: Colors.white),
-                  label: Text(
-                    _isAdding ? 'Ajout en cours...' : 'Ajouter au panier',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: AppFontSize.medium,
+                        ),
+                        onPressed: (_isAdding || toy == null)
+                            ? null
+                            : () => _addToCart(toy),
+                        icon: _isAdding
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.shopping_cart,
+                                color: Colors.white,
+                              ),
+                        label: Text(
+                          _isAdding ? 'Ajout en cours...' : 'Ajouter au panier',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: AppFontSize.medium,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 

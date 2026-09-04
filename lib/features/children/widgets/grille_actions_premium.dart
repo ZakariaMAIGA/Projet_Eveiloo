@@ -1,3 +1,4 @@
+import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -28,6 +29,17 @@ class GrilleActionsPremium extends StatelessWidget {
         onTap: () => StatefulNavigationShell.of(
           context,
         ).goBranch(2), // branche Tutoriels du shell enfant
+      ),
+      _ActionItemPremium(
+        label: 'Catalogue',
+        description: 'Découvrir des jouets et les ajouter en favoris',
+        icon: Icons.storefront_rounded,
+        couleur: const Color(0xFFE9168C),
+        couleurFond: const Color(0xFFFFE9F5),
+        onTap: () => context.pushNamed(
+          AppRoutes.childCatalogueName,
+          queryParameters: {'enfantId': enfantId},
+        ),
       ),
       _ActionItemPremium(
         label: 'Mes badges',

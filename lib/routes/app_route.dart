@@ -17,7 +17,8 @@ abstract final class AppRoutes {
   static const tutorialDetailName = 'tutorial-detail';
   static const profile = '/profile';
   static const catalogue = '/catalogue';
-  static const favoris = '/favoris';
+  static const favoris = '/favoris/:enfantId';
+  static const favorisName = 'favoris';
   static const cart = '/cart';
   static const cartName = 'cart';
   static const progression = '/progression/:enfantId';
@@ -117,5 +118,9 @@ abstract final class AppRoutes {
   static const tutorialsName = 'tutorials';
   static const profileName = 'profile';
   static const catalogueName = 'catalogue';
-  static const favorisName = 'favoris';
+
+  static const childToyDetail = '/child/toy-detail/:toyId';
+  static const childToyDetailName = 'child-toy-detail';
+  static const String childCatalogue = '/child-catalogue';
+  static const String childCatalogueName = 'childCatalogue';
 }

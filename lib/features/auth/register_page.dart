@@ -1,20 +1,21 @@
 import 'package:eveiloo_enfant/core/constants/AppSpacing.dart';
-import 'package:eveiloo_enfant/core/services/auth_service.dart';
+import 'package:eveiloo_enfant/core/provider/auth_provider.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:eveiloo_enfant/shared/app_button.dart';
 import 'package:eveiloo_enfant/shared/app_input.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class RegisterPage extends StatefulWidget {
+class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
 
   final _prenomController = TextEditingController();
@@ -24,9 +25,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  final AuthService _authService = AuthService();
-
-  bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -48,45 +46,32 @@ class _RegisterPageState extends State<RegisterPage> {
 
     FocusScope.of(context).unfocus();
 
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
-      await _authService.inscription(
-        prenom: _prenomController.text,
-        nom: _nomController.text,
-        courriel: _emailController.text,
-        telephone: _telephoneController.text,
-        motDePasse: _passwordController.text,
-      );
+      await ref
+          .read(authActionsProvider.notifier)
+          .inscription(
+            prenom: _prenomController.text,
+            nom: _nomController.text,
+            courriel: _emailController.text,
+            telephone: _telephoneController.text,
+            motDePasse: _passwordController.text,
+          );
 
       if (!mounted) return;
 
-      context.goNamed(AppRoutes.homeName);
+      // Après inscription, on redirige vers la page de connexion
+      // (l’utilisateur devra se connecter manuellement).
+      context.goNamed(AppRoutes.loginName);
 
-      // À ajouter après la création de HomePage ou AuthGate :
-      //
-      // Navigator.of(context).pushAndRemoveUntil(
-      //   MaterialPageRoute(builder: (_) => const HomePage()),
-      //   (route) => false,
-      // );
-      //
-      // Avec AuthGate, aucune navigation manuelle ne sera nécessaire.
+      // Si tu préfères qu’il soit automatiquement connecté et que
+      // AuthGate gère la redirection, utilise plutôt :
+      // context.go('/');
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-
       _afficherErreur(_messageErreurFirebase(e));
     } catch (_) {
       if (!mounted) return;
-
       _afficherErreur('Impossible de créer le compte. Réessaie plus tard.');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
   }
 
@@ -121,6 +106,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final inscriptionEnCours = ref.watch(authActionsProvider).isLoading;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
@@ -161,7 +147,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       'assets/images/logo_eveiloo.png',
                       height: 100,
                       errorBuilder: (context, error, stackTrace) {
-                        // Placeholder tant que l'asset n'est pas ajouté au projet
                         return Container(
                           height: 380,
                           width: 380,
@@ -314,7 +299,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       textInputAction: TextInputAction.done,
                       autofillHints: const [AutofillHints.newPassword],
                       onFieldSubmitted: (_) {
-                        if (!_isLoading) {
+                        if (!inscriptionEnCours) {
                           _inscription();
                         }
                       },
@@ -348,8 +333,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     AppButton(
                       label: 'Créer mon compte',
                       icon: Icons.person_add_outlined,
-                      isLoading: _isLoading,
-                      onPressed: _inscription,
+                      isLoading: inscriptionEnCours,
+                      onPressed: inscriptionEnCours ? null : _inscription,
                     ),
 
                     AppSpacing.verticalGapLg,
@@ -362,9 +347,12 @@ class _RegisterPageState extends State<RegisterPage> {
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
                         TextButton(
-                          onPressed: _isLoading
+                          onPressed: inscriptionEnCours
                               ? null
-                              : () => Navigator.of(context).pop(),
+                              : () {
+                                  // Retour à la page de login
+                                  context.goNamed(AppRoutes.loginName);
+                                },
                           child: const Text('Se connecter'),
                         ),
                       ],

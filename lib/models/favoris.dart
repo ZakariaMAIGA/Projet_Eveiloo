@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+
 class Favoris {
   final String id;
   final String enfantId;
-  final String elementId;
+  final String elementId  ;
   final String type;
   final DateTime dateAjout;
 

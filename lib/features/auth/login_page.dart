@@ -1,31 +1,26 @@
 import 'package:eveiloo_enfant/core/constants/AppSpacing.dart';
-import 'package:eveiloo_enfant/core/services/auth_service.dart';
+import 'package:eveiloo_enfant/core/provider/auth_provider.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
-
 import 'package:eveiloo_enfant/shared/app_button.dart';
 import 'package:eveiloo_enfant/shared/app_input.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-// import 'register_page.dart';
-
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  final AuthService _authService = AuthService();
-
-  bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
@@ -42,73 +37,36 @@ class _LoginPageState extends State<LoginPage> {
 
     FocusScope.of(context).unfocus();
 
-    setState(() {
-      _isLoading = true;
-    });
+    // Lance la connexion via Riverpod
+    await ref
+        .read(authActionsProvider.notifier)
+        .connexion(
+          courriel: _emailController.text,
+          motDePasse: _passwordController.text,
+        );
 
-    try {
-      await _authService.connexion(
-        courriel: _emailController.text,
-        motDePasse: _passwordController.text,
+    if (!mounted) return;
+
+    final authState = ref.read(authActionsProvider);
+
+    if (authState.hasError) {
+      // Affiche l’erreur Firebase
+      final error = authState.error;
+      final message = _messageErreurFirebase(error);
+      _afficherErreur(message);
+
+      // Reset l’état pour permettre un nouvel essai
+      ref.read(authActionsProvider.notifier).state = const AsyncValue.data(
+        null,
       );
-
-      if (!mounted) return;
-
-      context.goNamed(AppRoutes.homeName);
-
-      // Si tu ajoutes AuthGate plus tard, il redirigera automatiquement
-      // vers HomePage lorsque Firebase détectera la session connectée.
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-
-      _afficherErreur(_messageErreurFirebase(e));
-    } catch (_) {
-      if (!mounted) return;
-
-      _afficherErreur('Une erreur inattendue est survenue.');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _motDePasseOublie() async {
-    final courriel = _emailController.text.trim();
-
-    if (courriel.isEmpty) {
-      _afficherErreur('Saisis ton adresse e-mail avant de continuer.');
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      await _authService.reinitialiserMotDePasse(courriel);
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Un e-mail de réinitialisation a été envoyé.'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-
-      _afficherErreur(_messageErreurFirebase(e));
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
+    // Succès : navigation
+    // Si tu as un AuthGate :
+    // context.go('/');
+    // Sinon, vers home directement :
+    context.goNamed(AppRoutes.homeName);
   }
 
   void _afficherErreur(String message) {
@@ -117,37 +75,38 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  String _messageErreurFirebase(FirebaseAuthException exception) {
-    switch (exception.code) {
-      case 'invalid-email':
-        return 'L’adresse e-mail est invalide.';
+  String _messageErreurFirebase(Object? error) {
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
+        case 'invalid-email':
+          return 'L’adresse e-mail est invalide.';
 
-      case 'user-not-found':
-      case 'wrong-password':
-      case 'invalid-credential':
-        return 'E-mail ou mot de passe incorrect.';
+        case 'user-not-found':
+        case 'wrong-password':
+        case 'invalid-credential':
+          return 'E-mail ou mot de passe incorrect.';
 
-      case 'user-disabled':
-        return 'Ce compte a été désactivé.';
+        case 'user-disabled':
+          return 'Ce compte a été désactivé.';
 
-      case 'too-many-requests':
-        return 'Trop de tentatives. Réessaie plus tard.';
+        case 'too-many-requests':
+          return 'Trop de tentatives. Réessaie plus tard.';
 
-      case 'network-request-failed':
-        return 'Vérifie ta connexion Internet.';
+        case 'network-request-failed':
+          return 'Vérifie ta connexion Internet.';
 
-      default:
-        return exception.message ?? 'La connexion a échoué.';
+        default:
+          return error.message ?? 'La connexion a échoué.';
+      }
     }
-  }
 
-  void _ouvrirInscription() {
-    context.pushNamed(AppRoutes.registerName);
+    return 'Une erreur est survenue. Vérifie tes identifiants et ta connexion.';
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final connexionEnCours = ref.watch(authActionsProvider).isLoading;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
@@ -177,7 +136,6 @@ class _LoginPageState extends State<LoginPage> {
                       'assets/images/logo_eveiloo.png',
                       height: 180,
                       errorBuilder: (context, error, stackTrace) {
-                        // Placeholder tant que l'asset n'est pas ajouté au projet
                         return Container(
                           height: 380,
                           width: 380,
@@ -252,7 +210,7 @@ class _LoginPageState extends State<LoginPage> {
                       textInputAction: TextInputAction.done,
                       autofillHints: const [AutofillHints.password],
                       onFieldSubmitted: (_) {
-                        if (!_isLoading) {
+                        if (!connexionEnCours) {
                           _connexion();
                         }
                       },
@@ -282,7 +240,7 @@ class _LoginPageState extends State<LoginPage> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: _isLoading
+                        onPressed: connexionEnCours
                             ? null
                             : () => context.pushNamed(
                                 AppRoutes.forgotPasswordName,
@@ -295,8 +253,8 @@ class _LoginPageState extends State<LoginPage> {
 
                     AppButton(
                       label: 'Connexion',
-                      isLoading: _isLoading,
-                      onPressed: _connexion,
+                      isLoading: connexionEnCours,
+                      onPressed: connexionEnCours ? null : _connexion,
                     ),
 
                     AppSpacing.verticalGapXl,
@@ -309,7 +267,11 @@ class _LoginPageState extends State<LoginPage> {
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
                         TextButton(
-                          onPressed: _isLoading ? null : _ouvrirInscription,
+                          onPressed: connexionEnCours
+                              ? null
+                              : () {
+                                  context.pushNamed(AppRoutes.registerName);
+                                },
                           child: const Text('S’inscrire'),
                         ),
                       ],

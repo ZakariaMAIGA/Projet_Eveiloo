@@ -44,11 +44,25 @@ class _ProfilEnfantPageState extends State<ProfilEnfantPage> {
   // =========================
 
   Future<void> choisirDate() async {
+    final aujourdHui = DateTime.now();
+
+    // Limites : âge minimum 4 ans, maximum 12 ans
+    final dateMin = DateTime(
+      aujourdHui.year - 12,
+      aujourdHui.month,
+      aujourdHui.day,
+    );
+    final dateMax = DateTime(
+      aujourdHui.year - 4,
+      aujourdHui.month,
+      aujourdHui.day,
+    );
+
     final DateTime? dateChoisie = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
+      initialDate: dateMax, // par défaut, l’âge minimum (4 ans)
+      firstDate: dateMin, // enfant le plus âgé (12 ans)
+      lastDate: dateMax, // enfant le plus jeune (4 ans)
     );
 
     if (dateChoisie != null) {
@@ -84,12 +98,34 @@ class _ProfilEnfantPageState extends State<ProfilEnfantPage> {
       return;
     }
 
+    // Calcul de l’âge
+    final parts = dateController.text.split('/');
+    final jour = int.parse(parts[0]);
+    final mois = int.parse(parts[1]);
+    final annee = int.parse(parts[2]);
+    final dateNaissance = DateTime(annee, mois, jour);
+
+    final aujourdHui = DateTime.now();
+    int age = aujourdHui.year - dateNaissance.year;
+    if (aujourdHui.month < dateNaissance.month ||
+        (aujourdHui.month == dateNaissance.month &&
+            aujourdHui.day < dateNaissance.day)) {
+      age--;
+    }
+
+    // Vérification de l’âge
+    if (age < 4 || age > 12) {
+      _afficherMessage(
+        'Seuls les enfants de 4 à 12 ans peuvent être enregistrés',
+      );
+      return;
+    }
+
     setState(() {
       isLoading = true;
     });
 
     try {
-      // Création du modèle enfant
       final EnfantModel enfant = EnfantModel(
         enfantId: '',
         prenom: prenomController.text.trim(),
@@ -104,18 +140,14 @@ class _ProfilEnfantPageState extends State<ProfilEnfantPage> {
         activitesRealisees: 0,
       );
 
-      // Enregistrement via le Service
       await _enfantService.ajouterEnfant(enfant);
 
       if (!mounted) return;
 
       _afficherMessage('Profil enregistré avec succès', couleur: Colors.green);
-
-      // Retour vers Mes Enfants
       context.go(AppRoutes.childrenList);
     } catch (e) {
       if (!mounted) return;
-
       _afficherMessage(
         'Erreur lors de l’enregistrement : $e',
         couleur: Colors.red,

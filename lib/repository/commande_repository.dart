@@ -27,11 +27,13 @@ class CommandeRepository {
     );
 
     final commandeRef = _commandesRef.doc();
+    final numeroCommande = 'CMD-${DateTime.now().millisecondsSinceEpoch}';
 
     final batch = _firestore.batch();
 
     batch.set(commandeRef, {
       'utilisateurId': utilisateurId,
+      'numeroCommande': numeroCommande,
       'adresseLivraison': adresseLivraison,
       'montantTotal': montantTotal,
       'statut': StatutCommande.enAttente.toValue(),
