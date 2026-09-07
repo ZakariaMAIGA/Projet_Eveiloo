@@ -175,6 +175,12 @@ class ActivityService {
         });
   }
 
+  /// Nombre total d'activités, pour la carte statistique du dashboard admin.
+  Future<int> compterActivites() async {
+    final snapshot = await _firestore.collection(collection).count().get();
+    return snapshot.count ?? 0;
+  }
+
   /// ===========================
   /// QUESTIONS
   /// ===========================

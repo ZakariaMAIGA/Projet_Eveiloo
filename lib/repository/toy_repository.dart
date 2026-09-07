@@ -58,6 +58,27 @@ class ToyRepository {
     });
   }
 
+  /// Les [limite] derniers jouets ajoutés, plus récent en premier.
+  /// ⚠️ Un jouet créé avant l'ajout du champ `dateAjout` n'a pas ce champ
+  /// en base : Firestore l'exclut de ce tri (comportement standard pour
+  /// orderBy sur un champ absent). Pour qu'il apparaisse, ré-enregistre-le
+  /// une fois (ex: petite modification + sauvegarde depuis l'admin).
+  Stream<List<ToyModel>> observerDerniersJouets({int limite = 5}) {
+    return _firestore
+        .collection('JOUETS')
+        .orderBy('dateAjout', descending: true)
+        .limit(limite)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            return ToyModel.fromFirestore(
+              Map<String, dynamic>.from(doc.data()),
+              doc.id,
+            );
+          }).toList();
+        });
+  }
+
   /// Écoute en temps réel un jouet précis (page détail).
   Stream<ToyModel?> streamToy(String toyId) {
     return _firestore.collection('JOUETS').doc(toyId).snapshots().map((doc) {
@@ -68,12 +89,19 @@ class ToyRepository {
 
   // Ajouter un nouveau jouet dans Firestore
   Future<void> addToy(ToyModel toy) async {
-    await _firestore.collection('JOUETS').add(toy.toMap());
+    final donnees = toy.toMap();
+    donnees['dateAjout'] = FieldValue.serverTimestamp();
+    await _firestore.collection('JOUETS').add(donnees);
   }
 
   // Supprimer un jouet
   Future<void> deleteToy(String toyId) async {
     await _firestore.collection('JOUETS').doc(toyId).delete();
+  }
+
+  // Modifier un jouet existant
+  Future<void> updateToy(String toyId, Map<String, dynamic> donnees) async {
+    await _firestore.collection('JOUETS').doc(toyId).update(donnees);
   }
 
   // Récupère la liste des objets ToyModel à partir d'une liste d'IDs
@@ -88,5 +116,15 @@ class ToyRepository {
     return snapshot.docs
         .map((doc) => ToyModel.fromFirestore(doc.data(), doc.id))
         .toList();
+  }
+
+  // ===========================
+  // ADMIN — dashboard
+  // ===========================
+
+  /// Nombre total de jouets, pour la carte statistique du dashboard admin.
+  Future<int> compterJouets() async {
+    final snapshot = await _firestore.collection('JOUETS').count().get();
+    return snapshot.count ?? 0;
   }
 }

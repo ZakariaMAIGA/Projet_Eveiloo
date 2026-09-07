@@ -99,4 +99,56 @@ class CommandeRepository {
           .toList(),
     );
   }
+
+  // ===========================
+  // ADMIN — dashboard
+  // ===========================
+
+  /// Nombre total de commandes, toutes statuts confondus.
+  Future<int> compterCommandes() async {
+    final snapshot = await _commandesRef.count().get();
+    return snapshot.count ?? 0;
+  }
+
+  /// Nombre de commandes "actuelles" (en attente, confirmées ou expédiées,
+  /// donc pas encore livrées ni annulées). C'est ce chiffre qui alimente la
+  /// carte "Commandes" du dashboard admin.
+  Future<int> compterCommandesActuelles() async {
+    final snapshot = await _commandesRef
+        .where(
+          'statut',
+          whereIn: [
+            StatutCommande.enAttente.toValue(),
+            StatutCommande.confirmee.toValue(),
+            StatutCommande.expediee.toValue(),
+          ],
+        )
+        .count()
+        .get();
+    return snapshot.count ?? 0;
+  }
+
+  /// Toutes les commandes, tous utilisateurs confondus, triées de la plus
+  /// récente à la plus ancienne (vue admin globale).
+  Stream<List<Commande>> observerToutesLesCommandes() {
+    return _commandesRef.snapshots().map((snapshot) {
+      final commandes = snapshot.docs
+          .map((doc) => Commande.fromFirestore(doc))
+          .toList();
+      commandes.sort((a, b) {
+        if (a.dateCommande == null) return 1;
+        if (b.dateCommande == null) return -1;
+        return b.dateCommande!.compareTo(a.dateCommande!);
+      });
+      return commandes;
+    });
+  }
+
+  /// Les [limite] dernières commandes, tous utilisateurs confondus, pour le
+  /// bloc "Dernières commandes" du dashboard admin.
+  Stream<List<Commande>> observerDernieresCommandes({int limite = 3}) {
+    return observerToutesLesCommandes().map(
+      (commandes) => commandes.take(limite).toList(),
+    );
+  }
 }

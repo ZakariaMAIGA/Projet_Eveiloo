@@ -1,6 +1,8 @@
 // routes/app_router.dart
 import 'package:eveiloo_enfant/features/Nootifications/notification.dart';
 import 'package:eveiloo_enfant/features/activities/activitiesRoutes.dart';
+import 'package:eveiloo_enfant/features/admin/add_toy_page.dart';
+import 'package:eveiloo_enfant/features/admin/add_tutoriel_page.dart';
 import 'package:eveiloo_enfant/features/auth/AuthGate.dart';
 import 'package:eveiloo_enfant/features/auth/forgot_password_page.dart';
 import 'package:eveiloo_enfant/features/auth/register_page.dart';
@@ -9,6 +11,7 @@ import 'package:eveiloo_enfant/features/cart/cart_page.dart';
 import 'package:eveiloo_enfant/features/catalogues/catalogueRoutes.dart';
 import 'package:eveiloo_enfant/features/checkout/checkout_page.dart';
 import 'package:eveiloo_enfant/features/children/children_routes.dart';
+import 'package:eveiloo_enfant/features/home/admin_dashboard_page.dart';
 import 'package:eveiloo_enfant/features/onboarding/onboarding_page.dart';
 import 'package:eveiloo_enfant/widgets/CommandeDetails.dart';
 import 'package:eveiloo_enfant/features/commandes/mes_Commandes_page.dart';
@@ -160,6 +163,25 @@ class AppRouter {
         builder: (context, state) {
           final commandeId = state.pathParameters['commandeId']!;
           return CommandeDetailPage(commandeId: commandeId);
+        },
+      ),
+
+      GoRoute(
+        path: '/admin',
+        builder: (context, state) {
+          return const AdminDashboardPage();
+        },
+      ),
+      GoRoute(
+        path: '/admin/jouets/ajouter',
+        builder: (context, state) {
+          return const AddToyPage();
+        },
+      ),
+      GoRoute(
+        path: '/admin/tutoriels/ajouter',
+        builder: (context, state) {
+          return const AddTutorielPage();
         },
       ),
     ],
