@@ -8,21 +8,13 @@ import '../../repository/toy_repository.dart';
 import '../../routes/app_route.dart';
 import '../children/children_profil.dart'; // enfantParIdProvider
 
-/// Détermine le bucket d'âge (schéma existant en base : "4-6 ans",
-/// "7-9 ans", "10-12 ans") correspondant à l'âge réel d'un enfant.
-String _bucketPourAge(int age) {
-  if (age <= 6) return '4-6 ans';
-  if (age <= 9) return '7-9 ans';
-  return '10-12 ans';
-}
-
 class ToysPage extends ConsumerStatefulWidget {
   final String genre; // "fille" ou "garcon"
   final String? categorieId;
   final String? categorieNom;
 
   /// null = mode parent (filtre d'âge manuel via chips).
-  /// non-null = mode enfant (filtre d'âge automatique, pas de chips).
+  /// non-null = mode enfant (filtre d'âge automatique selon son âge).
   final String? enfantId;
 
   const ToysPage({
@@ -45,6 +37,7 @@ class _ToysPageState extends ConsumerState<ToysPage> {
     '4-6 ans',
     '7-9 ans',
     '10-12 ans',
+    '13-14 ans',
   ];
   String _selectedAge = 'Tous';
 
@@ -74,9 +67,17 @@ class _ToysPageState extends ConsumerState<ToysPage> {
   }
 
   // -----------------------------------------------------------------
-  // MODE PARENT : filtre d'âge manuel via chips.
+  // MODE PARENT : filtre manuel via chips.
   // -----------------------------------------------------------------
   Widget _buildCorpsParent() {
+    int? ageCible;
+    if (_selectedAge != 'Tous') {
+      final numbers = RegExp(r'\d+').allMatches(_selectedAge);
+      if (numbers.isNotEmpty) {
+        ageCible = int.tryParse(numbers.first.group(0)!);
+      }
+    }
+
     return Column(
       children: [
         const SizedBox(height: AppSpacing.sm),
@@ -84,9 +85,10 @@ class _ToysPageState extends ConsumerState<ToysPage> {
         const SizedBox(height: AppSpacing.sm),
         Expanded(
           child: StreamBuilder<List<ToyModel>>(
+            // Passage de ageCible directement (null si "Tous")
             stream: _toyRepository.getToysByGenreAndAge(
               genre: widget.genre,
-              ageFilter: _selectedAge,
+              ageEnfant: ageCible,
               categorieId: widget.categorieId,
             ),
             builder: (context, snapshot) => _buildListe(snapshot),
@@ -97,7 +99,7 @@ class _ToysPageState extends ConsumerState<ToysPage> {
   }
 
   // -----------------------------------------------------------------
-  // MODE ENFANT : pas de chips, filtre automatique selon son âge.
+  // MODE ENFANT : filtre automatique selon son âge réel (4 à 14 ans).
   // -----------------------------------------------------------------
   Widget _buildCorpsEnfant() {
     final enfantAsync = ref.watch(enfantParIdProvider(widget.enfantId!));
@@ -108,12 +110,11 @@ class _ToysPageState extends ConsumerState<ToysPage> {
           return const Center(child: Text('Enfant introuvable.'));
         }
         final age = _calculerAge(enfant.dateNaissance);
-        final bucket = _bucketPourAge(age);
 
         return StreamBuilder<List<ToyModel>>(
           stream: _toyRepository.getToysByGenreAndAge(
             genre: widget.genre,
-            ageFilter: bucket,
+            ageEnfant: age,
             categorieId: widget.categorieId,
           ),
           builder: (context, snapshot) => _buildListe(snapshot),

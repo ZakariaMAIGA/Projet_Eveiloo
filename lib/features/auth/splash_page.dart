@@ -1,3 +1,4 @@
+import 'package:eveiloo_enfant/features/auth/register_page.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../widgets/app_button.dart';
@@ -235,8 +236,14 @@ class _SplashPageState extends State<SplashPage>
                               AppButton(
                                 text: "Créer un compte",
                                 isPrimary: false,
-                                onPressed: () {},
-                              ),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const RegisterPage(),
+                                    ),
+                                  );
+                                },                              ),
                             ],
                           ),
                         ),

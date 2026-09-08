@@ -6,12 +6,6 @@ import '../../repository/toy_repository.dart';
 import '../../routes/app_route.dart';
 import '../children/children_profil.dart';
 
-String _bucketPourAge(int age) {
-  if (age <= 6) return '4-6 ans';
-  if (age <= 9) return '7-9 ans';
-  return '10-12 ans';
-}
-
 String _normaliserGenre(String genre) {
   final g = genre.trim().toLowerCase();
   if (g.contains('gar')) return 'garcon';
@@ -75,13 +69,12 @@ class _ChildCataloguePageState extends ConsumerState<ChildCataloguePage> {
             return const Center(child: Text('Enfant introuvable.'));
           }
           final age = _calculerAge(enfant.dateNaissance);
-          final bucket = _bucketPourAge(age);
           final genre = _normaliserGenre(enfant.genre);
 
           return StreamBuilder<List<ToyModel>>(
             stream: _toyRepository.getToysByGenreAndAge(
               genre: genre,
-              ageFilter: bucket,
+              ageEnfant: age,
             ),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -188,7 +181,7 @@ class _ChildCataloguePageState extends ConsumerState<ChildCataloguePage> {
                     children: List.generate(
                       5,
                       (index) => Icon(
-                        index < (jouet.note ?? 5)
+                        index < jouet.note
                             ? Icons.star_rounded
                             : Icons.star_border_rounded,
                         color: const Color(0xFFFFB800),

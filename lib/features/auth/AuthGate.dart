@@ -1,43 +1,73 @@
-// features/auth/auth_gate.dart
 import 'package:eveiloo_enfant/core/provider/auth_provider.dart';
 import 'package:eveiloo_enfant/routes/app_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// AuthGate ne doit JAMAIS retourner directement HomePage()/LoginPage()
-/// comme widget : ça les affiche à la location '/' (racine), en dehors
-/// du StatefulShellRoute.indexedStack qui fournit la barre de tabs.
-///
-/// Il doit toujours NAVIGUER (context.goNamed) vers la vraie route, pour
-/// que le contenu passe par le shell parent et affiche les tabs.
+/// AuthGate gère la direction initiale au lancement :
+/// - Non connecté -> SplashPage (qui gère Splash > Onboarding/Overview > Login)
+/// - Connecté (Admin) -> Dashboard Admin (/admin)
+/// - Connecté (Parent/Enfant) -> HomePage (AppRoutes.homeName)
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // 1. Écoute l'état de connexion Firebase
     final authAsync = ref.watch(authStateChangesProvider);
 
     return authAsync.when(
       data: (user) {
-        final destination = user != null
-            ? AppRoutes.homeName
-            : AppRoutes.loginName;
+        // Si l'utilisateur n'est pas connecté -> Direction le Splash
+        if (user == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              context.goNamed(AppRoutes.splashName);
+            }
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-        // On ne peut pas naviguer pendant build() ; on le fait juste après,
-        // une seule fois que ce frame est posé.
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!context.mounted) return;
-          context.goNamed(destination);
-        });
+        // 2. Si connecté, on écoute le profil utilisateur Firestore
+        final utilisateurAsync = ref.watch(utilisateurCourantProvider);
 
-        // Écran transitoire affiché le temps que la navigation se fasse.
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return utilisateurAsync.when(
+          data: (utilisateur) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!context.mounted) return;
+
+              // Vérification du rôle via le provider dédié
+              final estAdmin = ref.read(estAdminProvider);
+
+              if (estAdmin) {
+                // Redirection vers le Dashboard Admin
+                context.go('/admin');
+              } else {
+                // Redirection vers l'accueil principal
+                context.goNamed(AppRoutes.homeName);
+              }
+            });
+
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          },
+          loading: () =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
+          error: (err, stack) => Scaffold(
+            body: Center(
+              child: Text('Erreur lors de la récupération du profil : $err'),
+            ),
+          ),
+        );
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (err, stack) =>
-          Scaffold(body: Center(child: Text('Erreur de chargement: $err'))),
+      error: (err, stack) => Scaffold(
+        body: Center(child: Text('Erreur d\'authentification : $err')),
+      ),
     );
   }
 }

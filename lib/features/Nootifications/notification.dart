@@ -43,7 +43,6 @@ class NotificationsPage extends ConsumerWidget {
           }
 
           final notifications = snapshot.data ?? [];
-
           if (notifications.isEmpty) {
             return const Center(
               child: Text(

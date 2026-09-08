@@ -15,34 +15,41 @@ class ToyRepository {
     });
   }
 
-  /// Récupère les jouets filtrés par genre, tranche d'âge (bucket exact,
-  /// ex: "4-6 ans") et optionnellement par catégorie.
+  /// Récupère les jouets filtrés par genre et optionnellement par âge.
+  /// Si [ageEnfant] est null (ex: filtre "Tous"), la totalité des jouets est retournée.
   Stream<List<ToyModel>> getToysByGenreAndAge({
     required String genre,
-    required String ageFilter,
+    int? ageEnfant,
     String? categorieId,
   }) {
     Query<Map<String, dynamic>> query = _firestore
         .collection('JOUETS')
         .where('genre', isEqualTo: genre.toLowerCase());
 
-    if (ageFilter != 'Tous') {
-      query = query.where('ageRange', isEqualTo: ageFilter);
-    }
-
     if (categorieId != null && categorieId.isNotEmpty) {
       query = query.where('categorieId', isEqualTo: categorieId);
     }
 
     return query.snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return ToyModel.fromFirestore(Map<String, dynamic>.from(data), doc.id);
-      }).toList();
+      return snapshot.docs
+          .map((doc) {
+            final data = doc.data();
+            return ToyModel.fromFirestore(
+              Map<String, dynamic>.from(data),
+              doc.id,
+            );
+          })
+          .where((jouet) {
+            // Aucun filtre d'âge n'est appliqué si ageEnfant est null ("Tous")
+            if (ageEnfant == null) return true;
+            if (jouet.ageRange.toLowerCase() == 'tous') return true;
+            return ageEnfant >= jouet.ageMin && ageEnfant <= jouet.ageMax;
+          })
+          .toList();
     });
   }
 
-  // Récupérer les jouets par catégorie (si besoin, sans filtre genre/âge)
+  // Récupérer les jouets par catégorie (sans filtre genre/âge)
   Stream<List<ToyModel>> getToys({String? categorieId}) {
     Query<Map<String, dynamic>> query = _firestore.collection('JOUETS');
 
@@ -58,11 +65,7 @@ class ToyRepository {
     });
   }
 
-  /// Les [limite] derniers jouets ajoutés, plus récent en premier.
-  /// ⚠️ Un jouet créé avant l'ajout du champ `dateAjout` n'a pas ce champ
-  /// en base : Firestore l'exclut de ce tri (comportement standard pour
-  /// orderBy sur un champ absent). Pour qu'il apparaisse, ré-enregistre-le
-  /// une fois (ex: petite modification + sauvegarde depuis l'admin).
+  /// Les [limite] derniers jouets ajoutés
   Stream<List<ToyModel>> observerDerniersJouets({int limite = 5}) {
     return _firestore
         .collection('JOUETS')
@@ -79,7 +82,7 @@ class ToyRepository {
         });
   }
 
-  /// Écoute en temps réel un jouet précis (page détail).
+  /// Écoute en temps réel un jouet précis (page détail)
   Stream<ToyModel?> streamToy(String toyId) {
     return _firestore.collection('JOUETS').doc(toyId).snapshots().map((doc) {
       if (!doc.exists) return null;

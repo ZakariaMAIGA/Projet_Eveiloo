@@ -27,6 +27,8 @@ class _AddToyPageState extends State<AddToyPage> {
   final _imageUrlController = TextEditingController();
   final _imagesController = TextEditingController();
   final _ageRangeController = TextEditingController();
+  final _ageMinController = TextEditingController();
+  final _ageMaxController = TextEditingController();
   final _tagsController = TextEditingController();
   final _competencesController = TextEditingController();
 
@@ -42,6 +44,8 @@ class _AddToyPageState extends State<AddToyPage> {
     _imageUrlController.dispose();
     _imagesController.dispose();
     _ageRangeController.dispose();
+    _ageMinController.dispose();
+    _ageMaxController.dispose();
     _tagsController.dispose();
     _competencesController.dispose();
     super.dispose();
@@ -65,6 +69,8 @@ class _AddToyPageState extends State<AddToyPage> {
         categorieId: _categorieId ?? '',
         genre: _genre,
         ageRange: _ageRangeController.text.trim(),
+        ageMin: int.tryParse(_ageMinController.text.trim()) ?? 0,
+        ageMax: int.tryParse(_ageMaxController.text.trim()) ?? 99,
         note: 0,
         nombreAvis: 0,
         tags: _splitCsv(_tagsController.text),
@@ -148,9 +154,30 @@ class _AddToyPageState extends State<AddToyPage> {
                   onChanged: (v) => setState(() => _genre = v ?? 'fille'),
                 ),
                 AdminTextField(
-                  label: 'Tranche d\'âge',
+                  label: 'Tranche d\'âge (Texte)',
                   controller: _ageRangeController,
                   hint: 'Ex: 4-6 ans',
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AdminTextField(
+                        label: 'Âge Min (ans)',
+                        controller: _ageMinController,
+                        hint: 'Ex: 4',
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AdminTextField(
+                        label: 'Âge Max (ans)',
+                        controller: _ageMaxController,
+                        hint: 'Ex: 6',
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                  ],
                 ),
                 AdminTextField(
                   label: 'Tags (séparés par des virgules)',

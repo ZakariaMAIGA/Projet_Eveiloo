@@ -180,7 +180,7 @@ class _AdminToysPageState extends State<AdminToysPage> {
                               items: const [
                                 DropdownMenuItem(
                                   value: 'Tous',
-                                  child: Text('Tous'),
+                                  child: Text('Tous (4-14 ans)'),
                                 ),
                                 DropdownMenuItem(
                                   value: '4-6 ans',
@@ -193,6 +193,10 @@ class _AdminToysPageState extends State<AdminToysPage> {
                                 DropdownMenuItem(
                                   value: '10-12 ans',
                                   child: Text('10-12 ans'),
+                                ),
+                                DropdownMenuItem(
+                                  value: '13-14 ans',
+                                  child: Text('13-14 ans'),
                                 ),
                               ],
                               onChanged: (val) =>
@@ -225,6 +229,23 @@ class _AdminToysPageState extends State<AdminToysPage> {
                           ),
                           onPressed: () async {
                             if (formKey.currentState!.validate()) {
+                              // Parsing automatique des bornes min et max selon l'option choisie
+                              int min = 4;
+                              int max = 14;
+
+                              if (selectedAgeRange != 'Tous') {
+                                final numbers = RegExp(
+                                  r'\d+',
+                                ).allMatches(selectedAgeRange);
+                                final list = numbers
+                                    .map((m) => int.parse(m.group(0)!))
+                                    .toList();
+                                if (list.length >= 2) {
+                                  min = list.first;
+                                  max = list.last;
+                                }
+                              }
+
                               final newToy = ToyModel(
                                 id: '',
                                 nom: nomController.text,
@@ -235,6 +256,8 @@ class _AdminToysPageState extends State<AdminToysPage> {
                                 categorieId: selectedCatId,
                                 genre: selectedGenre,
                                 ageRange: selectedAgeRange,
+                                ageMin: min,
+                                ageMax: max,
                                 note: 5.0,
                                 nombreAvis: 1,
                                 tags: [],
